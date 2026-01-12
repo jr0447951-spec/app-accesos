@@ -127,13 +127,13 @@ document.getElementById("buscarSitio").addEventListener("input", function() {
   const texto = this.value.toLowerCase(); // Obtener texto en minúsculas para búsqueda
   const cmbSitio = document.getElementById("cmbSitio");
 
-  // Limpiar combo
+  // Limpiar combo de sitios
   cmbSitio.innerHTML = "";
 
   // Filtrar sitios por ID o Nombre
   const filtrados = sitios.filter(s =>
-    s.ID.toLowerCase().includes(texto) ||  // Compara con el ID
-    s.Nombre.toLowerCase().includes(texto)  // Compara con el Nombre
+    s.SiteID.toLowerCase().includes(texto) ||  // Filtra por ID
+    s.Nombre.toLowerCase().includes(texto)     // Filtra por Nombre
   );
 
   // Verificar si se encontraron sitios
@@ -142,7 +142,8 @@ document.getElementById("buscarSitio").addEventListener("input", function() {
   } else {
     // Llenar combo con los sitios filtrados
     filtrados.forEach((s) => {
-      cmbSitio.add(new Option(`${s.ID} - ${s.Nombre}`, sitios.indexOf(s)));
+      // Añadimos el SiteID como valor para identificar los sitios
+      cmbSitio.add(new Option(`${s.SiteID} - ${s.Nombre}`, s.SiteID)); // Usamos SiteID como valor
     });
   }
 });
@@ -197,5 +198,6 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
 
 
