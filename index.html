@@ -211,22 +211,22 @@ SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ID:${sitioSeleccionado.SiteID}
 NOMBRE: ${sitioSeleccionado['Nombre de Sitio']}
 PROPIETARIO: ${sitioSeleccionado.Torrero}
-${sitioSeleccionado['Nombre Torrero']}
+Nombre Torrero ${sitioSeleccionado['Nombre Torrero']}
 ▬▬▬▬▬▬▬▬▬▬
 ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO PRINCIPAL/DUI
 ${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI}
-TELEFONO: ${tecnicoPrincipal.TELEFONO}
-CORREO: ${tecnicoPrincipal.CORREO}
-▬▬▬▬▬▬▬▬▬▬
 TÉCNICOS ADICIONALES: ${tecnicosAdicionales.join(", ")}
 ▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
 Modelo: ${veh.Modelo}
 Color: ${veh.Color}
-▬▬▬▬▬▬▬▬▬▬`;
+▬▬▬▬▬▬▬▬▬▬
+TELEFONO: ${tecnicoPrincipal.TELEFONO}
+CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
+`;
 
   document.getElementById("resultado").value = mensaje;
 
@@ -243,6 +243,7 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
 
 
 
