@@ -72,15 +72,16 @@ let tecnicos = [];
 let vehiculos = [];
 let actividades = [];
 
-/* ================= LEER CSV ================= */
+
+/* ================= LEER CSV CON PUNTO Y COMA ================= */
 async function leerCSV(archivo) {
   const res = await fetch(archivo);
   const texto = await res.text();
-  const lineas = texto.split("\n").map(l => l.trim()).filter(l => l);
-  const encabezados = lineas[0].split(",");
+  const lineas = texto.split("\n").map(l => l.trim()).filter(l => l); // Divide por líneas
+  const encabezados = lineas[0].split(";"); // Usamos punto y coma como delimitador
 
   return lineas.slice(1).map(linea => {
-    const valores = linea.split(",");
+    const valores = linea.split(";");
     let obj = {};
     encabezados.forEach((h, i) => obj[h] = valores[i]);
     return obj;
@@ -196,4 +197,5 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
 
