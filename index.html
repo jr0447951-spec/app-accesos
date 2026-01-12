@@ -196,10 +196,12 @@ function generarMensaje() {
 
   // Obtener los técnicos adicionales seleccionados
   const tecnicosAdicionales = [];
+  const duiAdicionales = []; // Para almacenar los DUI de los técnicos adicionales
   const checkboxes = document.querySelectorAll("#checkboxTecnicos input:checked");
   checkboxes.forEach(checkbox => {
     const tecnicoAdicional = tecnicos[checkbox.value];
     tecnicosAdicionales.push(tecnicoAdicional.TECNICO);
+    duiAdicionales.push(tecnicoAdicional.DUI); // Agregar DUI de técnicos adicionales
   });
 
   const veh = vehiculos[document.getElementById("vehiculo").value];
@@ -228,7 +230,9 @@ TELEFONO: ${tecnicoPrincipal.TELEFONO}
 CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
 `;
 
+
   document.getElementById("resultado").value = mensaje;
+
   // Copiar al portapapeles
   navigator.clipboard.writeText(mensaje)
     .then(() => alert("Mensaje copiado al portapapeles"))
@@ -242,10 +246,3 @@ window.onload = cargarDatos;
 
 </body>
 </html>
-
-
-
-
-
-
-
