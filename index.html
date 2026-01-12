@@ -72,8 +72,7 @@ let tecnicos = [];
 let vehiculos = [];
 let actividades = [];
 
-
-/* ================= LEER CSV CON PUNTO Y COMA ================= */
+/* ================= LEER CSV ================= */
 async function leerCSV(archivo) {
   const res = await fetch(archivo);
   const texto = await res.text();
@@ -95,11 +94,14 @@ async function cargarDatos() {
   vehiculos = await leerCSV("vehiculos.csv");
   actividades = await leerCSV("actividad.csv");
 
-  console.log("Sitios cargados: ", sitios);  // <-- Agrega este log para verificar los sitios
+  // Mostrar en consola los datos cargados para comprobar
+  console.log("Sitios cargados: ", sitios);
+  console.log("Técnicos cargados: ", tecnicos);
+  console.log("Vehículos cargados: ", vehiculos);
+  console.log("Actividades cargadas: ", actividades);
 
   cargarCombos(); // Llamamos a cargarCombos después de cargar los datos
 }
-
 
 /* ================= LLENAR COMBOS ================= */
 function cargarCombos() {
@@ -109,6 +111,7 @@ function cargarCombos() {
   const cmbVehiculo = document.getElementById("vehiculo");
 
   // Asegúrate de que los sitios no estén vacíos
+  console.log("Cargando sitios en el combo:", sitios);
   if (sitios.length > 0) {
     sitios.forEach((s) => {
       // Asegúrate de que las claves estén bien definidas en el objeto `sitio`
@@ -118,14 +121,20 @@ function cargarCombos() {
     console.log("No se encontraron sitios.");
   }
 
+  // Verificar y cargar actividades
+  console.log("Cargando actividades en el combo:", actividades);
   actividades.forEach(a => {
     cmbActividad.add(new Option(a.Actividad, a.Actividad));
   });
 
+  // Verificar y cargar técnicos
+  console.log("Cargando técnicos en el combo:", tecnicos);
   tecnicos.forEach((t, i) => {
     cmbTecnico.add(new Option(t.Nombre, i));
   });
 
+  // Verificar y cargar vehículos
+  console.log("Cargando vehículos en el combo:", vehiculos);
   vehiculos.forEach((v, i) => {
     cmbVehiculo.add(new Option(`${v.Placa} - ${v.Marca}`, i));
   });
@@ -136,7 +145,7 @@ document.getElementById("buscarSitio").addEventListener("input", function() {
   const texto = this.value.toLowerCase(); // Obtener texto en minúsculas para búsqueda
   const cmbSitio = document.getElementById("cmbSitio");
 
-  // Limpiar combo de sitios
+  // Limpiar combo
   cmbSitio.innerHTML = "";
 
   // Filtrar sitios por ID o Nombre
@@ -151,8 +160,7 @@ document.getElementById("buscarSitio").addEventListener("input", function() {
   } else {
     // Llenar combo con los sitios filtrados
     filtrados.forEach((s) => {
-      // Añadimos el SiteID como valor para identificar los sitios
-      cmbSitio.add(new Option(`${s.SiteID} - ${s.Nombre}`, s.SiteID)); // Usamos SiteID como valor
+      cmbSitio.add(new Option(`${s.SiteID} - ${s.Nombre}`, s.SiteID));
     });
   }
 });
@@ -201,7 +209,6 @@ CORREO: ${tecnico.Correo}; tecnicossv@celectcac.com`;
     .catch(() => alert("No se pudo copiar"));
 }
 
-
 /* ================= SERVICE WORKER ================= */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
@@ -212,8 +219,3 @@ window.onload = cargarDatos;
 
 </body>
 </html>
-
-
-
-
-
