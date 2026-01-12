@@ -217,7 +217,7 @@ ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO PRINCIPAL/DUI
 ${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI}
-TÉCNICOS ADICIONALES: ${tecnicosAdicionales.join(", ")}
+TÉCNICOS ADICIONALES: ${tecnicosAdicionales.map((tecnico, idx) => `${tecnico} (DUI: ${duiAdicionales[idx]})`).join("\n")}
 ▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
@@ -229,7 +229,6 @@ CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
 `;
 
   document.getElementById("resultado").value = mensaje;
-
   // Copiar al portapapeles
   navigator.clipboard.writeText(mensaje)
     .then(() => alert("Mensaje copiado al portapapeles"))
@@ -243,7 +242,6 @@ window.onload = cargarDatos;
 
 </body>
 </html>
-
 
 
 
