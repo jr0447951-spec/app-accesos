@@ -219,7 +219,7 @@ ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO PRINCIPAL/DUI
 ${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI}
-${tecnicosAdicionales.map((tecnico, idx) => `${tecnico} DUI: ${duiAdicionales[idx]}`).join("\n")}
+${tecnicosAdicionales.map((tecnico, idx) => `${tecnico} ${duiAdicionales[idx]}`).join("\n")}
 ▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
@@ -246,4 +246,5 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
 
