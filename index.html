@@ -1,152 +1,163 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0078D4">
-<meta charset="UTF-8">
-<title>Generador de Mensaje de Acceso</title>
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
-  padding: 15px;
-}
-h2 { text-align: center; }
-label { font-weight: bold; margin-top: 10px; display:block; }
-select, button, textarea {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-}
-textarea {
-  height: 260px;
-  white-space: pre-wrap;
-}
-button {
-  background: #0078D4;
-  color: white;
-  border: none;
-  margin-top: 15px;
-  font-size: 16px;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Generador de Accesos</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0078D4">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px;
+      background: #f4f4f4;
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    select, button, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+    textarea {
+      height: 260px;
+      margin-top: 15px;
+    }
+    button {
+      background: #0078D4;
+      color: white;
+      border: none;
+      margin-top: 15px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 
 <body>
 
-<h2>📋 Generar Mensaje de Acceso</h2>
+<h2>📋 Generador de Accesos</h2>
 
-<label>Técnico principal</label>
-<select id="tecnicoPrincipal"></select>
-
-<label>Otros técnicos (Ctrl para varios)</label>
-<select id="otrosTecnicos" multiple size="4"></select>
+<label>Sitio</label>
+<select id="cmbSitio"></select>
 
 <label>Actividad</label>
 <select id="actividad"></select>
+
+<label>Técnico Principal</label>
+<select id="tecnicoPrincipal"></select>
 
 <label>Vehículo</label>
 <select id="vehiculo"></select>
 
 <button onclick="generarMensaje()">Generar y Copiar</button>
 
-<textarea id="resultado" readonly></textarea>
+<textarea id="resultado" placeholder="Aquí aparecerá el mensaje..."></textarea>
 
 <script>
-// =======================
-// DATOS (PUEDES EDITAR)
-// =======================
+/* ================= VARIABLES ================= */
+let sitios = [];
+let tecnicos = [];
+let vehiculos = [];
+let actividades = [];
 
-const correoFijo = "tecnicossv@celectcac.com";
+/* ================= LEER CSV ================= */
+async function leerCSV(archivo) {
+  const res = await fetch(archivo);
+  const texto = await res.text();
+  const lineas = texto.split("\n").map(l => l.trim()).filter(l => l);
+  const encabezados = lineas[0].split(",");
 
-const tecnicos = [
-  {nombre:"Douglas Rony Ventura Portillo", dui:"01315412-7", telefono:"+503 6176 4016", correo:"Douglas.ventura@celectcac.com"},
-  {nombre:"José Adalberto Palma Cruz", dui:"05702614-6", telefono:"+503 7000 0000", correo:"jose.palma@correo.com"}
-];
+  return lineas.slice(1).map(linea => {
+    const valores = linea.split(",");
+    let obj = {};
+    encabezados.forEach((h, i) => obj[h] = valores[i]);
+    return obj;
+  });
+}
 
-const actividades = [
-  "Servicio parcial",
-  "Mantenimiento",
-  "Instalación"
-];
+/* ================= CARGAR DATOS ================= */
+async function cargarDatos() {
+  sitios = await leerCSV("sitios.csv");
+  tecnicos = await leerCSV("tecnicos.csv");
+  vehiculos = await leerCSV("vehiculos.csv");
+  actividades = await leerCSV("actividad.csv");
 
-const vehiculos = [
-  {placa:"P6348D", marca:"NISSAN", modelo:"NP300", color:"BLANCO"}
-];
+  cargarCombos();
+}
 
-// =======================
-// CARGAR LISTAS
-// =======================
+/* ================= LLENAR COMBOS ================= */
+function cargarCombos() {
+  const cmbSitio = document.getElementById("cmbSitio");
+  const cmbActividad = document.getElementById("actividad");
+  const cmbTecnico = document.getElementById("tecnicoPrincipal");
+  const cmbVehiculo = document.getElementById("vehiculo");
 
-window.onload = () => {
-  const tp = document.getElementById("tecnicoPrincipal");
-  const ot = document.getElementById("otrosTecnicos");
-  const ac = document.getElementById("actividad");
-  const vh = document.getElementById("vehiculo");
-
-  tecnicos.forEach((t,i)=>{
-    tp.add(new Option(t.nombre, i));
-    ot.add(new Option(t.nombre, i));
+  sitios.forEach((s, i) => {
+    cmbSitio.add(new Option(`${s.ID} - ${s.Nombre}`, i));
   });
 
-  actividades.forEach(a=>ac.add(new Option(a,a)));
-
-  vehiculos.forEach((v,i)=>{
-    vh.add(new Option(v.placa + " - " + v.marca, i));
-  });
-};
-
-// =======================
-// GENERAR MENSAJE
-// =======================
-
-function generarMensaje(){
-  const tpIndex = tecnicoPrincipal.value;
-  const tecnicoP = tecnicos[tpIndex];
-  const actividad = document.getElementById("actividad").value;
-  const vehiculo = vehiculos[document.getElementById("vehiculo").value];
-
-  let listaTecnicos = `${tecnicoP.nombre}\t${tecnicoP.dui}\n`;
-
-  Array.from(otrosTecnicos.selectedOptions).forEach(o=>{
-    if(o.value != tpIndex){
-      const t = tecnicos[o.value];
-      listaTecnicos += `${t.nombre}\t${t.dui}\n`;
-    }
+  actividades.forEach(a => {
+    cmbActividad.add(new Option(a.Actividad, a.Actividad));
   });
 
-  const mensaje = 
+  tecnicos.forEach((t, i) => {
+    cmbTecnico.add(new Option(t.Nombre, i));
+  });
+
+  vehiculos.forEach((v, i) => {
+    cmbVehiculo.add(new Option(`${v.Placa} - ${v.Marca}`, i));
+  });
+}
+
+/* ================= GENERAR MENSAJE ================= */
+function generarMensaje() {
+  const sitio = sitios[cmbSitio.value];
+  const actividadSel = actividad.value;
+  const tecnico = tecnicos[tecnicoPrincipal.value];
+  const veh = vehiculos[vehiculo.value];
+
+  const mensaje =
 `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
-ID:390241
-NOMBRE: SAN LUIS TALPA
-PROPIETARIO: SBA
-ES18E7A-A San Luis Talpa
+ID:${sitio.ID}
+NOMBRE: ${sitio.Nombre}
+PROPIETARIO: ${sitio.Propietario}
+${sitio.Direccion}
 ▬▬▬▬▬▬▬▬▬▬
-ACTIVIDAD: ${actividad}
+ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO/DUI
-${listaTecnicos}▬▬▬▬▬▬▬▬▬▬
-Placa: ${vehiculo.placa}
-Marca: ${vehiculo.marca}
-Modelo: ${vehiculo.modelo}
-Color: ${vehiculo.color}
+${tecnico.Nombre}\t${tecnico.DUI}
 ▬▬▬▬▬▬▬▬▬▬
-TELEFONO: ${tecnicoP.telefono}
-CORREO: ${tecnicoP.correo}; ${correoFijo}`;
+Placa: ${veh.Placa}
+Marca: ${veh.Marca}
+Modelo: ${veh.Modelo}
+Color: ${veh.Color}
+▬▬▬▬▬▬▬▬▬▬
+TELEFONO: ${tecnico.Telefono}
+CORREO: ${tecnico.Correo}; tecnicossv@celectcac.com`;
 
   document.getElementById("resultado").value = mensaje;
 
   navigator.clipboard.writeText(mensaje)
-    .then(()=>alert("✅ Mensaje copiado al portapapeles"))
-    .catch(()=>alert("❌ No se pudo copiar"));
+    .then(() => alert("Mensaje copiado al portapapeles"))
+    .catch(() => alert("No se pudo copiar"));
 }
-</script>
-<script>
+
+/* ================= SERVICE WORKER ================= */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
+
+window.onload = cargarDatos;
 </script>
 
 </body>
