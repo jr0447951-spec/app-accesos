@@ -121,8 +121,10 @@ function cargarCombos() {
   // Asegúrate de que los sitios no estén vacíos
   if (sitios.length > 0) {
     sitios.forEach((s) => {
-      console.log(`Agregando sitio al combo: ${s.SiteID} - ${s['Nombre de Sitio']}`); // Verificar qué datos estamos agregando
-      cmbSitio.add(new Option(`${s.SiteID} - ${s['Nombre de Sitio']}`, s.SiteID));
+      // Convertir SiteID a string y mostrarlo correctamente en el combo
+      const siteID = String(s.SiteID);  // Convertir a string para asegurar formato correcto
+      console.log(`Agregando sitio al combo: ${siteID} - ${s['Nombre de Sitio']}`); // Verificar qué datos estamos agregando
+      cmbSitio.add(new Option(`${siteID} - ${s['Nombre de Sitio']}`, siteID));
     });
   } else {
     console.log("No se han cargado sitios correctamente."); // Si no se cargan sitios, avisa en la consola
@@ -162,7 +164,7 @@ function cargarCombos() {
 /* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
   const cmbSitioSel = document.getElementById("cmbSitio");
-  const sitioSeleccionado = sitios.find(s => s.SiteID === cmbSitioSel.value); // Buscamos el sitio por `SiteID`
+  const sitioSeleccionado = sitios.find(s => String(s.SiteID) === cmbSitioSel.value); // Buscamos el sitio por `SiteID`
 
   if (!sitioSeleccionado) {
     alert("Selecciona un sitio válido");
@@ -220,6 +222,7 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
 
 
 
