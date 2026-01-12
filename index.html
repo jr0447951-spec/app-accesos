@@ -37,6 +37,23 @@
       margin-top: 15px;
       font-size: 16px;
     }
+    .autocomplete-items {
+      border: 1px solid #d4d4d4;
+      max-height: 200px;
+      overflow-y: auto;
+      position: absolute;
+      z-index: 99;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .autocomplete-items div {
+      padding: 10px;
+      cursor: pointer;
+    }
+    .autocomplete-items div:hover {
+      background-color: #d4d4d4;
+    }
   </style>
 </head>
 
@@ -46,7 +63,7 @@
 
 <!-- BUSCADOR POR NOMBRE/ID -->
 <label>Buscar Sitio por Nombre o ID</label>
-<input type="text" id="buscarSitio" placeholder="Escribe nombre o ID">
+<input type="text" id="buscarSitio" placeholder="Escribe nombre o ID" oninput="filtrarSitios()" autocomplete="off">
 
 <!-- COMBOS -->
 <label>Sitio</label>
@@ -57,6 +74,9 @@
 
 <label>Técnico Principal</label>
 <select id="tecnicoPrincipal"></select>
+
+<label>Técnicos Adicionales (Seleccione múltiples)</label>
+<select id="tecnicosAdicionales" multiple></select>
 
 <label>Vehículo</label>
 <select id="vehiculo"></select>
@@ -109,15 +129,13 @@ function cargarCombos() {
   const cmbActividad = document.getElementById("actividad");
   const cmbTecnico = document.getElementById("tecnicoPrincipal");
   const cmbVehiculo = document.getElementById("vehiculo");
+  const cmbTecnicosAdicionales = document.getElementById("tecnicosAdicionales");
 
   // Asegúrate de que los sitios no estén vacíos
   if (sitios.length > 0) {
     sitios.forEach((s) => {
-      // Asegúrate de que las claves estén bien definidas en el objeto `sitio`
       cmbSitio.add(new Option(`${s.SiteID} - ${s.Nombre}`, s.SiteID));
     });
-  } else {
-    console.log("No se encontraron sitios.");
   }
 
   // Cargar las actividades
@@ -125,9 +143,12 @@ function cargarCombos() {
     cmbActividad.add(new Option(a.ACTIVIDAD, a.ACTIVIDAD)); // Usamos la propiedad ACTIVIDAD
   });
 
-  // Verificar y cargar técnicos
+  // Verificar y cargar técnicos (para Técnico Principal y Técnicos Adicionales)
   tecnicos.forEach((t, i) => {
-    cmbTecnico.add(new Option(t.TECNICO, i));  // Se usa la propiedad TECNICO en lugar de Nombre
+    // Técnico Principal
+    cmbTecnico.add(new Option(t.TECNICO, i));  
+    // Técnicos Adicionales
+    cmbTecnicosAdicionales.add(new Option(t.TECNICO, i));  
   });
 
   // Verificar y cargar vehículos
@@ -137,29 +158,37 @@ function cargarCombos() {
 }
 
 /* ================= FILTRAR SITIOS POR NOMBRE/ID ================= */
-document.getElementById("buscarSitio").addEventListener("input", function() {
-  const texto = this.value.toLowerCase(); // Obtener texto en minúsculas para búsqueda
-  const cmbSitio = document.getElementById("cmbSitio");
+function filtrarSitios() {
+  const input = document.getElementById("buscarSitio");
+  const filtro = input.value.toLowerCase();
+  const autocompleteContainer = document.createElement("div");
+  autocompleteContainer.setAttribute("class", "autocomplete-items");
+  input.parentNode.appendChild(autocompleteContainer);
 
-  // Limpiar combo
-  cmbSitio.innerHTML = "";
+  // Limpiar contenido anterior de autocompletado
+  autocompleteContainer.innerHTML = "";
 
   // Filtrar sitios por ID o Nombre
   const filtrados = sitios.filter(s =>
-    s.SiteID.toLowerCase().includes(texto) ||  // Filtra por ID
-    s.Nombre.toLowerCase().includes(texto)     // Filtra por Nombre
+    s.SiteID.toLowerCase().includes(filtro) ||  // Filtra por ID
+    s.Nombre.toLowerCase().includes(filtro)     // Filtra por Nombre
   );
 
-  // Verificar si se encontraron sitios
-  if (filtrados.length === 0) {
-    cmbSitio.add(new Option("No se encontraron resultados", ""));
-  } else {
-    // Llenar combo con los sitios filtrados
-    filtrados.forEach((s) => {
-      cmbSitio.add(new Option(`${s.SiteID} - ${s.Nombre}`, s.SiteID));
+  // Mostrar resultados de autocompletado
+  filtrados.forEach(s => {
+    const item = document.createElement("div");
+    item.innerHTML = `${s.SiteID} - ${s.Nombre}`;
+    item.addEventListener("click", function() {
+      // Rellenar el input con la selección
+      input.value = `${s.SiteID} - ${s.Nombre}`;
+      // Eliminar lista de autocompletado
+      autocompleteContainer.innerHTML = "";
+      // Rellenar el combo de sitios
+      document.getElementById("cmbSitio").value = s.SiteID;
     });
-  }
-});
+    autocompleteContainer.appendChild(item);
+  });
+}
 
 /* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
@@ -172,7 +201,17 @@ function generarMensaje() {
   }
 
   const actividadSel = document.getElementById("actividad").value;
-  const tecnico = tecnicos[document.getElementById("tecnicoPrincipal").value];
+  const tecnicoPrincipalIdx = document.getElementById("tecnicoPrincipal").value;
+  const tecnicoPrincipal = tecnicos[tecnicoPrincipalIdx];
+
+  // Obtener los técnicos adicionales seleccionados
+  const tecnicosAdicionales = [];
+  const tecnicosSeleccionados = Array.from(document.getElementById("tecnicosAdicionales").selectedOptions);
+  tecnicosSeleccionados.forEach(option => {
+    const tecnicoAdicional = tecnicos[option.value];
+    tecnicosAdicionales.push(tecnicoAdicional.TECNICO);
+  });
+
   const veh = vehiculos[document.getElementById("vehiculo").value];
 
   const mensaje =
@@ -186,16 +225,18 @@ ${sitioSeleccionado.Direccion}
 ▬▬▬▬▬▬▬▬▬▬
 ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
-TECNICO/DUI
-${tecnico.TECNICO}\t${tecnico.DUI}
+TECNICO PRINCIPAL/DUI
+${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI}
+TELEFONO: ${tecnicoPrincipal.TELEFONO}
+CORREO: ${tecnicoPrincipal.CORREO}
+▬▬▬▬▬▬▬▬▬▬
+TÉCNICOS ADICIONALES: ${tecnicosAdicionales.join(", ")}
 ▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
 Modelo: ${veh.Modelo}
 Color: ${veh.Color}
-▬▬▬▬▬▬▬▬▬▬
-TELEFONO: ${tecnico.TELEFONO}
-CORREO: ${tecnico.CORREO}; tecnicossv@celectcac.com`;
+▬▬▬▬▬▬▬▬▬▬`;
 
   document.getElementById("resultado").value = mensaje;
 
@@ -205,13 +246,10 @@ CORREO: ${tecnico.CORREO}; tecnicossv@celectcac.com`;
     .catch(() => alert("No se pudo copiar"));
 }
 
-/* ================= SERVICE WORKER ================= */
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
-
 window.onload = cargarDatos;
 </script>
 
 </body>
 </html>
+
+
