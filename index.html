@@ -151,9 +151,13 @@ document.getElementById("buscarSitio").addEventListener("input", function() {
 /* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
   const cmbSitioSel = document.getElementById("cmbSitio");
-  if(cmbSitioSel.value === "") { alert("Selecciona un sitio"); return; }
+  const sitioSeleccionado = sitios.find(s => s.SiteID === cmbSitioSel.value); // Encuentra el sitio por SiteID
+  
+  if (!sitioSeleccionado) {
+    alert("Selecciona un sitio válido");
+    return;
+  }
 
-  const sitio = sitios[cmbSitioSel.value];
   const actividadSel = document.getElementById("actividad").value;
   const tecnico = tecnicos[document.getElementById("tecnicoPrincipal").value];
   const veh = vehiculos[document.getElementById("vehiculo").value];
@@ -161,22 +165,26 @@ function generarMensaje() {
   const mensaje =
 `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
-▬▬▬▬▬▬▬▬▬▬
-ID:${sitio.ID}
-NOMBRE: ${sitio.Nombre}
-PROPIETARIO: ${sitio.Propietario}
-${sitio.Direccion}
-▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+ID:${sitioSeleccionado.SiteID}
+NOMBRE: ${sitioSeleccionado.Nombre}
+PROPIETARIO: ${sitioSeleccionado.Propietario}
+${sitioSeleccionado.Direccion}
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 ACTIVIDAD: ${actividadSel}
-▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 TECNICO/DUI
 ${tecnico.Nombre}\t${tecnico.DUI}
-▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
 Modelo: ${veh.Modelo}
 Color: ${veh.Color}
-▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+Empresa: CELECT SA DE CV 
+Supervisor: José Rivas
+Teléfono supervisor:6161 4465
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 TELEFONO: ${tecnico.Telefono}
 CORREO: ${tecnico.Correo}; tecnicossv@celectcac.com`;
 
@@ -188,6 +196,7 @@ CORREO: ${tecnico.Correo}; tecnicossv@celectcac.com`;
     .catch(() => alert("No se pudo copiar"));
 }
 
+
 /* ================= SERVICE WORKER ================= */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
@@ -198,6 +207,7 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
 
 
 
