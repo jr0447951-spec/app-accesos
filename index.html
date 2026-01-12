@@ -44,9 +44,30 @@
 
 <h2>📋 Generador de Accesos</h2>
 
-<!-- BUSCADOR POR NOMBRE/ID -->
-<label>Buscar Sitio por Nombre o ID</label>
-<input type="text" id="buscarSitio" placeholder="Escribe nombre o ID">
+/* ================= FILTRAR SITIOS POR NOMBRE/ID ================= */
+document.getElementById("buscarSitio").addEventListener("input", function() {
+  const texto = this.value.toLowerCase(); // Obtener texto en minúsculas para búsqueda
+  const cmbSitio = document.getElementById("cmbSitio");
+
+  // Limpiar combo de sitios
+  cmbSitio.innerHTML = "";
+
+  // Filtrar sitios por ID o Nombre
+  const filtrados = sitios.filter(s =>
+    s.ID.toLowerCase().includes(texto) ||  // Compara con el ID
+    s.Nombre.toLowerCase().includes(texto)  // Compara con el Nombre
+  );
+
+  // Verificar si se encontraron sitios
+  if (filtrados.length === 0) {
+    cmbSitio.add(new Option("No se encontraron resultados", ""));
+  } else {
+    // Llenar combo con los sitios filtrados
+    filtrados.forEach((s) => {
+      cmbSitio.add(new Option(`${s.ID} - ${s.Nombre}`, sitios.indexOf(s)));
+    });
+  }
+});
 
 <!-- COMBOS -->
 <label>Sitio</label>
@@ -191,3 +212,4 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
