@@ -37,22 +37,10 @@
       margin-top: 15px;
       font-size: 16px;
     }
-    .autocomplete-items {
-      border: 1px solid #d4d4d4;
-      max-height: 200px;
-      overflow-y: auto;
-      position: absolute;
-      z-index: 99;
-      width: 100%;
-      background-color: white;
-      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-    }
-    .autocomplete-items div {
-      padding: 10px;
-      cursor: pointer;
-    }
-    .autocomplete-items div:hover {
-      background-color: #d4d4d4;
+    .checkbox-container {
+      display: flex;
+      flex-direction: column;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -73,7 +61,8 @@
 <select id="tecnicoPrincipal"></select>
 
 <label>Técnicos Adicionales</label>
-<div class="checkbox-container" id="checkboxTecnicos"></div>
+<!-- Cambié los checkboxes por un select múltiple -->
+<select id="tecnicosAdicionales" multiple></select>
 
 <label>Vehículo</label>
 <select id="vehiculo"></select>
@@ -119,6 +108,7 @@ function cargarCombos() {
   const cmbActividad = document.getElementById("actividad");
   const cmbTecnico = document.getElementById("tecnicoPrincipal");
   const cmbVehiculo = document.getElementById("vehiculo");
+  const cmbTecnicosAdicionales = document.getElementById("tecnicosAdicionales");
 
   // Cargar las actividades
   actividades.forEach(a => {
@@ -130,19 +120,11 @@ function cargarCombos() {
     // Técnico Principal
     cmbTecnico.add(new Option(t.TECNICO, i));
 
-    // Técnicos Adicionales: Crear checkbox para cada técnico
-    const checkboxContainer = document.getElementById("checkboxTecnicos");
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.id = `tecnico-${i}`;
-    checkbox.value = i;
-    const label = document.createElement("label");
-    label.setAttribute("for", `tecnico-${i}`);
-    label.innerText = t.TECNICO;
-
-    checkboxContainer.appendChild(checkbox);
-    checkboxContainer.appendChild(label);
-    checkboxContainer.appendChild(document.createElement("br"));
+    // Técnicos Adicionales: Crear opción para cada técnico
+    const option = document.createElement("option");
+    option.value = i;
+    option.text = t.TECNICO;
+    cmbTecnicosAdicionales.appendChild(option);
   });
 
   // Verificar y cargar vehículos
@@ -197,12 +179,13 @@ function generarMensaje() {
   // Obtener los técnicos adicionales seleccionados
   const tecnicosAdicionales = [];
   const duiAdicionales = []; // Para almacenar los DUI de los técnicos adicionales
-  const checkboxes = document.querySelectorAll("#checkboxTecnicos input:checked");
-  checkboxes.forEach(checkbox => {
-    const tecnicoAdicional = tecnicos[checkbox.value];
+  const selectTecnicos = document.getElementById("tecnicosAdicionales");
+
+  for (let i = 0; i < selectTecnicos.selectedOptions.length; i++) {
+    const tecnicoAdicional = tecnicos[selectTecnicos.selectedOptions[i].value];
     tecnicosAdicionales.push(tecnicoAdicional.TECNICO);
     duiAdicionales.push(tecnicoAdicional.DUI); // Agregar DUI de técnicos adicionales
-  });
+  }
 
   const veh = vehiculos[document.getElementById("vehiculo").value];
 
@@ -246,5 +229,4 @@ window.onload = cargarDatos;
 
 </body>
 </html>
-
 
