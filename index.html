@@ -37,10 +37,22 @@
       margin-top: 15px;
       font-size: 16px;
     }
-    .checkbox-container {
-      display: flex;
-      flex-direction: column;
-      margin-top: 10px;
+    .autocomplete-items {
+      border: 1px solid #d4d4d4;
+      max-height: 200px;
+      overflow-y: auto;
+      position: absolute;
+      z-index: 99;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .autocomplete-items div {
+      padding: 10px;
+      cursor: pointer;
+    }
+    .autocomplete-items div:hover {
+      background-color: #d4d4d4;
     }
   </style>
 </head>
@@ -49,9 +61,10 @@
 
 <h2>📋 Generador de Accesos</h2>
 
-<!-- COMBOS -->
-<label>Sitio</label>
-<select id="cmbSitio"></select>
+<!-- AUTOCOMPLETADO PARA SITIOS -->
+<label>Seleccionar Sitio</label>
+<input type="text" id="buscarSitio" placeholder="Escribe nombre del sitio" oninput="filtrarSitios()" autocomplete="off">
+<div id="autocompleteContainer" class="autocomplete-items"></div>
 
 <label>Actividad</label>
 <select id="actividad"></select>
@@ -83,14 +96,10 @@ async function leerCSV(archivo) {
   const lineas = texto.split("\n").map(l => l.trim()).filter(l => l); // Divide por líneas
   const encabezados = lineas[0].split(";"); // Usamos punto y coma como delimitador
 
-  console.log("Encabezados CSV:", encabezados); // Verificar los encabezados del archivo CSV
-
   return lineas.slice(1).map(linea => {
     const valores = linea.split(";");
     let obj = {};
     encabezados.forEach((h, i) => obj[h] = valores[i]);
-
-    console.log("Datos del sitio:", obj); // Verificar cada objeto de sitio antes de agregarlo
     return obj;
   });
 }
@@ -102,33 +111,14 @@ async function cargarDatos() {
   vehiculos = await leerCSV("vehiculos.csv");
   actividades = await leerCSV("actividad.csv");
 
-  // Mostrar en consola los datos cargados para comprobar
-  console.log("Sitios cargados:", sitios); // Verificar que los sitios se carguen correctamente
-  console.log("Técnicos cargados:", tecnicos);
-  console.log("Vehículos cargados:", vehiculos);
-  console.log("Actividades cargadas:", actividades);
-
   cargarCombos(); // Llamamos a cargarCombos después de cargar los datos
 }
 
 /* ================= LLENAR COMBOS ================= */
 function cargarCombos() {
-  const cmbSitio = document.getElementById("cmbSitio");
   const cmbActividad = document.getElementById("actividad");
   const cmbTecnico = document.getElementById("tecnicoPrincipal");
   const cmbVehiculo = document.getElementById("vehiculo");
-
-  // Asegúrate de que los sitios no estén vacíos
-  if (sitios.length > 0) {
-    sitios.forEach((s) => {
-      // Convertir SiteID a string y mostrarlo correctamente en el combo
-      const siteID = String(s.SiteID);  // Convertir a string para asegurar formato correcto
-      console.log(`Agregando sitio al combo: ${siteID} - ${s['Nombre de Sitio']}`); // Verificar qué datos estamos agregando
-      cmbSitio.add(new Option(`${siteID} - ${s['Nombre de Sitio']}`, siteID));
-    });
-  } else {
-    console.log("No se han cargado sitios correctamente."); // Si no se cargan sitios, avisa en la consola
-  }
 
   // Cargar las actividades
   actividades.forEach(a => {
@@ -138,7 +128,7 @@ function cargarCombos() {
   // Verificar y cargar técnicos (para Técnico Principal y Técnicos Adicionales)
   tecnicos.forEach((t, i) => {
     // Técnico Principal
-    cmbTecnico.add(new Option(t.TECNICO, i));  
+    cmbTecnico.add(new Option(t.TECNICO, i));
 
     // Técnicos Adicionales: Crear checkbox para cada técnico
     const checkboxContainer = document.getElementById("checkboxTecnicos");
@@ -161,10 +151,39 @@ function cargarCombos() {
   });
 }
 
+/* ================= FILTRAR SITIOS POR NOMBRE ================= */
+function filtrarSitios() {
+  const input = document.getElementById("buscarSitio");
+  const filtro = input.value.toLowerCase();
+  const autocompleteContainer = document.getElementById("autocompleteContainer");
+
+  // Limpiar contenido anterior de autocompletado
+  autocompleteContainer.innerHTML = "";
+
+  // Filtrar sitios por Nombre
+  const filtrados = sitios.filter(s =>
+    s['Nombre de Sitio'].toLowerCase().includes(filtro) // Filtra por Nombre de Sitio
+  );
+
+  // Mostrar resultados de autocompletado
+  filtrados.forEach(s => {
+    const item = document.createElement("div");
+    item.innerHTML = `${s.SiteID} - ${s['Nombre de Sitio']}`;
+    item.addEventListener("click", function() {
+      // Rellenar el input con la selección
+      input.value = `${s.SiteID} - ${s['Nombre de Sitio']}`;
+      // Eliminar lista de autocompletado
+      autocompleteContainer.innerHTML = "";
+      // Aquí puedes almacenar el SiteID de forma interna para generar el mensaje
+      selectedSiteID = s.SiteID; // Guarda el ID seleccionado para usarlo más tarde
+    });
+    autocompleteContainer.appendChild(item);
+  });
+}
+
 /* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
-  const cmbSitioSel = document.getElementById("cmbSitio");
-  const sitioSeleccionado = sitios.find(s => String(s.SiteID) === cmbSitioSel.value); // Buscamos el sitio por `SiteID`
+  const sitioSeleccionado = sitios.find(s => s.SiteID === selectedSiteID); // Busca el sitio con el ID seleccionado
 
   if (!sitioSeleccionado) {
     alert("Selecciona un sitio válido");
@@ -217,11 +236,14 @@ Color: ${veh.Color}
     .catch(() => alert("No se pudo copiar"));
 }
 
+let selectedSiteID = ""; // Variable para almacenar el SiteID seleccionado
+
 window.onload = cargarDatos;
 </script>
 
 </body>
 </html>
+
 
 
 
