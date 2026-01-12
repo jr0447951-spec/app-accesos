@@ -44,30 +44,9 @@
 
 <h2>📋 Generador de Accesos</h2>
 
-/* ================= FILTRAR SITIOS POR NOMBRE/ID ================= */
-document.getElementById("buscarSitio").addEventListener("input", function() {
-  const texto = this.value.toLowerCase(); // Obtener texto en minúsculas para búsqueda
-  const cmbSitio = document.getElementById("cmbSitio");
-
-  // Limpiar combo de sitios
-  cmbSitio.innerHTML = "";
-
-  // Filtrar sitios por ID o Nombre
-  const filtrados = sitios.filter(s =>
-    s.ID.toLowerCase().includes(texto) ||  // Compara con el ID
-    s.Nombre.toLowerCase().includes(texto)  // Compara con el Nombre
-  );
-
-  // Verificar si se encontraron sitios
-  if (filtrados.length === 0) {
-    cmbSitio.add(new Option("No se encontraron resultados", ""));
-  } else {
-    // Llenar combo con los sitios filtrados
-    filtrados.forEach((s) => {
-      cmbSitio.add(new Option(`${s.ID} - ${s.Nombre}`, sitios.indexOf(s)));
-    });
-  }
-});
+<!-- BUSCADOR POR NOMBRE/ID -->
+<label>Buscar Sitio por Nombre o ID</label>
+<input type="text" id="buscarSitio" placeholder="Escribe nombre o ID">
 
 <!-- COMBOS -->
 <label>Sitio</label>
@@ -144,7 +123,7 @@ function cargarCombos() {
 
 /* ================= FILTRAR SITIOS POR NOMBRE/ID ================= */
 document.getElementById("buscarSitio").addEventListener("input", function() {
-  const texto = this.value.toLowerCase();
+  const texto = this.value.toLowerCase(); // Obtener texto en minúsculas para búsqueda
   const cmbSitio = document.getElementById("cmbSitio");
 
   // Limpiar combo
@@ -152,14 +131,19 @@ document.getElementById("buscarSitio").addEventListener("input", function() {
 
   // Filtrar sitios por ID o Nombre
   const filtrados = sitios.filter(s =>
-    s.ID.toLowerCase().includes(texto) ||
-    s.Nombre.toLowerCase().includes(texto)
+    s.ID.toLowerCase().includes(texto) ||  // Compara con el ID
+    s.Nombre.toLowerCase().includes(texto)  // Compara con el Nombre
   );
 
-  // Llenar combo con resultados
-  filtrados.forEach((s) => {
-    cmbSitio.add(new Option(`${s.ID} - ${s.Nombre}`, sitios.indexOf(s)));
-  });
+  // Verificar si se encontraron sitios
+  if (filtrados.length === 0) {
+    cmbSitio.add(new Option("No se encontraron resultados", ""));
+  } else {
+    // Llenar combo con los sitios filtrados
+    filtrados.forEach((s) => {
+      cmbSitio.add(new Option(`${s.ID} - ${s.Nombre}`, sitios.indexOf(s)));
+    });
+  }
 });
 
 /* ================= GENERAR MENSAJE ================= */
