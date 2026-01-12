@@ -21,7 +21,7 @@
       margin-top: 10px;
       display: block;
     }
-    select, button, textarea {
+    input, select, button, textarea {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -44,6 +44,11 @@
 
 <h2>📋 Generador de Accesos</h2>
 
+<!-- BUSCADOR POR NOMBRE/ID -->
+<label>Buscar Sitio por Nombre o ID</label>
+<input type="text" id="buscarSitio" placeholder="Escribe nombre o ID">
+
+<!-- COMBOS -->
 <label>Sitio</label>
 <select id="cmbSitio"></select>
 
@@ -116,12 +121,35 @@ function cargarCombos() {
   });
 }
 
+/* ================= FILTRAR SITIOS POR NOMBRE/ID ================= */
+document.getElementById("buscarSitio").addEventListener("input", function() {
+  const texto = this.value.toLowerCase();
+  const cmbSitio = document.getElementById("cmbSitio");
+
+  // Limpiar combo
+  cmbSitio.innerHTML = "";
+
+  // Filtrar sitios por ID o Nombre
+  const filtrados = sitios.filter(s =>
+    s.ID.toLowerCase().includes(texto) ||
+    s.Nombre.toLowerCase().includes(texto)
+  );
+
+  // Llenar combo con resultados
+  filtrados.forEach((s) => {
+    cmbSitio.add(new Option(`${s.ID} - ${s.Nombre}`, sitios.indexOf(s)));
+  });
+});
+
 /* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
-  const sitio = sitios[cmbSitio.value];
-  const actividadSel = actividad.value;
-  const tecnico = tecnicos[tecnicoPrincipal.value];
-  const veh = vehiculos[vehiculo.value];
+  const cmbSitioSel = document.getElementById("cmbSitio");
+  if(cmbSitioSel.value === "") { alert("Selecciona un sitio"); return; }
+
+  const sitio = sitios[cmbSitioSel.value];
+  const actividadSel = document.getElementById("actividad").value;
+  const tecnico = tecnicos[document.getElementById("tecnicoPrincipal").value];
+  const veh = vehiculos[document.getElementById("vehiculo").value];
 
   const mensaje =
 `BUEN DIA
@@ -147,6 +175,7 @@ CORREO: ${tecnico.Correo}; tecnicossv@celectcac.com`;
 
   document.getElementById("resultado").value = mensaje;
 
+  // Copiar al portapapeles
   navigator.clipboard.writeText(mensaje)
     .then(() => alert("Mensaje copiado al portapapeles"))
     .catch(() => alert("No se pudo copiar"));
