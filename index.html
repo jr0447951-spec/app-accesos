@@ -37,6 +37,34 @@
       margin-top: 15px;
       font-size: 16px;
     }
+
+    /* Modal Styling */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .modal-header {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
     .checkbox-container {
       display: flex;
       flex-direction: column;
@@ -60,9 +88,18 @@
 <label>Técnico Principal</label>
 <select id="tecnicoPrincipal"></select>
 
+<!-- Botón para abrir el modal de selección de técnicos adicionales -->
 <label>Técnicos Adicionales</label>
-<!-- Cambié los checkboxes por un select múltiple -->
-<select id="tecnicosAdicionales" multiple></select>
+<button type="button" onclick="openModal()">Seleccionar Técnicos Adicionales</button>
+
+<!-- Modal para seleccionar técnicos adicionales -->
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">Seleccionar Técnicos Adicionales</div>
+    <div class="checkbox-container" id="checkboxTecnicosModal"></div>
+    <button type="button" onclick="confirmarSeleccion()">Confirmar Selección</button>
+  </div>
+</div>
 
 <label>Vehículo</label>
 <select id="vehiculo"></select>
@@ -77,6 +114,7 @@ let sitios = [];
 let tecnicos = [];
 let vehiculos = [];
 let actividades = [];
+let seleccionTecnicosAdicionales = [];
 
 /* ================= LEER CSV ================= */
 async function leerCSV(archivo) {
@@ -108,7 +146,6 @@ function cargarCombos() {
   const cmbActividad = document.getElementById("actividad");
   const cmbTecnico = document.getElementById("tecnicoPrincipal");
   const cmbVehiculo = document.getElementById("vehiculo");
-  const cmbTecnicosAdicionales = document.getElementById("tecnicosAdicionales");
 
   // Cargar las actividades
   actividades.forEach(a => {
@@ -120,11 +157,19 @@ function cargarCombos() {
     // Técnico Principal
     cmbTecnico.add(new Option(t.TECNICO, i));
 
-    // Técnicos Adicionales: Crear opción para cada técnico
-    const option = document.createElement("option");
-    option.value = i;
-    option.text = t.TECNICO;
-    cmbTecnicosAdicionales.appendChild(option);
+    // Técnicos Adicionales: Crear checkbox para cada técnico en el modal
+    const checkboxContainer = document.getElementById("checkboxTecnicosModal");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = `tecnico-${i}`;
+    checkbox.value = i;
+    const label = document.createElement("label");
+    label.setAttribute("for", `tecnico-${i}`);
+    label.innerText = t.TECNICO;
+
+    checkboxContainer.appendChild(checkbox);
+    checkboxContainer.appendChild(label);
+    checkboxContainer.appendChild(document.createElement("br"));
   });
 
   // Verificar y cargar vehículos
@@ -163,6 +208,22 @@ function filtrarSitios() {
   });
 }
 
+/* ================= ABRIR MODAL ================= */
+function openModal() {
+  document.getElementById("myModal").style.display = "block";
+}
+
+/* ================= CERRAR MODAL Y CONFIRMAR SELECCIÓN ================= */
+function confirmarSeleccion() {
+  const seleccionados = [];
+  const checkboxes = document.querySelectorAll("#checkboxTecnicosModal input:checked");
+  checkboxes.forEach(checkbox => {
+    seleccionados.push(tecnicos[checkbox.value].TECNO);
+  });
+  seleccionTecnicosAdicionales = seleccionados;
+  document.getElementById("myModal").style.display = "none"; // Cerrar el modal
+}
+
 /* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
   const sitioSeleccionado = sitios.find(s => s.SiteID === selectedSiteID); // Busca el sitio con el ID seleccionado
@@ -175,19 +236,6 @@ function generarMensaje() {
   const actividadSel = document.getElementById("actividad").value;
   const tecnicoPrincipalIdx = document.getElementById("tecnicoPrincipal").value;
   const tecnicoPrincipal = tecnicos[tecnicoPrincipalIdx];
-
-  // Obtener los técnicos adicionales seleccionados
-  const tecnicosAdicionales = [];
-  const duiAdicionales = []; // Para almacenar los DUI de los técnicos adicionales
-  const selectTecnicos = document.getElementById("tecnicosAdicionales");
-
-  for (let i = 0; i < selectTecnicos.selectedOptions.length; i++) {
-    const tecnicoAdicional = tecnicos[selectTecnicos.selectedOptions[i].value];
-    tecnicosAdicionales.push(tecnicoAdicional.TECNICO);
-    duiAdicionales.push(tecnicoAdicional.DUI); // Agregar DUI de técnicos adicionales
-  }
-
-  const veh = vehiculos[document.getElementById("vehiculo").value];
 
   const mensaje =
 `BUEN DIA
@@ -229,4 +277,3 @@ window.onload = cargarDatos;
 
 </body>
 </html>
-
