@@ -111,7 +111,6 @@ function cargarCombos() {
   const cmbVehiculo = document.getElementById("vehiculo");
 
   // Asegúrate de que los sitios no estén vacíos
-  console.log("Cargando sitios en el combo:", sitios);
   if (sitios.length > 0) {
     sitios.forEach((s) => {
       // Asegúrate de que las claves estén bien definidas en el objeto `sitio`
@@ -121,20 +120,17 @@ function cargarCombos() {
     console.log("No se encontraron sitios.");
   }
 
-  // Verificar y cargar actividades
-  console.log("Cargando actividades en el combo:", actividades);
+  // Cargar las actividades
   actividades.forEach(a => {
-    cmbActividad.add(new Option(a.Actividad, a.Actividad));
+    cmbActividad.add(new Option(a.ACTIVIDAD, a.ACTIVIDAD)); // Usamos la propiedad ACTIVIDAD
   });
 
   // Verificar y cargar técnicos
-  console.log("Cargando técnicos en el combo:", tecnicos);
   tecnicos.forEach((t, i) => {
-    cmbTecnico.add(new Option(t.Nombre, i));
+    cmbTecnico.add(new Option(t.TECNICO, i));  // Se usa la propiedad TECNICO en lugar de Nombre
   });
 
   // Verificar y cargar vehículos
-  console.log("Cargando vehículos en el combo:", vehiculos);
   vehiculos.forEach((v, i) => {
     cmbVehiculo.add(new Option(`${v.Placa} - ${v.Marca}`, i));
   });
@@ -191,15 +187,15 @@ ${sitioSeleccionado.Direccion}
 ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO/DUI
-${tecnico.Nombre}\t${tecnico.DUI}
+${tecnico.TECNICO}\t${tecnico.DUI}
 ▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
 Modelo: ${veh.Modelo}
 Color: ${veh.Color}
 ▬▬▬▬▬▬▬▬▬▬
-TELEFONO: ${tecnico.Telefono}
-CORREO: ${tecnico.Correo}; tecnicossv@celectcac.com`;
+TELEFONO: ${tecnico.TELEFONO}
+CORREO: ${tecnico.CORREO}; tecnicossv@celectcac.com`;
 
   document.getElementById("resultado").value = mensaje;
 
