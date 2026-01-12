@@ -37,22 +37,10 @@
       margin-top: 15px;
       font-size: 16px;
     }
-    .autocomplete-items {
-      border: 1px solid #d4d4d4;
-      max-height: 200px;
-      overflow-y: auto;
-      position: absolute;
-      z-index: 99;
-      width: 100%;
-      background-color: white;
-      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
-    }
-    .autocomplete-items div {
-      padding: 10px;
-      cursor: pointer;
-    }
-    .autocomplete-items div:hover {
-      background-color: #d4d4d4;
+    .checkbox-container {
+      display: flex;
+      flex-direction: column;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -60,10 +48,6 @@
 <body>
 
 <h2>📋 Generador de Accesos</h2>
-
-<!-- AUTOCOMPLETADO PARA SITIOS -->
-<label>Seleccionar Sitio</label>
-<input type="text" id="buscarSitio" placeholder="Escribe nombre o ID del sitio" oninput="filtrarSitios()" autocomplete="off">
 
 <!-- COMBOS -->
 <label>Sitio</label>
@@ -75,8 +59,8 @@
 <label>Técnico Principal</label>
 <select id="tecnicoPrincipal"></select>
 
-<label>Técnicos Adicionales (Seleccione múltiples)</label>
-<select id="tecnicosAdicionales" multiple></select>
+<label>Técnicos Adicionales</label>
+<div class="checkbox-container" id="checkboxTecnicos"></div>
 
 <label>Vehículo</label>
 <select id="vehiculo"></select>
@@ -129,7 +113,6 @@ function cargarCombos() {
   const cmbActividad = document.getElementById("actividad");
   const cmbTecnico = document.getElementById("tecnicoPrincipal");
   const cmbVehiculo = document.getElementById("vehiculo");
-  const cmbTecnicosAdicionales = document.getElementById("tecnicosAdicionales");
 
   // Asegúrate de que los sitios no estén vacíos
   if (sitios.length > 0) {
@@ -147,46 +130,25 @@ function cargarCombos() {
   tecnicos.forEach((t, i) => {
     // Técnico Principal
     cmbTecnico.add(new Option(t.TECNICO, i));  
-    // Técnicos Adicionales
-    cmbTecnicosAdicionales.add(new Option(t.TECNICO, i));  
+
+    // Técnicos Adicionales: Crear checkbox para cada técnico
+    const checkboxContainer = document.getElementById("checkboxTecnicos");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.id = `tecnico-${i}`;
+    checkbox.value = i;
+    const label = document.createElement("label");
+    label.setAttribute("for", `tecnico-${i}`);
+    label.innerText = t.TECNICO;
+
+    checkboxContainer.appendChild(checkbox);
+    checkboxContainer.appendChild(label);
+    checkboxContainer.appendChild(document.createElement("br"));
   });
 
   // Verificar y cargar vehículos
   vehiculos.forEach((v, i) => {
     cmbVehiculo.add(new Option(`${v.Placa} - ${v.Marca}`, i));
-  });
-}
-
-/* ================= FILTRAR SITIOS POR NOMBRE/ID ================= */
-function filtrarSitios() {
-  const input = document.getElementById("buscarSitio");
-  const filtro = input.value.toLowerCase();
-  const autocompleteContainer = document.createElement("div");
-  autocompleteContainer.setAttribute("class", "autocomplete-items");
-  input.parentNode.appendChild(autocompleteContainer);
-
-  // Limpiar contenido anterior de autocompletado
-  autocompleteContainer.innerHTML = "";
-
-  // Filtrar sitios por ID o Nombre
-  const filtrados = sitios.filter(s =>
-    s.SiteID.toLowerCase().includes(filtro) ||  // Filtra por ID
-    s.Nombre.toLowerCase().includes(filtro)     // Filtra por Nombre
-  );
-
-  // Mostrar resultados de autocompletado
-  filtrados.forEach(s => {
-    const item = document.createElement("div");
-    item.innerHTML = `${s.SiteID} - ${s.Nombre}`;
-    item.addEventListener("click", function() {
-      // Rellenar el input con la selección
-      input.value = `${s.SiteID} - ${s.Nombre}`;
-      // Eliminar lista de autocompletado
-      autocompleteContainer.innerHTML = "";
-      // Rellenar el combo de sitios
-      document.getElementById("cmbSitio").value = s.SiteID;
-    });
-    autocompleteContainer.appendChild(item);
   });
 }
 
@@ -206,9 +168,9 @@ function generarMensaje() {
 
   // Obtener los técnicos adicionales seleccionados
   const tecnicosAdicionales = [];
-  const tecnicosSeleccionados = Array.from(document.getElementById("tecnicosAdicionales").selectedOptions);
-  tecnicosSeleccionados.forEach(option => {
-    const tecnicoAdicional = tecnicos[option.value];
+  const checkboxes = document.querySelectorAll("#checkboxTecnicos input:checked");
+  checkboxes.forEach(checkbox => {
+    const tecnicoAdicional = tecnicos[checkbox.value];
     tecnicosAdicionales.push(tecnicoAdicional.TECNICO);
   });
 
@@ -251,4 +213,6 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
+
 
