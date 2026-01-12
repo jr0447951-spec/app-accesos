@@ -83,10 +83,14 @@ async function leerCSV(archivo) {
   const lineas = texto.split("\n").map(l => l.trim()).filter(l => l); // Divide por líneas
   const encabezados = lineas[0].split(";"); // Usamos punto y coma como delimitador
 
+  console.log("Encabezados CSV:", encabezados); // Verificar los encabezados del archivo CSV
+
   return lineas.slice(1).map(linea => {
     const valores = linea.split(";");
     let obj = {};
     encabezados.forEach((h, i) => obj[h] = valores[i]);
+
+    console.log("Datos del sitio:", obj); // Verificar cada objeto de sitio antes de agregarlo
     return obj;
   });
 }
@@ -99,10 +103,10 @@ async function cargarDatos() {
   actividades = await leerCSV("actividad.csv");
 
   // Mostrar en consola los datos cargados para comprobar
-  console.log("Sitios cargados: ", sitios);
-  console.log("Técnicos cargados: ", tecnicos);
-  console.log("Vehículos cargados: ", vehiculos);
-  console.log("Actividades cargadas: ", actividades);
+  console.log("Sitios cargados:", sitios); // Verificar que los sitios se carguen correctamente
+  console.log("Técnicos cargados:", tecnicos);
+  console.log("Vehículos cargados:", vehiculos);
+  console.log("Actividades cargadas:", actividades);
 
   cargarCombos(); // Llamamos a cargarCombos después de cargar los datos
 }
@@ -117,8 +121,11 @@ function cargarCombos() {
   // Asegúrate de que los sitios no estén vacíos
   if (sitios.length > 0) {
     sitios.forEach((s) => {
-      cmbSitio.add(new Option(`${s.SiteID} - ${s.Nombre}`, s.SiteID));
+      console.log(`Agregando sitio al combo: ${s.SiteID} - ${s['Nombre de Sitio']}`); // Verificar qué datos estamos agregando
+      cmbSitio.add(new Option(`${s.SiteID} - ${s['Nombre de Sitio']}`, s.SiteID));
     });
+  } else {
+    console.log("No se han cargado sitios correctamente."); // Si no se cargan sitios, avisa en la consola
   }
 
   // Cargar las actividades
@@ -181,9 +188,9 @@ function generarMensaje() {
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
 ID:${sitioSeleccionado.SiteID}
-NOMBRE: ${sitioSeleccionado.Nombre}
-PROPIETARIO: ${sitioSeleccionado.Propietario}
-${sitioSeleccionado.Direccion}
+NOMBRE: ${sitioSeleccionado['Nombre de Sitio']}
+PROPIETARIO: ${sitioSeleccionado.Torrero}
+${sitioSeleccionado['Nombre Torrero']}
 ▬▬▬▬▬▬▬▬▬▬
 ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
@@ -213,6 +220,8 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
+
 
 
 
