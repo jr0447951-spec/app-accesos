@@ -95,8 +95,11 @@ async function cargarDatos() {
   vehiculos = await leerCSV("vehiculos.csv");
   actividades = await leerCSV("actividad.csv");
 
-  cargarCombos();
+  console.log("Sitios cargados: ", sitios);  // <-- Agrega este log para verificar los sitios
+
+  cargarCombos(); // Llamamos a cargarCombos después de cargar los datos
 }
+
 
 /* ================= LLENAR COMBOS ================= */
 function cargarCombos() {
@@ -105,9 +108,15 @@ function cargarCombos() {
   const cmbTecnico = document.getElementById("tecnicoPrincipal");
   const cmbVehiculo = document.getElementById("vehiculo");
 
-  sitios.forEach((s, i) => {
-    cmbSitio.add(new Option(`${s.ID} - ${s.Nombre}`, i));
-  });
+  // Asegúrate de que los sitios no estén vacíos
+  if (sitios.length > 0) {
+    sitios.forEach((s) => {
+      // Asegúrate de que las claves estén bien definidas en el objeto `sitio`
+      cmbSitio.add(new Option(`${s.SiteID} - ${s.Nombre}`, s.SiteID));
+    });
+  } else {
+    console.log("No se encontraron sitios.");
+  }
 
   actividades.forEach(a => {
     cmbActividad.add(new Option(a.Actividad, a.Actividad));
@@ -151,8 +160,8 @@ document.getElementById("buscarSitio").addEventListener("input", function() {
 /* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
   const cmbSitioSel = document.getElementById("cmbSitio");
-  const sitioSeleccionado = sitios.find(s => s.SiteID === cmbSitioSel.value); // Encuentra el sitio por SiteID
-  
+  const sitioSeleccionado = sitios.find(s => s.SiteID === cmbSitioSel.value); // Buscamos el sitio por `SiteID`
+
   if (!sitioSeleccionado) {
     alert("Selecciona un sitio válido");
     return;
@@ -165,26 +174,22 @@ function generarMensaje() {
   const mensaje =
 `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬
 ID:${sitioSeleccionado.SiteID}
 NOMBRE: ${sitioSeleccionado.Nombre}
 PROPIETARIO: ${sitioSeleccionado.Propietario}
 ${sitioSeleccionado.Direccion}
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬
 ACTIVIDAD: ${actividadSel}
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬
 TECNICO/DUI
 ${tecnico.Nombre}\t${tecnico.DUI}
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
 Modelo: ${veh.Modelo}
 Color: ${veh.Color}
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-Empresa: CELECT SA DE CV 
-Supervisor: José Rivas
-Teléfono supervisor:6161 4465
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+▬▬▬▬▬▬▬▬▬▬
 TELEFONO: ${tecnico.Telefono}
 CORREO: ${tecnico.Correo}; tecnicossv@celectcac.com`;
 
@@ -207,6 +212,7 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
 
 
 
