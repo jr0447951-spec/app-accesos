@@ -1,15 +1,16 @@
-TECNICO;DUI;TELEFONO;CORREO
-Edgardo Jose Soriano Moreno;04926687-1;+503 6175 7281;edgardo.soriano@celectcac.com
-Jose Edilberto Rivas Rivas;05366673-2;+503 61614465;jose.rivas@celectcac.com
-Juan Antonio Mejia Guzman;03871714-4;+503 6176 0229;juan.mejia@celectcac.com
-Daniel antonio melendez;00911429-6;+503 6175 8528;daniel.melendez@celectcac.com
-Raul Antonio Moran;01638499-1;+503 6177 9667;raul.moran@celectcac.com
-Luis Antonio Palacios Gomez;05587930-7;+503 6172 4636;luis.palacios@celectcac.com
-Ronald Alexander Gonzalez Orellana;04937910-3;+503 6176 6775;ronald.orellana@celectcac.com
-Douglas Rony Ventura Portillo;01315412-7;+503 6176 4016;douglas.ventura@celectcac.com
-Valentin adalberto Bolaños Bolaños;04792933-4;+503 7505 1959;valentin.bolanos@celectcac.com
-Jose Adalberto Palma Cruz;05702614-6;+503 6161 4295;jose.palma@celectcac.com
-Miguel Alfredo Ochoa Osorio;00975466-4;+503 6177 6936;miguel.ochoa@celectcac.com
-Victor Manuel Zepeda Molina;03254794-9;+503 6161 4450;victor.zepeda@celectcac.com
+TECNICO;DUI;TELEFONO;CORREO;FECHA DE NACIMIENTO
+Jose Edilberto Rivas Rivas;05366673-2;+503 61614465;jose.rivas@celectcac.com;19/06/96
+Edgardo Jose Soriano Moreno;04926687-1;+503 6175 7281;edgardo.soriano@celectcac.com;22/10/1993
+Juan Antonio Mejia Guzman;03871714-4;+503 6176 0229;juan.mejia@celectcac.com;29/12/1987
+Daniel antonio melendez;00911429-6;+503 6175 8528;daniel.melendez@celectcac.com;03/05/1973
+Raul Antonio Moran;01638499-1;+503 6177 9667;raul.moran@celectcac.com;00/00/1900
+Luis Antonio Palacios Gomez;05587930-7;+503 6172 4636;luis.palacios@celectcac.com;00/00/1900
+Ronald Alexander Gonzalez Orellana;04937910-3;+503 6176 6775;ronald.orellana@celectcac.com;00/00/1900
+Douglas Rony Ventura Portillo;01315412-7;+503 6176 4016;douglas.ventura@celectcac.com;00/00/1900
+Valentin adalberto Bolaños Bolaños;04792933-4;+503 7505 1959;valentin.bolanos@celectcac.com;15/02/1993
+Jose Adalberto Palma Cruz;05702614-6;+503 6161 4295;jose.palma@celectcac.com;00/00/1900
+Miguel Alfredo Ochoa Osorio;00975466-4;+503 6177 6936;miguel.ochoa@celectcac.com;28/12/1983
+Victor Manuel Zepeda Molina;03254794-9;+503 6161 4450;victor.zepeda@celectcac.com;27/08/1985
+
 
 
