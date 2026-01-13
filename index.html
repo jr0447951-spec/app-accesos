@@ -1,234 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Generador de Accesos</title>
-
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0078D4">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 15px;
-      background: #f4f4f4;
-    }
-    h2 {
-      text-align: center;
-    }
-    label {
-      font-weight: bold;
-      margin-top: 10px;
-      display: block;
-    }
-    input, select, button, textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-    }
-    textarea {
-      height: 260px;
-      margin-top: 15px;
-    }
-    button {
-      background: #0078D4;
-      color: white;
-      border: none;
-      margin-top: 15px;
-      font-size: 16px;
-    }
-
-    /* Modal Styling */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-    }
-
-    .modal-content {
-      background-color: #fefefe;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 400px;
-    }
-
-    .modal-header {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .checkbox-container {
-      display: flex;
-      flex-direction: column;
-      margin-top: 10px;
-    }
-  </style>
-</head>
-
-<body>
-
-<h2>📋 Generador de Accesos</h2>
-
-<!-- AUTOCOMPLETADO PARA SITIOS -->
-<label>Seleccionar Sitio</label>
-<input type="text" id="buscarSitio" placeholder="Escribe nombre del sitio" oninput="filtrarSitios()" autocomplete="off">
-<div id="autocompleteContainer" class="autocomplete-items"></div>
-
-<label>Actividad</label>
-<select id="actividad"></select>
-
-<label>Técnico Principal</label>
-<select id="tecnicoPrincipal"></select>
-
-<!-- Botón para abrir el modal de selección de técnicos adicionales -->
-<label>Técnicos Adicionales</label>
-<button type="button" onclick="openModal()">Seleccionar Técnicos Adicionales</button>
-
-<!-- Modal para seleccionar técnicos adicionales -->
-<div id="myModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">Seleccionar Técnicos Adicionales</div>
-    <div class="checkbox-container" id="checkboxTecnicosModal"></div>
-    <button type="button" onclick="confirmarSeleccion()">Confirmar Selección</button>
-  </div>
-</div>
-
-<label>Vehículo</label>
-<select id="vehiculo"></select>
-
-<button onclick="generarMensaje()">Generar y Copiar</button>
-
-<textarea id="resultado" placeholder="Aquí aparecerá el mensaje..."></textarea>
-
-<script>
-/* ================= VARIABLES ================= */
-let sitios = [];
-let tecnicos = [];
-let vehiculos = [];
-let actividades = [];
-let seleccionTecnicosAdicionales = [];
-
-/* ================= LEER CSV ================= */
-async function leerCSV(archivo) {
-  const res = await fetch(archivo);
-  const texto = await res.text();
-  const lineas = texto.split("\n").map(l => l.trim()).filter(l => l); // Divide por líneas
-  const encabezados = lineas[0].split(";"); // Usamos punto y coma como delimitador
-
-  return lineas.slice(1).map(linea => {
-    const valores = linea.split(";");
-    let obj = {};
-    encabezados.forEach((h, i) => obj[h] = valores[i]);
-    return obj;
-  });
-}
-
-/* ================= CARGAR DATOS ================= */
-async function cargarDatos() {
-  sitios = await leerCSV("sitios.csv");
-  tecnicos = await leerCSV("tecnicos.csv");
-  vehiculos = await leerCSV("vehiculos.csv");
-  actividades = await leerCSV("actividad.csv");
-
-  cargarCombos(); // Llamamos a cargarCombos después de cargar los datos
-}
-
-/* ================= LLENAR COMBOS ================= */
-function cargarCombos() {
-  const cmbActividad = document.getElementById("actividad");
-  const cmbTecnico = document.getElementById("tecnicoPrincipal");
-  const cmbVehiculo = document.getElementById("vehiculo");
-
-  // Cargar las actividades
-  actividades.forEach(a => {
-    cmbActividad.add(new Option(a.ACTIVIDAD, a.ACTIVIDAD)); // Usamos la propiedad ACTIVIDAD
-  });
-
-  // Verificar y cargar técnicos (para Técnico Principal y Técnicos Adicionales)
-  tecnicos.forEach((t, i) => {
-    // Técnico Principal
-    cmbTecnico.add(new Option(t.TECNICO, i));
-
-    // Técnicos Adicionales: Crear checkbox para cada técnico en el modal
-    const checkboxContainer = document.getElementById("checkboxTecnicosModal");
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.id = `tecnico-${i}`;
-    checkbox.value = i;
-    const label = document.createElement("label");
-    label.setAttribute("for", `tecnico-${i}`);
-    label.innerText = t.TECNICO;
-
-    checkboxContainer.appendChild(checkbox);
-    checkboxContainer.appendChild(label);
-    checkboxContainer.appendChild(document.createElement("br"));
-  });
-
-  // Verificar y cargar vehículos
-  vehiculos.forEach((v, i) => {
-    cmbVehiculo.add(new Option(`${v.Placa} - ${v.Marca}`, i));
-  });
-}
-
-/* ================= FILTRAR SITIOS POR NOMBRE ================= */
-function filtrarSitios() {
-  const input = document.getElementById("buscarSitio");
-  const filtro = input.value.toLowerCase();
-  const autocompleteContainer = document.getElementById("autocompleteContainer");
-
-  // Limpiar contenido anterior de autocompletado
-  autocompleteContainer.innerHTML = "";
-
-  // Filtrar sitios por Nombre
-  const filtrados = sitios.filter(s =>
-    s['Nombre de Sitio'].toLowerCase().includes(filtro) // Filtra por Nombre de Sitio
-  );
-
-  // Mostrar resultados de autocompletado
-  filtrados.forEach(s => {
-    const item = document.createElement("div");
-    item.innerHTML = `${s.SiteID} - ${s['Nombre de Sitio']}`;
-    item.addEventListener("click", function() {
-      // Rellenar el input con la selección
-      input.value = `${s.SiteID} - ${s['Nombre de Sitio']}`;
-      // Eliminar lista de autocompletado
-      autocompleteContainer.innerHTML = "";
-      // Aquí puedes almacenar el SiteID de forma interna para generar el mensaje
-      selectedSiteID = s.SiteID; // Guarda el ID seleccionado para usarlo más tarde
-    });
-    autocompleteContainer.appendChild(item);
-  });
-}
-
-/* ================= ABRIR MODAL ================= */
-function openModal() {
-  document.getElementById("myModal").style.display = "block";
-}
-
-/* ================= CERRAR MODAL Y CONFIRMAR SELECCIÓN ================= */
-function confirmarSeleccion() {
-  seleccionTecnicosAdicionales = [];
-
-  const checkboxes = document.querySelectorAll("#checkboxTecnicosModal input:checked");
-
-  checkboxes.forEach(cb => {
-    const tecnico = tecnicos[cb.value];
-    seleccionTecnicosAdicionales.push(tecnico);
-  });
-
-  document.getElementById("myModal").style.display = "none";
-}
-
-
-/* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
 
   if (!selectedSiteID) {
@@ -236,19 +5,20 @@ function generarMensaje() {
     return;
   }
 
-  const sitio = sitios.find(s => s.SiteID === selectedSiteID);
-  if (!sitio) {
+  const sitioSeleccionado = sitios.find(s => s.SiteID === selectedSiteID);
+  if (!sitioSeleccionado) {
     alert("Sitio no válido");
     return;
   }
 
-  const actividad = document.getElementById("actividad").value;
+  const actividadSel = document.getElementById("actividad").value;
 
   const idxPrincipal = document.getElementById("tecnicoPrincipal").value;
   const tecnicoPrincipal = tecnicos[idxPrincipal];
 
-  const vehiculo = vehiculos[document.getElementById("vehiculo").value];
+  const veh = vehiculos[document.getElementById("vehiculo").value];
 
+  /* ===== LISTA DE TECNICOS ===== */
   let listaTecnicos = "";
   listaTecnicos += `${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI}\n`;
 
@@ -256,8 +26,7 @@ function generarMensaje() {
     listaTecnicos += `${t.TECNICO}\t${t.DUI}\n`;
   });
 
-  const mensaje = 
-
+  const mensaje =
 `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
@@ -269,8 +38,7 @@ Nombre Torrero ${sitioSeleccionado['Nombre Torrero']}
 ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO PRINCIPAL/DUI
-${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI}
-${tecnicosAdicionales.map((tecnico, idx) => `${tecnico} ${duiAdicionales[idx]}`).join("\n")}
+${listaTecnicos.trim()}
 ▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
@@ -281,7 +49,6 @@ TELEFONO: ${tecnicoPrincipal.TELEFONO}
 CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
 `;
 
-
   document.getElementById("resultado").value = mensaje;
 
   navigator.clipboard.writeText(mensaje)
@@ -289,11 +56,5 @@ CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
     .catch(() => alert("No se pudo copiar"));
 }
 
-let selectedSiteID = ""; // Variable para almacenar el SiteID seleccionado
 
-window.onload = cargarDatos;
-</script>
-
-</body>
-</html>
 
