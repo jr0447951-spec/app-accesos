@@ -3,195 +3,158 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generador de Acceso</title>
+<title>Generador de Accesos</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-  h1 { text-align: center; }
+  body { font-family: Arial, sans-serif; padding: 10px; }
   label { display: block; margin-top: 10px; font-weight: bold; }
-  select, input, button { width: 100%; padding: 10px; margin-top: 5px; font-size: 16px; }
-  .chip { display: inline-block; padding: 10px; margin: 3px; border-radius: 20px; background: #eee; cursor: pointer; }
+  input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+  #listaSitios { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; z-index: 1000; }
+  .chip { display: inline-block; padding: 5px 10px; margin: 3px; background: #eee; border-radius: 25px; cursor: pointer; user-select: none; }
   .chip.selected { background: #4CAF50; color: white; }
-  button { cursor: pointer; }
+  button { margin-top: 15px; padding: 10px; width: 100%; font-size: 16px; }
 </style>
 </head>
 <body>
-<h1>Generador de Acceso</h1>
+
+<h2>Generador de Accesos</h2>
 
 <label for="sitio">Sitio:</label>
-<input type="text" id="sitio" placeholder="Escriba el sitio...">
+<div style="position: relative;">
+  <input type="text" id="sitio" placeholder="Escriba el sitio...">
+  <div id="listaSitios"></div>
+</div>
 
 <label for="actividad">Actividad:</label>
-<select id="actividad"></select>
+<select id="actividad">
+  <option value="">Seleccione una actividad</option>
+</select>
 
 <label for="vehiculo">Vehículo:</label>
-<select id="vehiculo"></select>
+<select id="vehiculo">
+  <option value="">Seleccione un vehículo</option>
+</select>
 
-<label>Técnico Principal:</label>
-<select id="tecnicoPrincipal"></select>
+<label for="tecnicoPrincipal">Técnico Principal:</label>
+<select id="tecnicoPrincipal">
+  <option value="">Seleccione técnico principal</option>
+</select>
 
 <label>Técnicos Adicionales:</label>
 <div id="tecnicosAdicionales"></div>
 
-<button id="generar">Generar y Copiar</button>
+<button id="generar">Generar y Copiar al Portapapeles</button>
 <button id="whatsapp">Enviar por WhatsApp</button>
 
 <script>
-// Función para leer CSV
-async function leerCSV(ruta, separador=';') {
-  const resp = await fetch(ruta);
-  const text = await resp.text();
+let sitios = [], actividades = [], tecnicos = [], vehiculos = [];
+
+// Función para cargar CSV
+async function cargarCSV(url) {
+  const res = await fetch(url);
+  const text = await res.text();
   const lineas = text.trim().split('\n');
-  const encabezados = lineas[0].split(separador).map(h => h.trim());
+  const headers = lineas[0].split(';');
   return lineas.slice(1).map(l => {
-    const valores = l.split(separador).map(v => v.trim());
+    const cols = l.split(';');
     let obj = {};
-    encabezados.forEach((h,i) => obj[h] = valores[i] || '');
+    headers.forEach((h,i) => obj[h.trim()] = cols[i]?.trim());
     return obj;
   });
 }
 
-// Variables globales
-let sitios = [], actividades = [], tecnicos = [], vehiculos = [];
+// Cargar todos los CSV
+async function inicializar() {
+  sitios = await cargarCSV('sitios.csv');
+  actividades = await cargarCSV('actividad.csv');
+  tecnicos = await cargarCSV('tecnicos.csv');
+  vehiculos = await cargarCSV('vehiculos.csv');
 
-// Cargar datos
-async function cargarDatos() {
-  sitios = await leerCSV('sitios.csv');
-  actividades = await leerCSV('actividad.csv', ';');
-  tecnicos = await leerCSV('tecnicos.csv');
-  vehiculos = await leerCSV('vehiculos.csv');
-
-  // Sitios Autocomplete
-  const inputSitio = document.getElementById('sitio');
-  inputSitio.addEventListener('input', () => {
-    const val = inputSitio.value.toLowerCase();
-    const opciones = sitios.filter(s => s['Nombre de Sitio'].toLowerCase().includes(val));
-    // Mostrar coincidencias debajo
-    let lista = document.getElementById('listaSitios');
-    if (!lista) {
-      lista = document.createElement('div');
-      lista.id = 'listaSitios';
-      lista.style.border = '1px solid #ccc';
-      lista.style.background = 'white';
-      lista.style.position = 'absolute';
-      lista.style.width = inputSitio.offsetWidth + 'px';
-      inputSitio.parentNode.appendChild(lista);
-    }
-    lista.innerHTML = '';
-    opciones.forEach(s => {
-      const div = document.createElement('div');
-      div.textContent = `${s['Nombre de Sitio']} (${s.SiteID})`;
-      div.style.padding = '5px';
-      div.style.cursor = 'pointer';
-      div.addEventListener('click', () => {
-        inputSitio.value = s['Nombre de Sitio'];
-        inputSitio.dataset.siteid = s.SiteID;
-        inputSitio.dataset.torrero = s.Torrero;
-        inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
-        lista.innerHTML = '';
-      });
-      lista.appendChild(div);
-    });
-  });
-
-  // Actividades Dropdown
-  const selectActividad = document.getElementById('actividad');
+  // Llenar dropdown de actividades
+  const selAct = document.getElementById('actividad');
   actividades.forEach(a => {
     const opt = document.createElement('option');
     opt.value = a['ACTIVIDAD'];
     opt.textContent = a['ACTIVIDAD'];
-    selectActividad.appendChild(opt);
+    selAct.appendChild(opt);
   });
 
-  // Vehículos Dropdown
-  const selectVehiculo = document.getElementById('vehiculo');
+  // Llenar dropdown de vehículos
+  const selVeh = document.getElementById('vehiculo');
   vehiculos.forEach(v => {
     const opt = document.createElement('option');
     opt.value = v.Placa;
-    opt.textContent = `${v.Placa} | ${v.Marca} | ${v.Modelo} | ${v.Color}`;
-    opt.dataset.marca = v.Marca;
-    opt.dataset.modelo = v.Modelo;
-    opt.dataset.color = v.Color;
-    selectVehiculo.appendChild(opt);
+    opt.textContent = `${v.Placa} - ${v.Marca} ${v.Modelo} (${v.Color})`;
+    selVeh.appendChild(opt);
   });
 
-  // Técnicos Principal
-  const selectTecnico = document.getElementById('tecnicoPrincipal');
-  tecnicos.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.TECNICO;
-    opt.textContent = `${t.TECNICO} (${t.DUI})`;
-    opt.dataset.dui = t.DUI;
-    opt.dataset.telefono = t.TELEFONO;
-    opt.dataset.correo = t.CORREO;
-    opt.dataset.fecha = t['FECHA DE NACIMIENTO'];
-    selectTecnico.appendChild(opt);
-  });
-
-  // Técnicos Adicionales Chips
-  const divTecnicos = document.getElementById('tecnicosAdicionales');
+  // Llenar técnico principal y chips
+  const selTecPrin = document.getElementById('tecnicoPrincipal');
+  const divTecAdd = document.getElementById('tecnicosAdicionales');
   tecnicos.forEach((t,i) => {
+    // Principal
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${t.TECNICO} (${t.DUI})`;
+    selTecPrin.appendChild(opt);
+    // Adicionales
     const chip = document.createElement('div');
     chip.className = 'chip';
-    chip.textContent = t.TECNICO;
+    chip.textContent = `${t.TECNICO} (${t.DUI})`;
     chip.dataset.index = i;
     chip.addEventListener('click', () => {
+      if (parseInt(selTecPrin.value) === i) return; // no seleccionar principal
       chip.classList.toggle('selected');
-      actualizarSeleccionados();
     });
-    divTecnicos.appendChild(chip);
+    divTecAdd.appendChild(chip);
   });
 }
 
-// Para que no se seleccione principal en adicionales
-function actualizarSeleccionados() {
-  const principal = document.getElementById('tecnicoPrincipal').value;
-  document.querySelectorAll('#tecnicosAdicionales .chip').forEach(c => {
-    const t = tecnicos[c.dataset.index].TECNICO;
-    if (t === principal) {
-      c.classList.remove('selected');
-      c.style.display = 'none';
-    } else {
-      c.style.display = 'inline-block';
-    }
+inicializar();
+
+// Autocompletado sitios
+const inputSitio = document.getElementById('sitio');
+const lista = document.getElementById('listaSitios');
+inputSitio.addEventListener('input', () => {
+  const val = inputSitio.value.toLowerCase();
+  lista.innerHTML = '';
+  if (!val) return;
+
+  const coincidencias = sitios.filter(s => s['Nombre de Sitio'].toLowerCase().includes(val));
+  coincidencias.forEach(s => {
+    const div = document.createElement('div');
+    div.textContent = `${s['Nombre de Sitio']} (${s.SiteID})`;
+    div.style.padding = '5px';
+    div.style.cursor = 'pointer';
+    div.addEventListener('click', () => {
+      inputSitio.value = s['Nombre de Sitio'];
+      inputSitio.dataset.siteid = s.SiteID;
+      inputSitio.dataset.torrero = s.Torrero;
+      inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
+      lista.innerHTML = '';
+    });
+    lista.appendChild(div);
   });
-}
+});
+document.addEventListener('click', (e) => {
+  if (!inputSitio.contains(e.target) && !lista.contains(e.target)) lista.innerHTML = '';
+});
 
 // Generar mensaje
 function generarMensaje() {
-  const sitioInput = document.getElementById('sitio');
   const sitio = {
-    SiteID: sitioInput.dataset.siteid || '',
-    Nombre: sitioInput.value || '',
-    Torrero: sitioInput.dataset.torrero || '',
-    NombreTorrero: sitioInput.dataset.nombretorrero || ''
+    SiteID: inputSitio.dataset.siteid || '',
+    Nombre: inputSitio.value || '',
+    Torrero: inputSitio.dataset.torrero || '',
+    NombreTorrero: inputSitio.dataset.nombretorrero || ''
   };
   const actividad = document.getElementById('actividad').value;
-  const vehSelect = document.getElementById('vehiculo').selectedOptions[0];
-  const vehiculo = {
-    Placa: vehSelect.value,
-    Marca: vehSelect.dataset.marca,
-    Modelo: vehSelect.dataset.modelo,
-    Color: vehSelect.dataset.color
-  };
-  const principalSel = document.getElementById('tecnicoPrincipal').selectedOptions[0];
-  const tecnicoPrincipal = {
-    TECNICO: principalSel.value,
-    DUI: principalSel.dataset.dui,
-    TELEFONO: principalSel.dataset.telefono,
-    CORREO: principalSel.dataset.correo,
-    FECHA: principalSel.dataset.fecha
-  };
-  // Adicionales
-  const adicionales = [];
-  const chips = document.querySelectorAll('#tecnicosAdicionales .chip.selected');
-  chips.forEach(c => {
-    const t = tecnicos[c.dataset.index];
-    adicionales.push(`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`);
-  });
+  const vehiculo = vehiculos[document.getElementById('vehiculo').selectedIndex - 1] || {};
+  const tecPrinIndex = parseInt(document.getElementById('tecnicoPrincipal').value);
+  const tecnicoPrincipal = tecnicos[tecPrinIndex] || {};
+  const bloqueTecnicos = [tecnicoPrincipal, ...Array.from(document.querySelectorAll('.chip.selected')).map(c => tecnicos[c.dataset.index])]
+    .map(t => `${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
 
-  const bloqueTecnicos = `${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI} (${tecnicoPrincipal.FECHA})\n${adicionales.join('\n')}`;
-
-  const mensaje = `BUEN DIA
+  return `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
 ID:${sitio.SiteID}
@@ -204,33 +167,30 @@ ACTIVIDAD: ${actividad}
 TECNICO PRINCIPAL/DUI
 ${bloqueTecnicos}
 ▬▬▬▬▬▬▬▬▬▬
-Placa: ${vehiculo.Placa}
-Marca: ${vehiculo.Marca}
-Modelo: ${vehiculo.Modelo}
-Color: ${vehiculo.Color}
+Placa: ${vehiculo.Placa || ''}
+Marca: ${vehiculo.Marca || ''}
+Modelo: ${vehiculo.Modelo || ''}
+Color: ${vehiculo.Color || ''}
 ▬▬▬▬▬▬▬▬▬▬
-TELEFONO: ${tecnicoPrincipal.TELEFONO}
-CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
-`;
-  return mensaje;
+TELEFONO: ${tecnicoPrincipal.TELEFONO || ''}
+CORREO: ${tecnicoPrincipal.CORREO || ''} tecnicossv@celectcac.com`;
 }
 
 // Botones
 document.getElementById('generar').addEventListener('click', () => {
   const msg = generarMensaje();
-  navigator.clipboard.writeText(msg).then(() => alert('Mensaje copiado al portapapeles'));
+  navigator.clipboard.writeText(msg).then(() => alert('Copiado al portapapeles'));
 });
 
 document.getElementById('whatsapp').addEventListener('click', () => {
   const msg = generarMensaje();
-  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
+  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
 });
-
-// Inicializar
-cargarDatos();
 </script>
+
 </body>
 </html>
+
 
 
