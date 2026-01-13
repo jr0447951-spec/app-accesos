@@ -1,60 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador de Accesos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 15px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input, select, button, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+    }
+
+    textarea {
+      height: 300px;
+      margin-top: 15px;
+    }
+
+    button {
+      background: #0078D4;
+      color: white;
+      border: none;
+      font-size: 16px;
+      margin-top: 15px;
+    }
+
+    /* Autocomplete */
+    .autocomplete-items div {
+      background: white;
+      border-bottom: 1px solid #ddd;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .autocomplete-items div:hover {
+      background: #e9e9e9;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background: white;
+      margin: 10% auto;
+      padding: 15px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 70%;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>📋 Generador de Accesos</h2>
+
+<!-- SITIO -->
+<label>Sitio</label>
+<input type="text" id="buscarSitio" placeholder="Escriba el nombre del sitio" oninput="filtrarSitios()" autocomplete="off">
+<div id="autocompleteContainer" class="autocomplete-items"></div>
+
+<!-- ACTIVIDAD -->
+<label>Actividad</label>
+<select id="actividad"></select>
+
+<!-- TECNICO PRINCIPAL -->
+<label>Técnico Principal</label>
+<select id="tecnicoPrincipal" onchange="actualizarTecnicoPrincipal()"></select>
+
+<!-- TECNICOS ADICIONALES -->
+<label>Técnicos Adicionales</label>
+<button type="button" onclick="abrirModal()">Seleccionar Técnicos</button>
+
+<!-- MODAL -->
+<div id="modalTecnicos" class="modal">
+  <div class="modal-content">
+    <h3>Seleccionar Técnicos</h3>
+    <div id="listaTecnicos"></div>
+    <button onclick="confirmarSeleccion()">Confirmar</button>
+    <button onclick="cerrarModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- VEHICULO -->
+<label>Vehículo</label>
+<select id="vehiculo"></select>
+
+<button onclick="generarMensaje()">Generar y Copiar</button>
+
+<textarea id="resultado" placeholder="Aquí aparecerá el mensaje..."></textarea>
+
+<script>
+/* ================= VARIABLES ================= */
+let sitios = [];
+let tecnicos = [];
+let vehiculos = [];
+let actividades = [];
+let seleccionTecnicosAdicionales = [];
+let selectedSiteID = "";
+
+/* ================= LEER CSV ================= */
+async function leerCSV(archivo) {
+  const res = await fetch(archivo);
+  const texto = await res.text();
+  const lineas = texto.split("\n").map(l => l.trim()).filter(l => l);
+  const headers = lineas[0].split(";");
+
+  return lineas.slice(1).map(l => {
+    const valores = l.split(";");
+    let obj = {};
+    headers.forEach((h, i) => obj[h] = valores[i]);
+    return obj;
+  });
+}
+
+/* ================= CARGAR DATOS ================= */
+async function cargarDatos() {
+  sitios = await leerCSV("sitios.csv");
+  tecnicos = await leerCSV("tecnicos.csv");
+  vehiculos = await leerCSV("vehiculos.csv");
+  actividades = await leerCSV("actividad.csv");
+
+  cargarCombos();
+}
+
+function cargarCombos() {
+
+  actividades.forEach(a => {
+    actividad.add(new Option(a.ACTIVIDAD, a.ACTIVIDAD));
+  });
+
+  tecnicos.forEach((t, i) => {
+    tecnicoPrincipal.add(new Option(t.TECNICO, i));
+
+    const chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.value = i;
+    chk.dataset.index = i;
+
+    const lbl = document.createElement("label");
+    lbl.appendChild(chk);
+    lbl.append(` ${t.TECNICO}`);
+
+    listaTecnicos.appendChild(lbl);
+    listaTecnicos.appendChild(document.createElement("br"));
+  });
+
+  vehiculos.forEach((v, i) => {
+    vehiculo.add(new Option(`${v.Placa} - ${v.Marca}`, i));
+  });
+}
+
+/* ================= AUTOCOMPLETE SITIOS ================= */
+function filtrarSitios() {
+  const filtro = buscarSitio.value.toLowerCase();
+  autocompleteContainer.innerHTML = "";
+
+  if (!filtro) return;
+
+  sitios
+    .filter(s => s["Nombre de Sitio"].toLowerCase().includes(filtro))
+    .forEach(s => {
+      const div = document.createElement("div");
+      div.textContent = `${s.SiteID} - ${s["Nombre de Sitio"]}`;
+      div.onclick = () => {
+        buscarSitio.value = `${s.SiteID} - ${s["Nombre de Sitio"]}`;
+        selectedSiteID = s.SiteID;
+        autocompleteContainer.innerHTML = "";
+      };
+      autocompleteContainer.appendChild(div);
+    });
+}
+
+/* ================= MODAL ================= */
+function abrirModal() {
+  modalTecnicos.style.display = "block";
+}
+
+function cerrarModal() {
+  modalTecnicos.style.display = "none";
+}
+
+/* ================= BLOQUEAR PRINCIPAL ================= */
+function actualizarTecnicoPrincipal() {
+  document.querySelectorAll("#listaTecnicos input").forEach(cb => {
+    cb.checked = false;
+    cb.disabled = false;
+  });
+
+  const idx = tecnicoPrincipal.value;
+  const cb = document.querySelector(`#listaTecnicos input[data-index='${idx}']`);
+  if (cb) cb.disabled = true;
+}
+
+/* ================= CONFIRMAR TECNICOS ================= */
+function confirmarSeleccion() {
+  seleccionTecnicosAdicionales = [];
+  document.querySelectorAll("#listaTecnicos input:checked").forEach(cb => {
+    seleccionTecnicosAdicionales.push(tecnicos[cb.value]);
+  });
+  cerrarModal();
+}
+
+/* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
 
-  if (!selectedSiteID) {
-    alert("Debe seleccionar un sitio");
-    return;
-  }
+  const sitio = sitios.find(s => s.SiteID === selectedSiteID);
+  if (!sitio) return alert("Seleccione un sitio");
 
-  const sitioSeleccionado = sitios.find(s => s.SiteID === selectedSiteID);
-  if (!sitioSeleccionado) {
-    alert("Sitio no válido");
-    return;
-  }
+  const act = actividad.value;
+  const tp = tecnicos[tecnicoPrincipal.value];
+  const veh = vehiculos[vehiculo.value];
 
-  const actividadSel = document.getElementById("actividad").value;
-
-  const idxPrincipal = document.getElementById("tecnicoPrincipal").value;
-  const tecnicoPrincipal = tecnicos[idxPrincipal];
-
-  const veh = vehiculos[document.getElementById("vehiculo").value];
-
-  /* ===== LISTA DE TECNICOS ===== */
-  let listaTecnicos = "";
-  listaTecnicos += `${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI}\n`;
-
+  let lista = `${tp.TECNICO}\t${tp.DUI}\n`;
   seleccionTecnicosAdicionales.forEach(t => {
-    listaTecnicos += `${t.TECNICO}\t${t.DUI}\n`;
+    lista += `${t.TECNICO}\t${t.DUI}\n`;
   });
 
   const mensaje =
 `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
-ID:${sitioSeleccionado.SiteID}
-NOMBRE: ${sitioSeleccionado['Nombre de Sitio']}
-PROPIETARIO: ${sitioSeleccionado.Torrero}
-Nombre Torrero ${sitioSeleccionado['Nombre Torrero']}
+ID:${sitio.SiteID}
+NOMBRE: ${sitio["Nombre de Sitio"]}
+PROPIETARIO: ${sitio.Torrero}
+Nombre Torrero ${sitio["Nombre Torrero"]}
 ▬▬▬▬▬▬▬▬▬▬
-ACTIVIDAD: ${actividadSel}
+ACTIVIDAD: ${act}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO PRINCIPAL/DUI
-${listaTecnicos.trim()}
+${lista.trim()}
 ▬▬▬▬▬▬▬▬▬▬
 Placa: ${veh.Placa}
 Marca: ${veh.Marca}
 Modelo: ${veh.Modelo}
 Color: ${veh.Color}
 ▬▬▬▬▬▬▬▬▬▬
-TELEFONO: ${tecnicoPrincipal.TELEFONO}
-CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
+TELEFONO: ${tp.TELEFONO}
+CORREO: ${tp.CORREO} tecnicossv@celectcac.com
 `;
 
-  document.getElementById("resultado").value = mensaje;
-
-  navigator.clipboard.writeText(mensaje)
-    .then(() => alert("Mensaje copiado al portapapeles"))
-    .catch(() => alert("No se pudo copiar"));
+  resultado.value = mensaje;
+  navigator.clipboard.writeText(mensaje);
+  alert("Mensaje copiado al portapapeles");
 }
+
+window.onload = cargarDatos;
+</script>
+
+</body>
+</html>
 
 
 
