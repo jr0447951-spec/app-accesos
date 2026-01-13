@@ -215,29 +215,49 @@ function openModal() {
 
 /* ================= CERRAR MODAL Y CONFIRMAR SELECCIÓN ================= */
 function confirmarSeleccion() {
-  const seleccionados = [];
+  seleccionTecnicosAdicionales = [];
+
   const checkboxes = document.querySelectorAll("#checkboxTecnicosModal input:checked");
-  checkboxes.forEach(checkbox => {
-    seleccionados.push(tecnicos[checkbox.value].TECNO);
+
+  checkboxes.forEach(cb => {
+    const tecnico = tecnicos[cb.value];
+    seleccionTecnicosAdicionales.push(tecnico);
   });
-  seleccionTecnicosAdicionales = seleccionados;
-  document.getElementById("myModal").style.display = "none"; // Cerrar el modal
+
+  document.getElementById("myModal").style.display = "none";
 }
+
 
 /* ================= GENERAR MENSAJE ================= */
 function generarMensaje() {
-  const sitioSeleccionado = sitios.find(s => s.SiteID === selectedSiteID); // Busca el sitio con el ID seleccionado
 
-  if (!sitioSeleccionado) {
-    alert("Selecciona un sitio válido");
+  if (!selectedSiteID) {
+    alert("Debe seleccionar un sitio");
     return;
   }
 
-  const actividadSel = document.getElementById("actividad").value;
-  const tecnicoPrincipalIdx = document.getElementById("tecnicoPrincipal").value;
-  const tecnicoPrincipal = tecnicos[tecnicoPrincipalIdx];
+  const sitio = sitios.find(s => s.SiteID === selectedSiteID);
+  if (!sitio) {
+    alert("Sitio no válido");
+    return;
+  }
 
-  const mensaje =
+  const actividad = document.getElementById("actividad").value;
+
+  const idxPrincipal = document.getElementById("tecnicoPrincipal").value;
+  const tecnicoPrincipal = tecnicos[idxPrincipal];
+
+  const vehiculo = vehiculos[document.getElementById("vehiculo").value];
+
+  let listaTecnicos = "";
+  listaTecnicos += `${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI}\n`;
+
+  seleccionTecnicosAdicionales.forEach(t => {
+    listaTecnicos += `${t.TECNICO}\t${t.DUI}\n`;
+  });
+
+  const mensaje = 
+
 `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
@@ -264,7 +284,6 @@ CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
 
   document.getElementById("resultado").value = mensaje;
 
-  // Copiar al portapapeles
   navigator.clipboard.writeText(mensaje)
     .then(() => alert("Mensaje copiado al portapapeles"))
     .catch(() => alert("No se pudo copiar"));
@@ -277,3 +296,4 @@ window.onload = cargarDatos;
 
 </body>
 </html>
+
