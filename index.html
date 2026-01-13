@@ -5,97 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generador de Acceso</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  padding: 10px;
-  max-width: 600px;
-  margin: auto;
-}
-
+body { font-family: Arial; padding: 10px; max-width: 600px; margin: auto; }
 h1 { text-align: center; }
-
-input, select, button {
-  width: 100%;
-  padding: 10px;
-  margin: 5px 0 15px 0;
-  box-sizing: border-box;
-  font-size: 16px;
-}
-
-button {
-  cursor: pointer;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  margin-top: 5px;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-textarea {
-  width: 100%;
-  height: 300px;
-  margin-top: 10px;
-  font-size: 16px;
-  padding: 10px;
-}
-
-.chip-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.chip {
-  padding: 12px 16px;
-  border-radius: 25px;
-  background-color: #f0f0f0;
-  cursor: pointer;
-  user-select: none;
-  border: 1px solid #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 16px;
-  transition: all 0.2s ease;
-}
-
-.chip.selected {
-  background-color: #4caf50;
-  color: white;
-  border-color: #4caf50;
-  font-weight: bold;
-}
-
-.chip.selected::after {
-  content: '✔';
-  font-size: 20px;
-  margin-left: 8px;
-}
-
-/* Estilos para autocomplete */
-.autocomplete-suggestions {
-  border: 1px solid #ccc;
-  max-height: 150px;
-  overflow-y: auto;
-  position: absolute;
-  background: white;
-  z-index: 1000;
-  width: 100%;
-}
-
-.autocomplete-suggestion {
-  padding: 8px;
-  cursor: pointer;
-}
-
-.autocomplete-suggestion:hover {
-  background-color: #ddd;
-}
-
+input, select, button { width: 100%; padding: 10px; margin: 5px 0 15px 0; box-sizing: border-box; font-size: 16px; }
+button { cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; margin-top: 5px; }
+button:hover { background-color: #0056b3; }
+textarea { width: 100%; height: 300px; font-size: 16px; padding: 10px; margin-top: 10px; }
+.chip-container { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { padding: 12px 16px; border-radius: 25px; background-color: #f0f0f0; cursor: pointer; user-select: none; border: 1px solid #ccc; display: flex; align-items: center; justify-content: space-between; font-size: 16px; transition: all 0.2s ease; }
+.chip.selected { background-color: #4caf50; color: white; border-color: #4caf50; font-weight: bold; }
+.chip.selected::after { content: '✔'; font-size: 20px; margin-left: 8px; }
+.autocomplete-suggestions { border: 1px solid #ccc; max-height: 150px; overflow-y: auto; position: absolute; background: white; z-index: 1000; width: calc(100% - 22px); }
+.autocomplete-suggestion { padding: 8px; cursor: pointer; }
+.autocomplete-suggestion:hover { background-color: #ddd; }
 </style>
 </head>
 <body>
@@ -103,7 +25,10 @@ textarea {
 <h1>Generador de Acceso</h1>
 
 <label>Selecciona Sitio:</label>
-<input type="text" id="sitioInput" placeholder="Escribe nombre del sitio">
+<div style="position:relative;">
+  <input type="text" id="sitioInput" placeholder="Escribe nombre del sitio">
+  <div id="sitioSuggestions" class="autocomplete-suggestions"></div>
+</div>
 
 <label>Actividad:</label>
 <select id="actividadSelect"></select>
@@ -124,39 +49,32 @@ textarea {
 <textarea id="mensaje" readonly></textarea>
 
 <script>
-// Variables
 let sitios = [], actividades = [], tecnicos = [], vehiculos = [];
 let seleccionAdicional = new Set();
-let duiAdicionales = [];
 let sitioSeleccionado = null;
 
 // Cargar CSV
-async function cargarCSV(nombreArchivo, callback) {
+async function cargarCSV(nombreArchivo) {
   const res = await fetch(nombreArchivo);
   const texto = await res.text();
-  callback(texto);
-}
-
-// Parse CSV simple
-function parseCSV(texto) {
   const lines = texto.trim().split('\n');
   const headers = lines[0].split(';');
   return lines.slice(1).map(line=>{
     const values = line.split(';');
     const obj = {};
-    headers.forEach((h,i)=> obj[h]=values[i]);
+    headers.forEach((h,i)=>obj[h]=values[i]);
     return obj;
   });
 }
 
-// Inicializar datos
+// Inicializar
 async function init() {
-  await cargarCSV('sitios.csv', t=> sitios=parseCSV(t));
-  await cargarCSV('actividad.csv', t=> actividades=parseCSV(t));
-  await cargarCSV('tecnicos.csv', t=> tecnicos=parseCSV(t));
-  await cargarCSV('vehiculos.csv', t=> vehiculos=parseCSV(t));
+  sitios = await cargarCSV('sitios.csv');
+  actividades = await cargarCSV('actividad.csv');
+  tecnicos = await cargarCSV('tecnicos.csv');
+  vehiculos = await cargarCSV('vehiculos.csv');
 
-  // Dropdowns
+  // Actividades dropdown
   const actividadSelect = document.getElementById('actividadSelect');
   actividades.forEach(a=>{
     const opt = document.createElement('option');
@@ -165,6 +83,7 @@ async function init() {
     actividadSelect.appendChild(opt);
   });
 
+  // Vehiculos dropdown
   const vehiculoSelect = document.getElementById('vehiculoSelect');
   vehiculos.forEach(v=>{
     const opt = document.createElement('option');
@@ -173,6 +92,7 @@ async function init() {
     vehiculoSelect.appendChild(opt);
   });
 
+  // Tecnico principal
   const tecnicoPrincipalSelect = document.getElementById('tecnicoPrincipalSelect');
   tecnicos.forEach(t=>{
     const opt = document.createElement('option');
@@ -184,11 +104,9 @@ async function init() {
   renderChips();
 }
 
-// Autocomplete de Sitios
+// Autocomplete Sitios
 const sitioInput = document.getElementById('sitioInput');
-const suggestionBox = document.createElement('div');
-suggestionBox.className = 'autocomplete-suggestions';
-sitioInput.parentNode.appendChild(suggestionBox);
+const suggestionBox = document.getElementById('sitioSuggestions');
 
 sitioInput.addEventListener('input', ()=>{
   const val = sitioInput.value.toLowerCase();
@@ -208,22 +126,18 @@ sitioInput.addEventListener('input', ()=>{
   });
 });
 
-// Chips de técnicos adicionales
+// Chips tecnicos adicionales
 const tecnicosChipsDiv = document.getElementById('tecnicosChipsDiv');
 const tecnicoPrincipalSelect = document.getElementById('tecnicoPrincipalSelect');
 
 function renderChips() {
   tecnicosChipsDiv.innerHTML = '';
   tecnicos.forEach(t=>{
-    if(t.TECNICO === tecnicoPrincipalSelect.value) return; // no mostrar principal
+    if(t.TECNICO === tecnicoPrincipalSelect.value) return;
     const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.textContent = t.TECNICO;
-
-    if(seleccionAdicional.has(t.TECNICO)){
-      chip.classList.add('selected');
-    }
-
+    chip.className='chip';
+    chip.textContent=t.TECNICO;
+    if(seleccionAdicional.has(t.TECNICO)) chip.classList.add('selected');
     chip.addEventListener('click', ()=>{
       if(seleccionAdicional.has(t.TECNICO)){
         seleccionAdicional.delete(t.TECNICO);
@@ -238,23 +152,19 @@ function renderChips() {
 }
 
 tecnicoPrincipalSelect.addEventListener('change', ()=>{
-  // quitar selección de chips si coincide con principal
-  if(seleccionAdicional.has(tecnicoPrincipalSelect.value)){
-    seleccionAdicional.delete(tecnicoPrincipalSelect.value);
-  }
+  if(seleccionAdicional.has(tecnicoPrincipalSelect.value)) seleccionAdicional.delete(tecnicoPrincipalSelect.value);
   renderChips();
 });
 
 // Generar mensaje
 function generarMensaje() {
-  if(!sitioSeleccionado) {
-    alert('Selecciona un sitio válido.');
-    return;
-  }
-  const actividadSel = document.getElementById('actividadSelect').value;
-  const veh = vehiculos.find(v=>v.Placa===document.getElementById('vehiculoSelect').value);
+  if(!sitioSeleccionado) { alert('Selecciona un sitio válido'); return; }
+  const actividad = document.getElementById('actividadSelect').value;
+  const vehiculo = vehiculos.find(v=>v.Placa===document.getElementById('vehiculoSelect').value);
   const tecnicoPrincipal = tecnicos.find(t=>t.TECNICO===tecnicoPrincipalSelect.value);
-  const tecnicosAdicionales = Array.from(seleccionAdicional).map(name=> tecnicos.find(t=>t.TECNICO===name));
+  const tecnicosAdicionales = Array.from(seleccionAdicional).map(n=> tecnicos.find(t=>t.TECNICO===n));
+
+  const bloqueTecnicos = [tecnicoPrincipal, ...tecnicosAdicionales].map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
 
   const mensaje = `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
@@ -264,20 +174,20 @@ NOMBRE: ${sitioSeleccionado['Nombre de Sitio']}
 PROPIETARIO: ${sitioSeleccionado.Torrero}
 Nombre Torrero ${sitioSeleccionado['Nombre Torrero']}
 ▬▬▬▬▬▬▬▬▬▬
-ACTIVIDAD: ${actividadSel}
+ACTIVIDAD: ${actividad}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO PRINCIPAL/DUI
-${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI} (${tecnicoPrincipal['FECHA DE NACIMIENTO']})
-${tecnicosAdicionales.map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join("\n")}
+${bloqueTecnicos}
 ▬▬▬▬▬▬▬▬▬▬
-Placa: ${veh.Placa}
-Marca: ${veh.Marca}
-Modelo: ${veh.Modelo}
-Color: ${veh.Color}
+Placa: ${vehiculo.Placa}
+Marca: ${vehiculo.Marca}
+Modelo: ${vehiculo.Modelo}
+Color: ${vehiculo.Color}
 ▬▬▬▬▬▬▬▬▬▬
 TELEFONO: ${tecnicoPrincipal.TELEFONO}
 CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
 `;
+
   document.getElementById('mensaje').value = mensaje;
 }
 
@@ -296,11 +206,10 @@ document.getElementById('whatsappBtn').addEventListener('click', ()=>{
   window.open(`https://wa.me/?text=${mensajeText}`, '_blank');
 });
 
-// Inicializar
 init();
-
 </script>
 </body>
 </html>
+
 
 
