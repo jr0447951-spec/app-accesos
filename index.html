@@ -5,174 +5,199 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generador de Acceso</title>
 <style>
-body { font-family: Arial; padding: 10px; max-width: 600px; margin: auto; }
-h1 { text-align: center; }
-input, select, button { width: 100%; padding: 10px; margin: 5px 0 15px 0; box-sizing: border-box; font-size: 16px; }
-button { cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; margin-top: 5px; }
-button:hover { background-color: #0056b3; }
-textarea { width: 100%; height: 300px; font-size: 16px; padding: 10px; margin-top: 10px; }
-.chip-container { display: flex; flex-wrap: wrap; gap: 10px; }
-.chip { padding: 12px 16px; border-radius: 25px; background-color: #f0f0f0; cursor: pointer; user-select: none; border: 1px solid #ccc; display: flex; align-items: center; justify-content: space-between; font-size: 16px; transition: all 0.2s ease; }
-.chip.selected { background-color: #4caf50; color: white; border-color: #4caf50; font-weight: bold; }
-.chip.selected::after { content: '✔'; font-size: 20px; margin-left: 8px; }
-.autocomplete-suggestions { border: 1px solid #ccc; max-height: 150px; overflow-y: auto; position: absolute; background: white; z-index: 1000; width: calc(100% - 22px); }
-.autocomplete-suggestion { padding: 8px; cursor: pointer; }
-.autocomplete-suggestion:hover { background-color: #ddd; }
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+  h1 { text-align: center; }
+  label { display: block; margin-top: 10px; font-weight: bold; }
+  select, input, button { width: 100%; padding: 10px; margin-top: 5px; font-size: 16px; }
+  .chip { display: inline-block; padding: 10px; margin: 3px; border-radius: 20px; background: #eee; cursor: pointer; }
+  .chip.selected { background: #4CAF50; color: white; }
+  button { cursor: pointer; }
 </style>
 </head>
 <body>
-
 <h1>Generador de Acceso</h1>
 
-<label>Selecciona Sitio:</label>
-<div style="position:relative;">
-  <input type="text" id="sitioInput" placeholder="Escribe nombre del sitio">
-  <div id="sitioSuggestions" class="autocomplete-suggestions"></div>
-</div>
+<label for="sitio">Sitio:</label>
+<input type="text" id="sitio" placeholder="Escriba el sitio...">
 
-<label>Actividad:</label>
-<select id="actividadSelect"></select>
+<label for="actividad">Actividad:</label>
+<select id="actividad"></select>
 
-<label>Vehículo:</label>
-<select id="vehiculoSelect"></select>
+<label for="vehiculo">Vehículo:</label>
+<select id="vehiculo"></select>
 
 <label>Técnico Principal:</label>
-<select id="tecnicoPrincipalSelect"></select>
+<select id="tecnicoPrincipal"></select>
 
 <label>Técnicos Adicionales:</label>
-<div class="chip-container" id="tecnicosChipsDiv"></div>
+<div id="tecnicosAdicionales"></div>
 
-<button id="generarBtn">Generar Mensaje</button>
-<button id="copiarBtn">Copiar al Portapapeles</button>
-<button id="whatsappBtn">Enviar a WhatsApp</button>
-
-<textarea id="mensaje" readonly></textarea>
+<button id="generar">Generar y Copiar</button>
+<button id="whatsapp">Enviar por WhatsApp</button>
 
 <script>
-let sitios = [], actividades = [], tecnicos = [], vehiculos = [];
-let seleccionAdicional = new Set();
-let sitioSeleccionado = null;
-
-// Cargar CSV
-async function cargarCSV(nombreArchivo) {
-  const res = await fetch(nombreArchivo);
-  const texto = await res.text();
-  const lines = texto.trim().split('\n');
-  const headers = lines[0].split(';');
-  return lines.slice(1).map(line=>{
-    const values = line.split(';');
-    const obj = {};
-    headers.forEach((h,i)=>obj[h]=values[i]);
+// Función para leer CSV
+async function leerCSV(ruta, separador=';') {
+  const resp = await fetch(ruta);
+  const text = await resp.text();
+  const lineas = text.trim().split('\n');
+  const encabezados = lineas[0].split(separador).map(h => h.trim());
+  return lineas.slice(1).map(l => {
+    const valores = l.split(separador).map(v => v.trim());
+    let obj = {};
+    encabezados.forEach((h,i) => obj[h] = valores[i] || '');
     return obj;
   });
 }
 
-// Inicializar
-async function init() {
-  sitios = await cargarCSV('sitios.csv');
-  actividades = await cargarCSV('actividad.csv');
-  tecnicos = await cargarCSV('tecnicos.csv');
-  vehiculos = await cargarCSV('vehiculos.csv');
+// Variables globales
+let sitios = [], actividades = [], tecnicos = [], vehiculos = [];
 
-  // Actividades dropdown
-  const actividadSelect = document.getElementById('actividadSelect');
-  actividades.forEach(a=>{
-    const opt = document.createElement('option');
-    opt.value = a.Actividad;
-    opt.textContent = a.Actividad;
-    actividadSelect.appendChild(opt);
+// Cargar datos
+async function cargarDatos() {
+  sitios = await leerCSV('sitios.csv');
+  actividades = await leerCSV('actividad.csv', ';');
+  tecnicos = await leerCSV('tecnicos.csv');
+  vehiculos = await leerCSV('vehiculos.csv');
+
+  // Sitios Autocomplete
+  const inputSitio = document.getElementById('sitio');
+  inputSitio.addEventListener('input', () => {
+    const val = inputSitio.value.toLowerCase();
+    const opciones = sitios.filter(s => s['Nombre de Sitio'].toLowerCase().includes(val));
+    // Mostrar coincidencias debajo
+    let lista = document.getElementById('listaSitios');
+    if (!lista) {
+      lista = document.createElement('div');
+      lista.id = 'listaSitios';
+      lista.style.border = '1px solid #ccc';
+      lista.style.background = 'white';
+      lista.style.position = 'absolute';
+      lista.style.width = inputSitio.offsetWidth + 'px';
+      inputSitio.parentNode.appendChild(lista);
+    }
+    lista.innerHTML = '';
+    opciones.forEach(s => {
+      const div = document.createElement('div');
+      div.textContent = `${s['Nombre de Sitio']} (${s.SiteID})`;
+      div.style.padding = '5px';
+      div.style.cursor = 'pointer';
+      div.addEventListener('click', () => {
+        inputSitio.value = s['Nombre de Sitio'];
+        inputSitio.dataset.siteid = s.SiteID;
+        inputSitio.dataset.torrero = s.Torrero;
+        inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
+        lista.innerHTML = '';
+      });
+      lista.appendChild(div);
+    });
   });
 
-  // Vehiculos dropdown
-  const vehiculoSelect = document.getElementById('vehiculoSelect');
-  vehiculos.forEach(v=>{
+  // Actividades Dropdown
+  const selectActividad = document.getElementById('actividad');
+  actividades.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a['ACTIVIDAD'];
+    opt.textContent = a['ACTIVIDAD'];
+    selectActividad.appendChild(opt);
+  });
+
+  // Vehículos Dropdown
+  const selectVehiculo = document.getElementById('vehiculo');
+  vehiculos.forEach(v => {
     const opt = document.createElement('option');
     opt.value = v.Placa;
-    opt.textContent = `${v.Placa} - ${v.Marca} ${v.Modelo} ${v.Color}`;
-    vehiculoSelect.appendChild(opt);
+    opt.textContent = `${v.Placa} | ${v.Marca} | ${v.Modelo} | ${v.Color}`;
+    opt.dataset.marca = v.Marca;
+    opt.dataset.modelo = v.Modelo;
+    opt.dataset.color = v.Color;
+    selectVehiculo.appendChild(opt);
   });
 
-  // Tecnico principal
-  const tecnicoPrincipalSelect = document.getElementById('tecnicoPrincipalSelect');
-  tecnicos.forEach(t=>{
+  // Técnicos Principal
+  const selectTecnico = document.getElementById('tecnicoPrincipal');
+  tecnicos.forEach(t => {
     const opt = document.createElement('option');
     opt.value = t.TECNICO;
     opt.textContent = `${t.TECNICO} (${t.DUI})`;
-    tecnicoPrincipalSelect.appendChild(opt);
+    opt.dataset.dui = t.DUI;
+    opt.dataset.telefono = t.TELEFONO;
+    opt.dataset.correo = t.CORREO;
+    opt.dataset.fecha = t['FECHA DE NACIMIENTO'];
+    selectTecnico.appendChild(opt);
   });
 
-  renderChips();
-}
-
-// Autocomplete Sitios
-const sitioInput = document.getElementById('sitioInput');
-const suggestionBox = document.getElementById('sitioSuggestions');
-
-sitioInput.addEventListener('input', ()=>{
-  const val = sitioInput.value.toLowerCase();
-  suggestionBox.innerHTML = '';
-  if(!val) return;
-  sitios.filter(s=>s['Nombre de Sitio'].toLowerCase().includes(val))
-        .forEach(s=>{
-    const div = document.createElement('div');
-    div.className='autocomplete-suggestion';
-    div.textContent = `${s['Nombre de Sitio']} (ID: ${s.SiteID})`;
-    div.addEventListener('click', ()=>{
-      sitioInput.value = s['Nombre de Sitio'];
-      sitioSeleccionado = s;
-      suggestionBox.innerHTML = '';
-    });
-    suggestionBox.appendChild(div);
-  });
-});
-
-// Chips tecnicos adicionales
-const tecnicosChipsDiv = document.getElementById('tecnicosChipsDiv');
-const tecnicoPrincipalSelect = document.getElementById('tecnicoPrincipalSelect');
-
-function renderChips() {
-  tecnicosChipsDiv.innerHTML = '';
-  tecnicos.forEach(t=>{
-    if(t.TECNICO === tecnicoPrincipalSelect.value) return;
+  // Técnicos Adicionales Chips
+  const divTecnicos = document.getElementById('tecnicosAdicionales');
+  tecnicos.forEach((t,i) => {
     const chip = document.createElement('div');
-    chip.className='chip';
-    chip.textContent=t.TECNICO;
-    if(seleccionAdicional.has(t.TECNICO)) chip.classList.add('selected');
-    chip.addEventListener('click', ()=>{
-      if(seleccionAdicional.has(t.TECNICO)){
-        seleccionAdicional.delete(t.TECNICO);
-        chip.classList.remove('selected');
-      } else {
-        seleccionAdicional.add(t.TECNICO);
-        chip.classList.add('selected');
-      }
+    chip.className = 'chip';
+    chip.textContent = t.TECNICO;
+    chip.dataset.index = i;
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('selected');
+      actualizarSeleccionados();
     });
-    tecnicosChipsDiv.appendChild(chip);
+    divTecnicos.appendChild(chip);
   });
 }
 
-tecnicoPrincipalSelect.addEventListener('change', ()=>{
-  if(seleccionAdicional.has(tecnicoPrincipalSelect.value)) seleccionAdicional.delete(tecnicoPrincipalSelect.value);
-  renderChips();
-});
+// Para que no se seleccione principal en adicionales
+function actualizarSeleccionados() {
+  const principal = document.getElementById('tecnicoPrincipal').value;
+  document.querySelectorAll('#tecnicosAdicionales .chip').forEach(c => {
+    const t = tecnicos[c.dataset.index].TECNICO;
+    if (t === principal) {
+      c.classList.remove('selected');
+      c.style.display = 'none';
+    } else {
+      c.style.display = 'inline-block';
+    }
+  });
+}
 
 // Generar mensaje
 function generarMensaje() {
-  if(!sitioSeleccionado) { alert('Selecciona un sitio válido'); return; }
-  const actividad = document.getElementById('actividadSelect').value;
-  const vehiculo = vehiculos.find(v=>v.Placa===document.getElementById('vehiculoSelect').value);
-  const tecnicoPrincipal = tecnicos.find(t=>t.TECNICO===tecnicoPrincipalSelect.value);
-  const tecnicosAdicionales = Array.from(seleccionAdicional).map(n=> tecnicos.find(t=>t.TECNICO===n));
+  const sitioInput = document.getElementById('sitio');
+  const sitio = {
+    SiteID: sitioInput.dataset.siteid || '',
+    Nombre: sitioInput.value || '',
+    Torrero: sitioInput.dataset.torrero || '',
+    NombreTorrero: sitioInput.dataset.nombretorrero || ''
+  };
+  const actividad = document.getElementById('actividad').value;
+  const vehSelect = document.getElementById('vehiculo').selectedOptions[0];
+  const vehiculo = {
+    Placa: vehSelect.value,
+    Marca: vehSelect.dataset.marca,
+    Modelo: vehSelect.dataset.modelo,
+    Color: vehSelect.dataset.color
+  };
+  const principalSel = document.getElementById('tecnicoPrincipal').selectedOptions[0];
+  const tecnicoPrincipal = {
+    TECNICO: principalSel.value,
+    DUI: principalSel.dataset.dui,
+    TELEFONO: principalSel.dataset.telefono,
+    CORREO: principalSel.dataset.correo,
+    FECHA: principalSel.dataset.fecha
+  };
+  // Adicionales
+  const adicionales = [];
+  const chips = document.querySelectorAll('#tecnicosAdicionales .chip.selected');
+  chips.forEach(c => {
+    const t = tecnicos[c.dataset.index];
+    adicionales.push(`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`);
+  });
 
-  const bloqueTecnicos = [tecnicoPrincipal, ...tecnicosAdicionales].map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
+  const bloqueTecnicos = `${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI} (${tecnicoPrincipal.FECHA})\n${adicionales.join('\n')}`;
 
   const mensaje = `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
-ID:${sitioSeleccionado.SiteID}
-NOMBRE: ${sitioSeleccionado['Nombre de Sitio']}
-PROPIETARIO: ${sitioSeleccionado.Torrero}
-Nombre Torrero ${sitioSeleccionado['Nombre Torrero']}
+ID:${sitio.SiteID}
+NOMBRE: ${sitio.Nombre}
+PROPIETARIO: ${sitio.Torrero}
+Nombre Torrero ${sitio.NombreTorrero}
 ▬▬▬▬▬▬▬▬▬▬
 ACTIVIDAD: ${actividad}
 ▬▬▬▬▬▬▬▬▬▬
@@ -187,29 +212,25 @@ Color: ${vehiculo.Color}
 TELEFONO: ${tecnicoPrincipal.TELEFONO}
 CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
 `;
-
-  document.getElementById('mensaje').value = mensaje;
+  return mensaje;
 }
 
 // Botones
-document.getElementById('generarBtn').addEventListener('click', generarMensaje);
-
-document.getElementById('copiarBtn').addEventListener('click', ()=>{
-  const txt = document.getElementById('mensaje');
-  txt.select();
-  navigator.clipboard.writeText(txt.value);
-  alert('Mensaje copiado al portapapeles');
+document.getElementById('generar').addEventListener('click', () => {
+  const msg = generarMensaje();
+  navigator.clipboard.writeText(msg).then(() => alert('Mensaje copiado al portapapeles'));
 });
 
-document.getElementById('whatsappBtn').addEventListener('click', ()=>{
-  const mensajeText = encodeURIComponent(document.getElementById('mensaje').value);
-  window.open(`https://wa.me/?text=${mensajeText}`, '_blank');
+document.getElementById('whatsapp').addEventListener('click', () => {
+  const msg = generarMensaje();
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
 });
 
-init();
+// Inicializar
+cargarDatos();
 </script>
 </body>
 </html>
-
 
 
