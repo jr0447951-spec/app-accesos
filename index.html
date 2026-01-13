@@ -3,175 +3,279 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generador de Accesos</title>
+<title>Generador de Accesos Móvil - CSV</title>
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; }
+body { font-family: Arial, sans-serif; margin: 15px; }
 label { display: block; margin-top: 10px; }
-select, input { width: 100%; padding: 8px; margin-top: 5px; }
-button { margin-top: 15px; padding: 10px 20px; font-size: 16px; }
-.checkbox-list { max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; }
-.checkbox-list label { display: block; }
+input, select, button { width: 100%; padding: 8px; margin-top: 5px; }
+button { font-size: 16px; margin-top: 15px; }
+
+.chips-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.chip {
+  padding: 8px 12px;
+  border-radius: 20px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid #ccc;
+}
+.chip.selected { background-color: #4caf50; color: white; border-color: #4caf50; }
+
+.autocomplete-items {
+  position: relative;
+  border: 1px solid #d4d4d4;
+  border-top: none;
+  z-index: 99;
+  background: white;
+}
+.autocomplete-item {
+  padding: 10px;
+  cursor: pointer;
+}
+.autocomplete-item:hover {
+  background-color: #e9e9e9;
+}
 </style>
 </head>
 <body>
 
-  
-<h2>Generador de Accesos</h2>
+<h2>Generador de Accesos (CSV) - Móvil Friendly</h2>
 
-<!-- Sitio -->
+<label for="fileSitios">Cargar sitios.csv:</label>
+<input type="file" id="fileSitios" accept=".csv">
+
+<label for="fileTecnicos">Cargar tecnicos.csv:</label>
+<input type="file" id="fileTecnicos" accept=".csv">
+
+<label for="fileActividades">Cargar actividad.csv:</label>
+<input type="file" id="fileActividades" accept=".csv">
+
+<label for="fileVehiculos">Cargar vehiculos.csv:</label>
+<input type="file" id="fileVehiculos" accept=".csv">
+
 <label for="sitioInput">Sitio:</label>
 <input type="text" id="sitioInput" placeholder="Escribe para autocompletar">
+<div id="autocomplete-list" class="autocomplete-items"></div>
 
-<!-- Actividad -->
-<label for="actividadInput">Actividad:</label>
-<input type="text" id="actividadInput" placeholder="Escriba actividad">
+<label for="actividadSelect">Actividad:</label>
+<select id="actividadSelect">
+  <option value="">Seleccione actividad</option>
+</select>
 
-<!-- Técnico Principal -->
+<label for="vehiculoSelect">Vehículo:</label>
+<select id="vehiculoSelect">
+  <option value="">Seleccione vehículo</option>
+</select>
+
 <label for="tecnicoPrincipalSelect">Técnico Principal:</label>
 <select id="tecnicoPrincipalSelect"></select>
 
-<!-- Técnicos Adicionales -->
 <label>Técnicos Adicionales:</label>
-<div class="checkbox-list" id="tecnicosAdicionalesDiv"></div>
+<div class="chips-container" id="tecnicosChipsDiv"></div>
 
-<!-- Vehículo -->
-<label>Placa:</label>
-<input type="text" id="placaInput">
-<label>Marca:</label>
-<input type="text" id="marcaInput">
-<label>Modelo:</label>
-<input type="text" id="modeloInput">
-<label>Color:</label>
-<input type="text" id="colorInput">
-
-<!-- Botón Generar Mensaje -->
-<button id="generarBtn">Generar Mensaje y WhatsApp</button>
+<button id="generarWhatsAppBtn">Abrir WhatsApp</button>
+<button id="copiarBtn">Generar y copiar al portapapeles</button>
 
 <script>
-// --- Datos de ejemplo (reemplazar con CSV parseados) ---
-const sitios = [
-  { SiteID: '390502', Nombre: 'SENSUNTEPEQUE', Torrero: 'TORRECOM', NombreTorrero: 'TSVTF09295 SENSUNTEPEQUE' },
-  { SiteID: '391025', Nombre: 'AMATECAMPO', Torrero: 'TORREAM', NombreTorrero: 'ABC123 AMATECAMPO' }
-];
-
-const tecnicos = [
-  { TECNICO: 'Jose Edilberto Rivas Rivas', DUI: '05366673-2', TELEFONO: '+503 61614465', CORREO: 'jose.rivas@celectcac.com', FECHA_NACIMIENTO: '19/06/96' },
-  { TECNICO: 'Luis Antonio Palacios Gomez', DUI: '05587930-7', TELEFONO: '+503 12345678', CORREO: 'luis.palacios@celectcac.com', FECHA_NACIMIENTO: '07/06/66' },
-  { TECNICO: 'Ronald Alexander Gonzalez Orellana', DUI: '04937910-3', TELEFONO: '+503 87654321', CORREO: 'ronald.gonzalez@celectcac.com', FECHA_NACIMIENTO: '21/09/76' },
-  { TECNICO: 'Miguel Alfredo Ochoa Osorio', DUI: '00975466-4', TELEFONO: '+503 55555555', CORREO: 'miguel.ochoa@celectcac.com', FECHA_NACIMIENTO: '17/06/94' }
-];
-
-// --- Autocompletar sitio ---
-const sitioInput = document.getElementById('sitioInput');
+let sitios = [];
+let tecnicos = [];
+let actividades = [];
+let vehiculos = [];
 let sitioSeleccionado = null;
+let seleccionAdicional = new Set();
 
-sitioInput.addEventListener('input', () => {
-  const val = sitioInput.value.toUpperCase();
-  const match = sitios.find(s => s.Nombre.toUpperCase().includes(val));
-  if (match) sitioSeleccionado = match;
-});
-
-// --- Cargar técnico principal ---
-const tecnicoPrincipalSelect = document.getElementById('tecnicoPrincipalSelect');
-tecnicos.forEach(t => {
-  const opt = document.createElement('option');
-  opt.value = t.TECNICO;
-  opt.textContent = `${t.TECNICO} (${t.DUI})`;
-  tecnicoPrincipalSelect.appendChild(opt);
-});
-
-// --- Cargar técnicos adicionales ---
-const tecnicosAdicionalesDiv = document.getElementById('tecnicosAdicionalesDiv');
-function renderCheckboxes() {
-  tecnicosAdicionalesDiv.innerHTML = '';
-  tecnicos.forEach(t => {
-    const chk = document.createElement('input');
-    chk.type = 'checkbox';
-    chk.id = t.TECNICO;
-    chk.value = t.TECNICO;
-
-    // Evitar que técnico principal se pueda seleccionar
-    if (t.TECNICO === tecnicoPrincipalSelect.value) chk.disabled = true;
-
-    const label = document.createElement('label');
-    label.htmlFor = t.TECNICO;
-    label.textContent = `${t.TECNICO} (${t.DUI})`;
-
-    label.prepend(chk);
-    tecnicosAdicionalesDiv.appendChild(label);
+// --- Leer CSV ---
+function parseCSV(text, delimiter=';') {
+  const lines = text.trim().split(/\r?\n/);
+  const headers = lines[0].split(delimiter).map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const data = line.split(delimiter).map(d => d.trim());
+    const obj = {};
+    headers.forEach((h,i)=>obj[h]=data[i]||'');
+    return obj;
   });
 }
 
-// Inicial render
-renderCheckboxes();
+// --- Cargar CSV ---
+function cargarCSV(inputId, callback){
+  const file = document.getElementById(inputId).files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => callback(evt.target.result);
+  reader.readAsText(file);
+}
 
-// Actualizar checkbox cuando cambia técnico principal
-tecnicoPrincipalSelect.addEventListener('change', renderCheckboxes);
-
-// --- Botón Generar Mensaje ---
-document.getElementById('generarBtn').addEventListener('click', () => {
-  if (!sitioSeleccionado) {
-    alert('Seleccione un sitio válido');
-    return;
-  }
-
-  const actividad = document.getElementById('actividadInput').value || '';
-
-  // Vehículo
-  const veh = {
-    Placa: document.getElementById('placaInput').value,
-    Marca: document.getElementById('marcaInput').value,
-    Modelo: document.getElementById('modeloInput').value,
-    Color: document.getElementById('colorInput').value
-  };
-
-  // Técnico principal
-  const tecnicoPrincipal = tecnicos.find(t => t.TECNICO === tecnicoPrincipalSelect.value);
-
-  // Técnicos adicionales
-  const tecnicosAdicionales = Array.from(document.querySelectorAll('#tecnicosAdicionalesDiv input:checked'))
-    .map(c => tecnicos.find(t => t.TECNICO === c.value));
-
-  // Construir lista de técnicos final
-  let listaTecnicos = [];
-  listaTecnicos.push(`${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI} (${tecnicoPrincipal.FECHA_NACIMIENTO})`);
-  tecnicosAdicionales.forEach(t => {
-    if (t.TECNICO !== tecnicoPrincipal.TECNICO) {
-      listaTecnicos.push(`${t.TECNICO}\t${t.DUI} (${t.FECHA_NACIMIENTO})`);
-    }
+// --- Sitios ---
+document.getElementById('fileSitios').addEventListener('change', ()=>{
+  cargarCSV('fileSitios', text=>{
+    sitios = parseCSV(text);
+    alert(`Cargados ${sitios.length} sitios`);
   });
-  const bloqueTecnicos = listaTecnicos.join('\n');
+});
 
-  // Mensaje final
-  const mensaje = `BUEN DIA
+// --- Técnicos ---
+document.getElementById('fileTecnicos').addEventListener('change', ()=>{
+  cargarCSV('fileTecnicos', text=>{
+    tecnicos = parseCSV(text);
+    populateTecnicoPrincipal();
+    renderChips();
+    alert(`Cargados ${tecnicos.length} técnicos`);
+  });
+});
+
+// --- Actividades ---
+document.getElementById('fileActividades').addEventListener('change', ()=>{
+  cargarCSV('fileActividades', text=>{
+    actividades = parseCSV(text);
+    const select = document.getElementById('actividadSelect');
+    select.innerHTML = '<option value="">Seleccione actividad</option>';
+    actividades.forEach(a=>{
+      const opt = document.createElement('option');
+      opt.value = a.ACTIVIDAD;
+      opt.textContent = a.ACTIVIDAD;
+      select.appendChild(opt);
+    });
+  });
+});
+
+// --- Vehículos ---
+document.getElementById('fileVehiculos').addEventListener('change', ()=>{
+  cargarCSV('fileVehiculos', text=>{
+    vehiculos = parseCSV(text);
+    const select = document.getElementById('vehiculoSelect');
+    select.innerHTML = '<option value="">Seleccione vehículo</option>';
+    vehiculos.forEach(v=>{
+      const opt = document.createElement('option');
+      opt.value = [v.Placa,v.Marca,v.Modelo,v.Color].join('|');
+      opt.textContent = `${v.Placa} | ${v.Marca} | ${v.Modelo} | ${v.Color}`;
+      select.appendChild(opt);
+    });
+  });
+});
+
+// --- Técnico principal ---
+const tecnicoPrincipalSelect = document.getElementById('tecnicoPrincipalSelect');
+function populateTecnicoPrincipal() {
+  tecnicoPrincipalSelect.innerHTML = '';
+  tecnicos.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t.TECNICO;
+    opt.textContent = `${t.TECNICO} (${t.DUI})`;
+    tecnicoPrincipalSelect.appendChild(opt);
+  });
+}
+
+// --- Técnicos adicionales ---
+const tecnicosChipsDiv = document.getElementById('tecnicosChipsDiv');
+function renderChips() {
+  tecnicosChipsDiv.innerHTML = '';
+  tecnicos.forEach(t=>{
+    if(t.TECNICO === tecnicoPrincipalSelect.value) return;
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = `${t.TECNICO} (${t.DUI})`;
+    chip.addEventListener('click', ()=>{
+      if(seleccionAdicional.has(t.TECNICO)){
+        seleccionAdicional.delete(t.TECNICO);
+        chip.classList.remove('selected');
+      } else {
+        seleccionAdicional.add(t.TECNICO);
+        chip.classList.add('selected');
+      }
+    });
+    tecnicosChipsDiv.appendChild(chip);
+  });
+}
+tecnicoPrincipalSelect.addEventListener('change', ()=>{
+  seleccionAdicional.clear();
+  renderChips();
+});
+
+// --- Autocompletado tipo dropdown ---
+const sitioInput = document.getElementById('sitioInput');
+const autocompleteList = document.getElementById('autocomplete-list');
+
+sitioInput.addEventListener('input', ()=>{
+  const val = sitioInput.value.toUpperCase();
+  autocompleteList.innerHTML = '';
+  if(!val) return;
+  const matches = sitios.filter(s=>s['Nombre de Sitio'].toUpperCase().includes(val));
+  matches.forEach(s=>{
+    const item = document.createElement('div');
+    item.className = 'autocomplete-item';
+    item.textContent = `${s['Nombre de Sitio']} | ID: ${s.SiteID}`;
+    item.addEventListener('click', ()=>{
+      sitioInput.value = s['Nombre de Sitio'];
+      sitioSeleccionado = s;
+      autocompleteList.innerHTML = '';
+    });
+    autocompleteList.appendChild(item);
+  });
+});
+
+// --- Generar mensaje ---
+function generarMensaje() {
+  if(!sitioSeleccionado){ alert('Seleccione un sitio válido'); return null; }
+  const actividadSel = document.getElementById('actividadSelect').value;
+  if(!actividadSel){ alert('Seleccione actividad'); return null; }
+  const vehiculoSel = document.getElementById('vehiculoSelect').value;
+  if(!vehiculoSel){ alert('Seleccione vehículo'); return null; }
+  const [placa, marca, modelo, color] = vehiculoSel.split('|');
+
+  const tecnicoPrincipal = tecnicos.find(t=>t.TECNICO === tecnicoPrincipalSelect.value);
+  const tecnicosAdicionales = Array.from(seleccionAdicional).map(n=>tecnicos.find(t=>t.TECNICO===n));
+
+  let listaTecnicos = [];
+  listaTecnicos.push(`${tecnicoPrincipal.TECNICO}\t${tecnicoPrincipal.DUI} (${tecnicoPrincipal['FECHA DE NACIMIENTO']})`);
+  tecnicosAdicionales.forEach(t=>{
+    listaTecnicos.push(`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`);
+  });
+
+  return `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
 ID:${sitioSeleccionado.SiteID}
-NOMBRE: ${sitioSeleccionado.Nombre}
+NOMBRE: ${sitioSeleccionado['Nombre de Sitio']}
 PROPIETARIO: ${sitioSeleccionado.Torrero}
-Nombre Torrero ${sitioSeleccionado.NombreTorrero}
+Nombre Torrero ${sitioSeleccionado['Nombre Torrero']}
 ▬▬▬▬▬▬▬▬▬▬
-ACTIVIDAD: ${actividad}
+ACTIVIDAD: ${actividadSel}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICO PRINCIPAL/DUI
-${bloqueTecnicos}
+${listaTecnicos.join('\n')}
 ▬▬▬▬▬▬▬▬▬▬
-Placa: ${veh.Placa}
-Marca: ${veh.Marca}
-Modelo: ${veh.Modelo}
-Color: ${veh.Color}
+Placa: ${placa}
+Marca: ${marca}
+Modelo: ${modelo}
+Color: ${color}
 ▬▬▬▬▬▬▬▬▬▬
 TELEFONO: ${tecnicoPrincipal.TELEFONO}
 CORREO: ${tecnicoPrincipal.CORREO} tecnicossv@celectcac.com
 `;
+}
 
-  // --- Enviar a WhatsApp ---
+// --- Botón WhatsApp ---
+document.getElementById('generarWhatsAppBtn').addEventListener('click', ()=>{
+  const mensaje = generarMensaje();
+  if(!mensaje) return;
   const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
   window.open(urlWhatsApp, '_blank');
 });
+
+// --- Botón Copiar ---
+document.getElementById('copiarBtn').addEventListener('click', ()=>{
+  const mensaje = generarMensaje();
+  if(!mensaje) return;
+  navigator.clipboard.writeText(mensaje).then(()=>{
+    alert('Mensaje copiado al portapapeles');
+  }).catch(()=> alert('Error al copiar al portapapeles'));
+});
 </script>
+
 </body>
 </html>
+
+
 
 
 
