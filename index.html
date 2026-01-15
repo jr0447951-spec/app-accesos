@@ -42,8 +42,12 @@
 <label>Técnicos Adicionales:</label>
 <div id="tecnicosAdicionales"></div>
 
+<!-- Botones existentes -->
 <button id="generar">Generar y Copiar al Portapapeles</button>
 <button id="whatsapp">Enviar por WhatsApp</button>
+
+<!-- NUEVO BOTÓN -->
+<button id="irIngresoSalida">Reporte de INGRESO / SALIDA</button>
 
 <script>
 let sitios = [], actividades = [], tecnicos = [], vehiculos = [];
@@ -180,7 +184,7 @@ TELEFONO: ${tecnicoPrincipal.TELEFONO || ''}
 CORREO: ${tecnicoPrincipal.CORREO || ''} tecnicossv@celectcac.com`;
 }
 
-// Botones
+// Botones existentes
 document.getElementById('generar').addEventListener('click', () => {
   const msg = generarMensaje();
   navigator.clipboard.writeText(msg).then(() => alert('Copiado al portapapeles'));
@@ -191,13 +195,50 @@ document.getElementById('whatsapp').addEventListener('click', () => {
   const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
   window.open(url,'_blank');
 });
-
-
 </script>
 
-  
+<!-- === NUEVO SCRIPT PARA EL BOTÓN DE INGRESO/SALIDA === -->
+<script>
+(function () {
+  const btn = document.getElementById('irIngresoSalida');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+
+    const sitioID = inputSitio?.dataset?.siteid || '';
+    const sitioNombre = inputSitio?.value || '';
+    const actividad = document.getElementById('actividad')?.value || '';
+
+    const tecSelect = document.getElementById('tecnicoPrincipal');
+    const tecPrinIndex = parseInt(tecSelect?.value);
+    const tecnicoPrincipal = tecnicos?.[tecPrinIndex] || {};
+
+    const adicionales = Array.from(document.querySelectorAll('.chip.selected'))
+      .map(c => tecnicos?.[c.dataset.index])
+      .filter(Boolean);
+
+    const todosTecnicos = tecnicoPrincipal.TECNICO
+      ? [tecnicoPrincipal, ...adicionales]
+      : adicionales;
+
+    const personal = todosTecnicos
+      .map(t => `${t.TECNICO} ${t.DUI}`)
+      .join('|');
+
+    const url =
+      `pag2.html?siteid=${encodeURIComponent(sitioID)}` +
+      `&sitio=${encodeURIComponent(sitioNombre)}` +
+      `&actividad=${encodeURIComponent(actividad)}` +
+      `&personal=${encodeURIComponent(personal)}`;
+
+    window.location.href = url;
+  });
+})();
+</script>
+
 </body>
 </html>
+
 
 
 
