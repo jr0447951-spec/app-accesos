@@ -53,6 +53,9 @@
 <button id="copiar">Copiar Mensaje</button>
 <button id="whatsapp">Enviar por WhatsApp</button>
 
+<!-- NUEVO BOTÓN HOME -->
+<button id="home">HOME</button>
+
 <script>
 /* === Obtener parámetros desde index.html === */
 const params = new URLSearchParams(window.location.search);
@@ -107,6 +110,11 @@ document.getElementById('copiar').addEventListener('click', () => {
 document.getElementById('whatsapp').addEventListener('click', () => {
   const url = `https://wa.me/?text=${encodeURIComponent(textarea.value)}`;
   window.open(url, '_blank');
+});
+
+/* === BOTÓN HOME === */
+document.getElementById('home').addEventListener('click', () => {
+  window.location.href = 'index.html';
 });
 </script>
 
