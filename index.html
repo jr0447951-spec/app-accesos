@@ -192,41 +192,13 @@ document.getElementById('whatsapp').addEventListener('click', () => {
   window.open(url,'_blank');
 });
 
-  <button id="irIngresoSalida">Reporte de INGRESO / SALIDA</button>
 
-</script>
-<script>
-document.getElementById('irIngresoSalida').addEventListener('click', () => {
-
-  const sitioID = inputSitio.dataset.siteid || '';
-  const sitioNombre = inputSitio.value || '';
-  const actividad = document.getElementById('actividad').value;
-
-  const tecPrinIndex = parseInt(document.getElementById('tecnicoPrincipal').value);
-  const tecnicoPrincipal = tecnicos[tecPrinIndex] || {};
-
-  const tecnicosSeleccionados = [
-    tecnicoPrincipal,
-    ...Array.from(document.querySelectorAll('.chip.selected'))
-      .map(c => tecnicos[c.dataset.index])
-  ];
-
-  const personal = tecnicosSeleccionados
-    .map(t => `${t.TECNICO} ${t.DUI}`)
-    .join('|');
-
-  const url = `pag2.html?siteid=${encodeURIComponent(sitioID)}
-    &sitio=${encodeURIComponent(sitioNombre)}
-    &actividad=${encodeURIComponent(actividad)}
-    &personal=${encodeURIComponent(personal)}`;
-
-  window.location.href = url;
-});
 </script>
 
   
 </body>
 </html>
+
 
 
 
