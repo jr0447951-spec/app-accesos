@@ -1,0 +1,17 @@
+PORTE;CORTO;DETALLADO
+GRAN;Infraestructura;Reporte de INFRAESTRUCTURA
+GRAN;Tecnologías;Reporte de TECNOLOGIAS
+GRAN;DC Power;Reporte de DC POWER
+GRAN;Aires acond.;Reporte de AIRES ACONDICIONADOS
+GRAN;Alta capacidad;Reporte de ALTA CAPACIDAD
+GRAN;Equipos Elect.;Reporte de EQUIPOS ELECTRONGENOS
+
+MEDIANO;Infraestructura;Reporte de INFRAESTRUCTURA
+MEDIANO;Tecnologías;Reporte de TECNOLOGIAS
+MEDIANO;DC Power;Reporte de DC POWER
+MEDIANO;Aire acond.;Reporte de AIRE ACONDICIONADO
+MEDIANO;Alta capacidad;Reporte de ALTA CAPACIDAD
+
+PEQUEÑO;DC Power;Reporte de DC POWER
+PEQUEÑO;Infraestructura torre;Reporte de INFRAESTRUCTURA TORRE
+PEQUEÑO;Tecnologías;Reporte de TECNOLOGIAS
