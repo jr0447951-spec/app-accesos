@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Mensajes MANTENIMIENTO</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 10px; }
+  h2 { margin-bottom: 15px; }
+  label { display: block; margin-top: 10px; font-weight: bold; }
+  input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+  #listaSitios { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; z-index: 1000; }
+  .chip { display: inline-block; padding: 5px 10px; margin: 3px; background: #eee; border-radius: 25px; cursor: pointer; user-select: none; }
+  .chip.selected { background: #4CAF50; color: white; }
+  .chip.validacion { background: #f0c040; }
+  .chip.validacion.selected { background: #FF9800; color: white; }
+  button { margin-top: 15px; padding: 10px; width: 100%; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<h2>Generador de Mensajes MANTENIMIENTO</h2>
+
+<!-- Buscador de sitio -->
+<label for="sitio">Sitio:</label>
+<div style="position: relative;">
+  <input type="text" id="sitio" placeholder="Escriba el sitio...">
+  <div id="listaSitios"></div>
+</div>
+
+<!-- Selector de porte -->
+<label for="porte">Tipo de Porte:</label>
+<select id="porte">
+  <option value="">Seleccione un porte</option>
+  <option value="GRAN">Gran Porte</option>
+  <option value="MEDIANO">Mediano Porte</option>
+  <option value="PEQUEÑO">Pequeño Porte</option>
+</select>
+
+<!-- Reportes -->
+<label>Reportes:</label>
+<div id="reportes"></div>
+
+<!-- Trabajos realizados -->
+<label>Trabajos realizados:</label>
+<div id="trabajos"></div>
+
+<!-- Validación -->
+<label>Validación:</label>
+<div id="validacion"></div>
+
+<!-- Botones -->
+<button id="generar">Generar y Copiar al Portapapeles</button>
+<button id="whatsapp">Enviar por WhatsApp</button>
+
+<script>
+let sitios = [], reportes = [], trabajos = [], validaciones = [];
+
+// Cargar CSV
+async function cargarCSV(url) {
+  const res = await fetch(url);
+  const text = await res.text();
+  const lineas = text.trim().split('\n');
+  const headers = lineas[0].split(';');
+  return lineas.slice(1).map(l => {
+    const cols = l.split(';');
+    let obj = {};
+    headers.forEach((h,i) => obj[h.trim()] = cols[i]?.trim());
+    return obj;
+  });
+}
+
+// Inicialización
+async function inicializar() {
+  sitios = await cargarCSV('sitios.csv');
+  reportes = await cargarCSV('reportes.csv');
+  trabajos = await cargarCSV('trabajos.csv');
+  validaciones = await cargarCSV('validacion.csv');
+
+  // Mostrar reportes y trabajos después de seleccionar porte
+  document.getElementById('porte').addEventListener('change', actualizarReportes);
+
+  // Crear chips de trabajos
+  const divTrabajos = document.getElementById('trabajos');
+  trabajos.forEach((t,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = t.CORTO;
+    chip.dataset.index = i;
+    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    divTrabajos.appendChild(chip);
+  });
+
+  // Crear chips de validación
+  const divVal = document.getElementById('validacion');
+  validaciones.forEach((v,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip validacion';
+    chip.textContent = v.CORTO;
+    chip.dataset.index = i;
+    chip.addEventListener('click', () => {
+      // Solo un chip seleccionado a la vez
+      divVal.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.toggle('selected');
+    });
+    divVal.appendChild(chip);
+  });
+}
+
+function actualizarReportes() {
+  const porte = document.getElementById('porte').value;
+  const divRep = document.getElementById('reportes');
+  divRep.innerHTML = '';
+  if(!porte) return;
+
+  reportes.filter(r => r.PORTE === porte).forEach((r,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = r.CORTO;
+    chip.dataset.index = i;
+    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    divRep.appendChild(chip);
+  });
+}
+
+// Autocompletado sitios
+const inputSitio = document.getElementById('sitio');
+const lista = document.getElementById('listaSitios');
+inputSitio.addEventListener('input', () => {
+  const val = inputSitio.value.toLowerCase();
+  lista.innerHTML = '';
+  if (!val) return;
+  sitios.filter(s => s['Nombre de Sitio'].toLowerCase().includes(val))
+    .forEach(s => {
+      const div = document.createElement('div');
+      div.textContent = `${s['Nombre de Sitio']} (${s.SiteID})`;
+      div.style.padding='5px';
+      div.style.cursor='pointer';
+      div.addEventListener('click', () => {
+        inputSitio.value = s['Nombre de Sitio'];
+        inputSitio.dataset.siteid = s.SiteID;
+        lista.innerHTML = '';
+      });
+      lista.appendChild(div);
+    });
+});
+document.addEventListener('click', e => {
+  if(!inputSitio.contains(e.target) && !lista.contains(e.target)) lista.innerHTML='';
+});
+
+// Función para elegir variante aleatoria de trabajo
+function obtenerTextoAleatorio(trabajo) {
+  const variantes = [trabajo.VARIANTE1, trabajo.VARIANTE2, trabajo.VARIANTE3].filter(Boolean);
+  return variantes[Math.floor(Math.random() * variantes.length)];
+}
+
+// Generar mensaje
+function generarMensaje() {
+  const sitioNombre = inputSitio.value || '';
+  const sitioID = inputSitio.dataset.siteid || '';
+  
+  const porte = document.getElementById('porte').value;
+  let mensajeBase = "Mantenimiento preventivo finalizado.";
+  // se puede parametrizar luego según porte con CSV de portes
+
+  // Reportes seleccionados
+  const repSeleccionados = Array.from(document.querySelectorAll('#reportes .chip.selected'))
+    .map(c => reportes[c.dataset.index].DETALLADO);
+  
+  // Trabajos seleccionados
+  const trabajosSeleccionados = Array.from(document.querySelectorAll('#trabajos .chip.selected'))
+    .map(c => obtenerTextoAleatorio(trabajos[c.dataset.index]));
+
+  // Validación seleccionada
+  const valSeleccionada = document.querySelector('#validacion .chip.selected');
+  const valTexto = valSeleccionada ? validaciones[valSeleccionada.dataset.index].DETALLADO : '';
+
+  // Construir mensaje
+  let msg = `${sitioNombre}\nID: ${sitioID}\n\n${mensajeBase}\n`;
+  
+  if(repSeleccionados.length) {
+    msg += `\nSe realizaron los siguientes reportes:\n• ${repSeleccionados.join('\n• ')}\n`;
+  }
+  if(trabajosSeleccionados.length) {
+    msg += `\n${trabajosSeleccionados.join('\n')}\n`;
+  }
+  if(valTexto) {
+    msg += `\n${valTexto}`;
+  }
+  return msg;
+}
+
+// Botones
+document.getElementById('generar').addEventListener('click', () => {
+  const msg = generarMensaje();
+  navigator.clipboard.writeText(msg).then(() => alert('Copiado al portapapeles'));
+});
+document.getElementById('whatsapp').addEventListener('click', () => {
+  const msg = generarMensaje();
+  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
+});
+
+inicializar();
+</script>
+</body>
+</html>
