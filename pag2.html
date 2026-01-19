@@ -3,38 +3,118 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reporte de Entrada / Salida</title>
+<title>Reporte de Entrada / Salida Independiente</title>
 
 <style>
+  /* --- 1. ESTILOS BASE (Fondo degradado de reportes anteriores) --- */
   body {
-    font-family: Arial, sans-serif;
-    padding: 10px;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    padding: 15px;
+    background: linear-gradient(135deg, #f0f4ff, #e0f7f1); /* Fondo solicitado */
+    min-height: 100vh;
+    color: #333;
   }
   h2 {
     text-align: center;
+    color: #2c3e50;
+    margin-bottom: 20px;
   }
   label {
-    font-weight: bold;
+    font-weight: 600;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #444;
   }
-  select {
+
+  /* --- 2. ESTILOS DE INPUTS Y SELECTS --- */
+  input, select, textarea {
     width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-  }
-  textarea {
-    width: 100%;
-    height: 280px;
     padding: 10px;
     box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid #bdc3c7;
     font-size: 14px;
+    background-color: #fff;
+  }
+
+  /* --- 3. ESTILOS DEL BUSCADOR DE SITIOS (Replicado del index) --- */
+  #listaSitios {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: white;
+    border: 1px solid #bdc3c7;
+    border-top: none;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  #listaSitios div {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+  }
+  #listaSitios div:hover {
+    background-color: #f1f9fe; /* Color suave al pasar el mouse */
+  }
+
+  /* --- 4. ESTILOS PARA PERSONAL (CHIPS/BOTONES POP) --- */
+  #contenedorPersonal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 6px;
+    border: 1px solid #bdc3c7;
+    min-height: 40px;
+    align-items: center;
+  }
+  .chip {
+    display: inline-block;
+    padding: 8px 12px;
+    background: #e0e0e0; /* Gris inicial */
+    border-radius: 25px; /* Bordes muy redondeados como en el index */
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    transition: all 0.2s ease;
+  }
+  .chip:hover {
+    background: #d5d5d5;
+    transform: translateY(-1px);
+  }
+  /* Estilo cuando el chip está seleccionado (Verde del index) */
+  .chip.selected {
+    background: #4CAF50; 
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  /* --- 5. ÁREA DE TEXTO Y BOTONES --- */
+  textarea {
+    height: 180px;
+    font-family: monospace;
+    background-color: #fcfcfc;
+    margin-top: 5px;
+  }
+  /* Contenedor para botones en fila */
+  .action-buttons {
+      display: flex; gap: 10px; margin-top: 15px;
   }
   button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    font-size: 16px;
+    flex: 1; padding: 12px; font-size: 16px; border: none; border-radius: 8px;
+    cursor: pointer; transition: all 0.2s ease; color: white; font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
+  button:hover { opacity: 0.9; transform: translateY(-2px);}
+  #copiar { background: #2196F3; } /* Azul */
+  #whatsapp { background: #4CAF50; } /* Verde */
+  #home { background: #607D8B; margin-top: 20px; width: 100%; } /* Gris */
+  
+  .loading { color: #888; font-style: italic; }
 </style>
 </head>
 
@@ -42,47 +122,184 @@
 
 <h2>Reporte de Entrada / Salida</h2>
 
-<label for="tipoReporte">Tipo de reporte:</label>
-<select id="tipoReporte">
-  <option value="entrada">Entrada</option>
-  <option value="salida">Salida</option>
-</select>
+<label for="sitioBuscador">1. Sitio:</label>
+<div style="position: relative;">
+  <input type="text" id="sitioBuscador" placeholder="Escriba para buscar sitio..." autocomplete="off">
+  <div id="listaSitios"></div>
+</div>
 
-<textarea id="mensaje"></textarea>
+<div style="display: flex; gap: 15px; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 150px;">
+        <label for="tipoReporte">2. Tipo:</label>
+        <select id="tipoReporte">
+            <option value="Entrada">Entrada</option>
+            <option value="Salida">Salida</option>
+        </select>
+    </div>
+    
+    <div style="flex: 2; min-width: 200px;">
+        <label for="actividadSelect">3. Actividad:</label>
+        <select id="actividadSelect">
+            <option value="">Cargando actividades...</option>
+        </select>
+    </div>
+</div>
 
-<button id="copiar">Copiar Mensaje</button>
-<button id="whatsapp">Enviar por WhatsApp</button>
 
-<!-- NUEVO BOTÓN HOME -->
-<button id="home">HOME</button>
+<label>4. Personal (Clic para seleccionar):</label>
+<div id="contenedorPersonal">
+    <span class="loading">Cargando técnicos...</span>
+</div>
+
+
+<label>Vista Previa:</label>
+<textarea id="mensaje" readonly placeholder="Complete los campos para generar el mensaje..."></textarea>
+
+<div class="action-buttons">
+    <button id="copiar">Copiar Mensaje</button>
+    <button id="whatsapp">Enviar WhatsApp</button>
+</div>
+
+<button id="home">🏠 Inicio</button>
 
 <script>
-/* === Obtener parámetros desde index.html === */
-const params = new URLSearchParams(window.location.search);
+// --- Variables Globales ---
+let sitiosData = [];
 
-const siteid = params.get('siteid') || '';
-const sitio = params.get('sitio') || '';
-const actividad = params.get('actividad') || '';
-const personalRaw = params.get('personal') || '';
-
-const personal = personalRaw
-  ? personalRaw.split('|').join('\n')
-  : '';
-
+// --- Referencias al DOM ---
+const inputSitio = document.getElementById('sitioBuscador');
+const listaSitiosDiv = document.getElementById('listaSitios');
 const textarea = document.getElementById('mensaje');
 const tipoSelect = document.getElementById('tipoReporte');
+const actividadSelect = document.getElementById('actividadSelect');
+const contenedorPersonal = document.getElementById('contenedorPersonal');
 
-/* === Función generadora del mensaje === */
+
+// --- FUNCIÓN CARGAR CSV (Tomada del index de referencia) ---
+async function cargarCSV(url) {
+  try {
+      const res = await fetch(url);
+      const text = await res.text();
+      const lineas = text.trim().split('\n');
+      const headers = lineas[0].split(';');
+      return lineas.slice(1).map(l => {
+        const cols = l.split(';');
+        let obj = {};
+        headers.forEach((h,i) => obj[h.trim()] = cols[i]?.trim());
+        return obj;
+      });
+  } catch (e) {
+      console.error("Error cargando CSV:", url, e);
+      return [];
+  }
+}
+
+// --- INICIALIZACIÓN DE DATOS ---
+async function inicializar() {
+  // 1. Cargar los 3 archivos CSV
+  const [sitios, actividades, tecnicos] = await Promise.all([
+      cargarCSV('sitios.csv'),
+      cargarCSV('actividad.csv'),
+      cargarCSV('tecnicos.csv')
+  ]);
+
+  // 2. Guardar sitios para el buscador
+  sitiosData = sitios;
+
+  // 3. Llenar dropdown de Actividades
+  actividadSelect.innerHTML = '<option value="">-- Seleccione Actividad --</option>';
+  actividades.forEach(a => {
+      // Usa el nombre de columna exacto del index de referencia: 'ACTIVIDAD'
+      if(a['ACTIVIDAD']) { 
+          const option = document.createElement('option');
+          option.value = a['ACTIVIDAD'];
+          option.textContent = a['ACTIVIDAD'];
+          actividadSelect.appendChild(option);
+      }
+  });
+  
+  // 4. Llenar chips de Personal
+  contenedorPersonal.innerHTML = ''; // Limpiar mensaje de carga
+  if(tecnicos.length === 0) contenedorPersonal.textContent = "No se encontraron técnicos.";
+  
+  tecnicos.forEach((t, i) => {
+       // Usa columnas del index de referencia: 'TECNICO' y 'DUI'
+      if(t['TECNICO']) {
+          const chip = document.createElement('div');
+          chip.className = 'chip';
+          // Formato: Nombre (DUI)
+          chip.textContent = `${t['TECNICO']} (${t['DUI'] || 'S/DUI'})`;
+          chip.dataset.index = i; // Guardamos índice por si necesitamos más datos del objeto original
+
+          // Evento click para seleccionar/deseleccionar
+          chip.addEventListener('click', () => {
+              chip.classList.toggle('selected');
+              actualizarVistaPrevia(); // Actualizar mensaje al instante
+          });
+          contenedorPersonal.appendChild(chip);
+      }
+  });
+
+  // Generar vista previa inicial
+  actualizarVistaPrevia();
+}
+
+
+// --- LÓGICA DEL BUSCADOR DE SITIOS (Adaptada del index) ---
+inputSitio.addEventListener('input', () => {
+  const val = inputSitio.value.toLowerCase();
+  listaSitiosDiv.innerHTML = '';
+  if (!val) return;
+
+  // Usa columna del index de referencia: 'Nombre de Sitio'
+  sitiosData.filter(s => s['Nombre de Sitio']?.toLowerCase().includes(val))
+    .slice(0, 10) // Limitar resultados
+    .forEach(s => {
+      const div = document.createElement('div');
+      // Usa columnas: 'Nombre de Sitio' y 'SiteID'
+      div.textContent = `${s['Nombre de Sitio']} (${s.SiteID})`;
+      div.addEventListener('click', () => {
+        inputSitio.value = s['Nombre de Sitio'];
+        inputSitio.dataset.siteid = s.SiteID; // Guardar ID oculto
+        listaSitiosDiv.innerHTML = '';
+        actualizarVistaPrevia();
+      });
+      listaSitiosDiv.appendChild(div);
+    });
+});
+
+// Cerrar lista al hacer clic fuera
+document.addEventListener('click', (e) => {
+  if(!inputSitio.contains(e.target) && !listaSitiosDiv.contains(e.target)) listaSitiosDiv.innerHTML = '';
+});
+
+
+// --- GENERACIÓN DEL MENSAJE ---
 function generarMensaje() {
   const tipo = tipoSelect.value;
+  const nombreSitio = inputSitio.value;
+  const idSitio = inputSitio.dataset.siteid;
+  const actividad = actividadSelect.value;
 
+  // Obtener texto de los chips seleccionados
+  const personalSeleccionado = Array.from(contenedorPersonal.querySelectorAll('.chip.selected'))
+                                    .map(chip => chip.textContent);
+
+  // Validaciones
+  if (!idSitio || !actividad || personalSeleccionado.length === 0) {
+      return "Por favor complete: Sitio, Actividad y al menos un Técnico.";
+  }
+
+  const personalString = personalSeleccionado.join('\n');
+
+  // Formato del mensaje de Entrada/Salida
   return `Buen día
 Reportamos ${tipo} al sitio
 
-${siteid} - ${sitio}
+${idSitio} - ${nombreSitio}
 
 Personal:
-${personal}
+${personalString}
 
 Empresa:
 CELECT SA DE CV
@@ -92,32 +309,36 @@ CELECT SA DE CV
 Actividad a Realizar: ${actividad}`;
 }
 
-/* === Inicializar mensaje === */
-textarea.value = generarMensaje();
+// Función auxiliar
+function actualizarVistaPrevia() {
+    textarea.value = generarMensaje();
+}
 
-/* === Cambiar texto al cambiar Entrada / Salida === */
-tipoSelect.addEventListener('change', () => {
-  textarea.value = generarMensaje();
-});
+// --- LISTENERS DE CAMBIO ---
+tipoSelect.addEventListener('change', actualizarVistaPrevia);
+actividadSelect.addEventListener('change', actualizarVistaPrevia);
 
-/* === Copiar al portapapeles === */
+// --- BOTONES ---
 document.getElementById('copiar').addEventListener('click', () => {
-  navigator.clipboard.writeText(textarea.value)
-    .then(() => alert('Mensaje copiado al portapapeles'));
+  const msg = textarea.value;
+  if (msg.startsWith("Por favor")) {alert("Faltan datos."); return;}
+  navigator.clipboard.writeText(msg).then(() => alert('Copiado al portapapeles'));
 });
 
-/* === Enviar por WhatsApp === */
 document.getElementById('whatsapp').addEventListener('click', () => {
-  const url = `https://wa.me/?text=${encodeURIComponent(textarea.value)}`;
-  window.open(url, '_blank');
+  const msg = textarea.value;
+  if (msg.startsWith("Por favor")) {alert("Faltan datos."); return;}
+  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
 });
 
-/* === BOTÓN HOME === */
 document.getElementById('home').addEventListener('click', () => {
-  window.location.href = 'index.html';
+  window.location.href = 'index.html'; // Redirige al index principal
 });
+
+// --- INICIAR ---
+inicializar();
 </script>
 
 </body>
 </html>
-
