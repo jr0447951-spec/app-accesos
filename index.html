@@ -4,19 +4,133 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generador de Accesos a sitios MOVISTAR</title>
+
 <style>
-  body { font-family: Arial, sans-serif; padding: 10px; }
-  label { display: block; margin-top: 10px; font-weight: bold; }
-  input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-  #listaSitios { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; z-index: 1000; }
-  .chip { display: inline-block; padding: 5px 10px; margin: 3px; background: #eee; border-radius: 25px; cursor: pointer; user-select: none; }
-  .chip.selected { background: #4CAF50; color: white; }
-  button { margin-top: 15px; padding: 10px; width: 100%; font-size: 16px; }
+  /* === ESTILO GENERAL === */
+  body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    padding: 15px;
+    background: linear-gradient(135deg, #f0f4ff, #e0f7f1);
+    min-height: 100vh;
+    color: #333;
+  }
+
+  h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+
+  label {
+    font-weight: 600;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+  }
+
+  /* === INPUTS Y SELECTS === */
+  input, select {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid #bdc3c7;
+    font-size: 14px;
+    background-color: #fff;
+  }
+
+  /* === BUSCADOR DE SITIOS === */
+  #listaSitios {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: white;
+    border: 1px solid #bdc3c7;
+    border-top: none;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  #listaSitios div {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+  }
+  #listaSitios div:hover {
+    background-color: #f1f9fe;
+  }
+
+  /* === CHIPS DE TÉCNICOS === */
+  #tecnicosAdicionales {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 6px;
+    border: 1px solid #bdc3c7;
+  }
+
+  .chip {
+    padding: 8px 12px;
+    background: #e0e0e0;
+    border-radius: 25px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    transition: all 0.2s ease;
+  }
+
+  .chip:hover {
+    background: #d5d5d5;
+    transform: translateY(-1px);
+  }
+
+  .chip.selected {
+    background: #4CAF50;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  /* === BOTONES === */
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  button {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+
+  #generar { background: #2196F3; }
+  #whatsapp { background: #4CAF50; }
+  #irIngresoSalida {
+    background: #607D8B;
+    margin-top: 15px;
+    width: 100%;
+  }
 </style>
 </head>
+
 <body>
 
-<h2>Generador de Accesos a sitios Movistar/CELECT</h2>
+<h2>Generador de Accesos a sitios Movistar / CELECT</h2>
 
 <label for="sitio">Sitio:</label>
 <div style="position: relative;">
@@ -42,209 +156,15 @@
 <label>Técnicos Adicionales:</label>
 <div id="tecnicosAdicionales"></div>
 
-<!-- Botones existentes -->
-<button id="generar">Generar y Copiar al Portapapeles</button>
-<button id="whatsapp">Enviar por WhatsApp</button>
+<!-- BOTONES -->
+<div class="action-buttons">
+  <button id="generar">Copiar Mensaje</button>
+  <button id="whatsapp">WhatsApp</button>
+</div>
 
-<!-- NUEVO BOTÓN -->
-<button id="irIngresoSalida">Reporte de INGRESO / SALIDA</button>
+<button id="irIngresoSalida">📋 Reporte de INGRESO / SALIDA</button>
 
-<script>
-let sitios = [], actividades = [], tecnicos = [], vehiculos = [];
-
-// Función para cargar CSV
-async function cargarCSV(url) {
-  const res = await fetch(url);
-  const text = await res.text();
-  const lineas = text.trim().split('\n');
-  const headers = lineas[0].split(';');
-  return lineas.slice(1).map(l => {
-    const cols = l.split(';');
-    let obj = {};
-    headers.forEach((h,i) => obj[h.trim()] = cols[i]?.trim());
-    return obj;
-  });
-}
-
-// Cargar todos los CSV
-async function inicializar() {
-  sitios = await cargarCSV('sitios.csv');
-  actividades = await cargarCSV('actividad.csv');
-  tecnicos = await cargarCSV('tecnicos.csv');
-  vehiculos = await cargarCSV('vehiculos.csv');
-
-  // Llenar dropdown de actividades
-  const selAct = document.getElementById('actividad');
-  actividades.forEach(a => {
-    const opt = document.createElement('option');
-    opt.value = a['ACTIVIDAD'];
-    opt.textContent = a['ACTIVIDAD'];
-    selAct.appendChild(opt);
-  });
-
-  // Llenar dropdown de vehículos
-  const selVeh = document.getElementById('vehiculo');
-  vehiculos.forEach(v => {
-    const opt = document.createElement('option');
-    opt.value = v.Placa;
-    opt.textContent = `${v.Placa} - ${v.Marca} ${v.Modelo} (${v.Color})`;
-    selVeh.appendChild(opt);
-  });
-
-  // Llenar técnico principal y chips
-  const selTecPrin = document.getElementById('tecnicoPrincipal');
-  const divTecAdd = document.getElementById('tecnicosAdicionales');
-  tecnicos.forEach((t,i) => {
-    // Principal
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `${t.TECNICO} (${t.DUI})`;
-    selTecPrin.appendChild(opt);
-    // Adicionales
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.textContent = `${t.TECNICO} (${t.DUI})`;
-    chip.dataset.index = i;
-    chip.addEventListener('click', () => {
-      if (parseInt(selTecPrin.value) === i) return; // no seleccionar principal
-      chip.classList.toggle('selected');
-    });
-    divTecAdd.appendChild(chip);
-  });
-}
-
-inicializar();
-
-// Autocompletado sitios
-const inputSitio = document.getElementById('sitio');
-const lista = document.getElementById('listaSitios');
-inputSitio.addEventListener('input', () => {
-  const val = inputSitio.value.toLowerCase();
-  lista.innerHTML = '';
-  if (!val) return;
-
-  const coincidencias = sitios.filter(s => s['Nombre de Sitio'].toLowerCase().includes(val));
-  coincidencias.forEach(s => {
-    const div = document.createElement('div');
-    div.textContent = `${s['Nombre de Sitio']} (${s.SiteID})`;
-    div.style.padding = '5px';
-    div.style.cursor = 'pointer';
-    div.addEventListener('click', () => {
-      inputSitio.value = s['Nombre de Sitio'];
-      inputSitio.dataset.siteid = s.SiteID;
-      inputSitio.dataset.torrero = s.Torrero;
-      inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
-      lista.innerHTML = '';
-    });
-    lista.appendChild(div);
-  });
-});
-document.addEventListener('click', (e) => {
-  if (!inputSitio.contains(e.target) && !lista.contains(e.target)) lista.innerHTML = '';
-});
-
-// Generar mensaje
-function generarMensaje() {
-  const sitio = {
-    SiteID: inputSitio.dataset.siteid || '',
-    Nombre: inputSitio.value || '',
-    Torrero: inputSitio.dataset.torrero || '',
-    NombreTorrero: inputSitio.dataset.nombretorrero || ''
-  };
-  const actividad = document.getElementById('actividad').value;
-  const vehiculo = vehiculos[document.getElementById('vehiculo').selectedIndex - 1] || {};
-  const tecPrinIndex = parseInt(document.getElementById('tecnicoPrincipal').value);
-  const tecnicoPrincipal = tecnicos[tecPrinIndex] || {};
-  const bloqueTecnicos = [tecnicoPrincipal, ...Array.from(document.querySelectorAll('.chip.selected')).map(c => tecnicos[c.dataset.index])]
-    .map(t => `${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
-
-  return `BUEN DIA
-SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
-▬▬▬▬▬▬▬▬▬▬
-ID:${sitio.SiteID}
-NOMBRE: ${sitio.Nombre}
-PROPIETARIO: ${sitio.Torrero}
-Nombre Torrero ${sitio.NombreTorrero}
-▬▬▬▬▬▬▬▬▬▬
-ACTIVIDAD: ${actividad}
-▬▬▬▬▬▬▬▬▬▬
-TECNICOS/DUI
-${bloqueTecnicos}
-▬▬▬▬▬▬▬▬▬▬
-Placa: ${vehiculo.Placa || ''}
-Marca: ${vehiculo.Marca || ''}
-Modelo: ${vehiculo.Modelo || ''}
-Color: ${vehiculo.Color || ''}
-▬▬▬▬▬▬▬▬▬▬
-Empresa: CELECT SA DE CV
-Supervisor: José Rivas
-Teléfono supervisor:6161 4465
-▬▬▬▬▬▬▬▬▬▬
-TELEFONO: ${tecnicoPrincipal.TELEFONO || ''}
-CORREO: ${tecnicoPrincipal.CORREO || ''} tecnicossv@celectcac.com`;
-}
-
-// Botones existentes
-document.getElementById('generar').addEventListener('click', () => {
-  const msg = generarMensaje();
-  navigator.clipboard.writeText(msg).then(() => alert('Copiado al portapapeles'));
-});
-
-document.getElementById('whatsapp').addEventListener('click', () => {
-  const msg = generarMensaje();
-  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url,'_blank');
-});
-</script>
-
-<!-- === NUEVO SCRIPT PARA EL BOTÓN DE INGRESO/SALIDA === -->
-<script>
-(function () {
-  const btn = document.getElementById('irIngresoSalida');
-  if (!btn) return;
-
-  btn.addEventListener('click', () => {
-
-    const sitioID = inputSitio?.dataset?.siteid || '';
-    const sitioNombre = inputSitio?.value || '';
-    const actividad = document.getElementById('actividad')?.value || '';
-
-    const tecSelect = document.getElementById('tecnicoPrincipal');
-    const tecPrinIndex = parseInt(tecSelect?.value);
-    const tecnicoPrincipal = tecnicos?.[tecPrinIndex] || {};
-
-    const adicionales = Array.from(document.querySelectorAll('.chip.selected'))
-      .map(c => tecnicos?.[c.dataset.index])
-      .filter(Boolean);
-
-    const todosTecnicos = tecnicoPrincipal.TECNICO
-      ? [tecnicoPrincipal, ...adicionales]
-      : adicionales;
-
-    const personal = todosTecnicos
-      .map(t => `${t.TECNICO} ${t.DUI}`)
-      .join('|');
-
-    const url =
-      `pag2.html?siteid=${encodeURIComponent(sitioID)}` +
-      `&sitio=${encodeURIComponent(sitioNombre)}` +
-      `&actividad=${encodeURIComponent(actividad)}` +
-      `&personal=${encodeURIComponent(personal)}`;
-
-    window.location.href = url;
-  });
-})();
-</script>
+<!-- 🔹 TU SCRIPT ORIGINAL VA AQUÍ SIN CAMBIOS 🔹 -->
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
