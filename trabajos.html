@@ -54,7 +54,7 @@
 <button id="whatsapp">Enviar por WhatsApp</button>
 
 <script>
-let sitios = [], reportes = [], trabajos = [], validaciones = [];
+let sitios = [], reportes = [], trabajos = [];
 
 // Cargar CSV
 async function cargarCSV(url) {
@@ -75,9 +75,8 @@ async function inicializar() {
   sitios = await cargarCSV('sitios.csv');
   reportes = await cargarCSV('reportes.csv');
   trabajos = await cargarCSV('trabajos.csv');
-  validaciones = await cargarCSV('validacion.csv');
 
-  // Mostrar reportes y trabajos después de seleccionar porte
+  // Mostrar reportes después de seleccionar porte
   document.getElementById('porte').addEventListener('change', actualizarReportes);
 
   // Crear chips de trabajos
@@ -91,22 +90,16 @@ async function inicializar() {
     divTrabajos.appendChild(chip);
   });
 
-  // Crear chips de validación
+  // Crear chip único de validación
   const divVal = document.getElementById('validacion');
-  validaciones.forEach((v,i) => {
-    const chip = document.createElement('div');
-    chip.className = 'chip validacion';
-    chip.textContent = v.CORTO;
-    chip.dataset.index = i;
-    chip.addEventListener('click', () => {
-      // Solo un chip seleccionado a la vez
-      divVal.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-      chip.classList.toggle('selected');
-    });
-    divVal.appendChild(chip);
-  });
+  const chipVal = document.createElement('div');
+  chipVal.className = 'chip validacion';
+  chipVal.textContent = "Sitio Operativo, valida NOC ITS";
+  chipVal.addEventListener('click', () => chipVal.classList.toggle('selected'));
+  divVal.appendChild(chipVal);
 }
 
+// Actualizar reportes según porte
 function actualizarReportes() {
   const porte = document.getElementById('porte').value;
   const divRep = document.getElementById('reportes');
@@ -161,7 +154,6 @@ function generarMensaje() {
   
   const porte = document.getElementById('porte').value;
   let mensajeBase = "Mantenimiento preventivo finalizado.";
-  // se puede parametrizar luego según porte con CSV de portes
 
   // Reportes seleccionados
   const repSeleccionados = Array.from(document.querySelectorAll('#reportes .chip.selected'))
@@ -173,7 +165,7 @@ function generarMensaje() {
 
   // Validación seleccionada
   const valSeleccionada = document.querySelector('#validacion .chip.selected');
-  const valTexto = valSeleccionada ? validaciones[valSeleccionada.dataset.index].DETALLADO : '';
+  const valTexto = valSeleccionada ? valSeleccionada.textContent : '';
 
   // Construir mensaje
   let msg = `${sitioNombre}\nID: ${sitioID}\n\n${mensajeBase}\n`;
