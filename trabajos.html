@@ -5,30 +5,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generador de Mensajes MANTENIMIENTO</title>
 <style>
-  body { font-family: Arial, sans-serif; padding: 10px; }
-  h2 { margin-bottom: 15px; }
+  /* Fondo alegre pero suave */
+  body {
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    background: linear-gradient(135deg, #f0f4ff, #e0f7f1);
+    min-height: 100vh;
+  }
+  h2 { margin-bottom: 15px; color: #333; }
   label { display: block; margin-top: 10px; font-weight: bold; }
-  input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-  #listaSitios { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; max-height: 150px; overflow-y: auto; z-index: 1000; }
-  .chip { display: inline-block; padding: 5px 10px; margin: 3px; background: #eee; border-radius: 25px; cursor: pointer; user-select: none; }
-  .chip.selected { background: #4CAF50; color: white; }
+  input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; border-radius:5px; border:1px solid #ccc; }
+  
+  #listaSitios {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+  }
+
+  .chip {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 4px;
+    background: #eee;
+    border-radius: 25px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+  }
+  .chip:hover { transform: scale(1.05); background: #ddd; }
+  .chip.selected { background: #4CAF50; color: white; transform: scale(1.1) rotate(-2deg); }
+  
   .chip.validacion { background: #f0c040; }
-  .chip.validacion.selected { background: #FF9800; color: white; }
-  button { margin-top: 15px; padding: 10px; width: 100%; font-size: 16px; }
+  .chip.validacion:hover { transform: scale(1.05); background:#f4d955; }
+  .chip.validacion.selected { background: #FF9800; color: white; transform: scale(1.1) rotate(2deg); }
+
+  button {
+    margin-top: 15px;
+    padding: 12px;
+    width: 100%;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #4CAF50;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  button:hover { background: #45a049; transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+
+  /* Vista previa */
+  #vistaPrevia {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 150px;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    margin-top:10px;
+  }
+
+  /* Mensaje de error */
+  #errorMsg {
+    color: red;
+    font-weight: bold;
+    margin-top: 10px;
+    display: none;
+  }
 </style>
 </head>
 <body>
 
 <h2>Generador de Mensajes MANTENIMIENTO</h2>
 
-<!-- Buscador de sitio -->
 <label for="sitio">Sitio:</label>
 <div style="position: relative;">
   <input type="text" id="sitio" placeholder="Escriba el sitio...">
   <div id="listaSitios"></div>
 </div>
 
-<!-- Selector de porte -->
 <label for="porte">Tipo de Porte:</label>
 <select id="porte">
   <option value="">Seleccione un porte</option>
@@ -37,19 +97,20 @@
   <option value="PEQUEÑO">Pequeño Porte</option>
 </select>
 
-<!-- Reportes -->
 <label>Reportes:</label>
 <div id="reportes"></div>
 
-<!-- Trabajos realizados -->
 <label>Trabajos realizados:</label>
 <div id="trabajos"></div>
 
-<!-- Validación -->
 <label>Validación:</label>
 <div id="validacion"></div>
 
-<!-- Botones -->
+<label>Vista previa:</label>
+<div id="vistaPrevia"></div>
+
+<div id="errorMsg">Completa los datos para generar mensaje.</div>
+
 <button id="generar">Generar y Copiar al Portapapeles</button>
 <button id="whatsapp">Enviar por WhatsApp</button>
 
@@ -76,30 +137,26 @@ async function inicializar() {
   reportes = await cargarCSV('reportes.csv');
   trabajos = await cargarCSV('trabajos.csv');
 
-  // Mostrar reportes después de seleccionar porte
-  document.getElementById('porte').addEventListener('change', actualizarReportes);
-
-  // Crear chips de trabajos
-  const divTrabajos = document.getElementById('trabajos');
-  trabajos.forEach((t,i) => {
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.textContent = t.CORTO;
-    chip.dataset.index = i;
-    chip.addEventListener('click', () => chip.classList.toggle('selected'));
-    divTrabajos.appendChild(chip);
+  document.getElementById('porte').addEventListener('change', () => {
+    actualizarReportes();
+    actualizarTrabajos();
+    actualizarVistaPrevia();
   });
 
-  // Crear chip único de validación
+  // Crear chip único de validación con emoji
   const divVal = document.getElementById('validacion');
   const chipVal = document.createElement('div');
   chipVal.className = 'chip validacion';
-  chipVal.textContent = "Sitio Operativo, valida NOC ITS";
-  chipVal.addEventListener('click', () => chipVal.classList.toggle('selected'));
+  chipVal.textContent = "✅ Sitio Operativo, valida NOC ITS";
+  chipVal.addEventListener('click', () => {
+    divVal.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+    chipVal.classList.toggle('selected');
+    actualizarVistaPrevia();
+  });
   divVal.appendChild(chipVal);
 }
 
-// Actualizar reportes según porte
+// Actualizar reportes según porte con emoji
 function actualizarReportes() {
   const porte = document.getElementById('porte').value;
   const divRep = document.getElementById('reportes');
@@ -109,10 +166,33 @@ function actualizarReportes() {
   reportes.filter(r => r.PORTE === porte).forEach((r,i) => {
     const chip = document.createElement('div');
     chip.className = 'chip';
-    chip.textContent = r.CORTO;
+    chip.textContent = "📝 " + r.CORTO;
     chip.dataset.index = i;
-    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('selected');
+      actualizarVistaPrevia();
+    });
     divRep.appendChild(chip);
+  });
+}
+
+// Actualizar trabajos según porte con emoji
+function actualizarTrabajos() {
+  const porte = document.getElementById('porte').value;
+  const divTrabajos = document.getElementById('trabajos');
+  divTrabajos.innerHTML = '';
+  if(!porte) return;
+
+  trabajos.filter(t => t.PORTE === porte).forEach((t,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = "🔧 " + t.CORTO;
+    chip.dataset.index = i;
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('selected');
+      actualizarVistaPrevia();
+    });
+    divTrabajos.appendChild(chip);
   });
 }
 
@@ -133,6 +213,7 @@ inputSitio.addEventListener('input', () => {
         inputSitio.value = s['Nombre de Sitio'];
         inputSitio.dataset.siteid = s.SiteID;
         lista.innerHTML = '';
+        actualizarVistaPrevia();
       });
       lista.appendChild(div);
     });
@@ -151,44 +232,50 @@ function obtenerTextoAleatorio(trabajo) {
 function generarMensaje() {
   const sitioNombre = inputSitio.value || '';
   const sitioID = inputSitio.dataset.siteid || '';
-  
   const porte = document.getElementById('porte').value;
   let mensajeBase = "Mantenimiento preventivo finalizado.";
 
-  // Reportes seleccionados
   const repSeleccionados = Array.from(document.querySelectorAll('#reportes .chip.selected'))
     .map(c => reportes[c.dataset.index].DETALLADO);
   
-  // Trabajos seleccionados
   const trabajosSeleccionados = Array.from(document.querySelectorAll('#trabajos .chip.selected'))
     .map(c => obtenerTextoAleatorio(trabajos[c.dataset.index]));
 
-  // Validación seleccionada
   const valSeleccionada = document.querySelector('#validacion .chip.selected');
   const valTexto = valSeleccionada ? valSeleccionada.textContent : '';
 
-  // Construir mensaje
+  if(!sitioNombre || !porte) return null;
+
   let msg = `${sitioNombre}\nID: ${sitioID}\n\n${mensajeBase}\n`;
-  
-  if(repSeleccionados.length) {
-    msg += `\nSe realizaron los siguientes reportes:\n• ${repSeleccionados.join('\n• ')}\n`;
-  }
-  if(trabajosSeleccionados.length) {
-    msg += `\n${trabajosSeleccionados.join('\n')}\n`;
-  }
-  if(valTexto) {
-    msg += `\n${valTexto}`;
-  }
+  if(repSeleccionados.length) msg += `\nSe realizaron los siguientes reportes:\n• ${repSeleccionados.join('\n• ')}\n`;
+  if(trabajosSeleccionados.length) msg += `\n${trabajosSeleccionados.join('\n')}\n`;
+  if(valTexto) msg += `\n${valTexto}`;
   return msg;
+}
+
+// Actualizar vista previa
+function actualizarVistaPrevia() {
+  const msg = generarMensaje();
+  const vista = document.getElementById('vistaPrevia');
+  const error = document.getElementById('errorMsg');
+  if(msg) {
+    vista.textContent = msg;
+    error.style.display = 'none';
+  } else {
+    vista.textContent = '';
+    error.style.display = 'block';
+  }
 }
 
 // Botones
 document.getElementById('generar').addEventListener('click', () => {
   const msg = generarMensaje();
+  if(!msg) { document.getElementById('errorMsg').style.display='block'; return; }
   navigator.clipboard.writeText(msg).then(() => alert('Copiado al portapapeles'));
 });
 document.getElementById('whatsapp').addEventListener('click', () => {
   const msg = generarMensaje();
+  if(!msg) { document.getElementById('errorMsg').style.display='block'; return; }
   const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
   window.open(url,'_blank');
 });
