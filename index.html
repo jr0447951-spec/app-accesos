@@ -3,264 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generador de Accesos Movistar</title>
-
+<title>Generador de Accesos a sitios MOVISTAR</title>
 <style>
-body{
-  font-family: Arial, sans-serif;
-  padding: 15px;
-  background: linear-gradient(135deg,#f0f4ff,#e0f7f1);
-}
-h2{text-align:center;}
-label{font-weight:bold;margin-top:12px;display:block;}
-input,select,textarea{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  box-sizing:border-box;
-}
-#listaSitios{
-  position:absolute;
-  background:#fff;
-  width:100%;
-  border:1px solid #ccc;
-  max-height:150px;
-  overflow:auto;
-  z-index:1000;
-}
-#listaSitios div{
-  padding:8px;
-  cursor:pointer;
-}
-#listaSitios div:hover{background:#f1f1f1;}
-.chip{
-  display:inline-block;
-  padding:6px 12px;
-  margin:4px;
-  background:#e0e0e0;
-  border-radius:20px;
-  cursor:pointer;
-}
-.chip.selected{
-  background:#4CAF50;
-  color:white;
-}
-button{
-  margin-top:15px;
-  padding:12px;
-  width:100%;
-  font-size:16px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-#generar{background:#2196F3;color:white;}
-#whatsapp{background:#4CAF50;color:white;}
-textarea{
-  height:220px;
-  margin-top:10px;
-  font-family:monospace;
-}
-.error{
-  color:#d32f2f;
-  font-weight:bold;
-  display:none;
-  margin-top:10px;
-}
+  body { font-family: Arial, sans-serif; padding: 15px; background: #f0f8ff; color:#333; }
+  h2 { text-align:center; color:#2c3e50; }
+  label { display:block; margin-top:10px; font-weight:bold; }
+  input, select, textarea { width:100%; padding:8px; margin-top:5px; box-sizing:border-box; border-radius:6px; border:1px solid #ccc; }
+  #listaSitios { position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ccc; max-height:150px; overflow-y:auto; z-index:1000; border-radius:0 0 6px 6px; }
+  #listaSitios div { padding:5px; cursor:pointer; }
+  #listaSitios div:hover { background:#f1f9fe; }
+  .chip { display:inline-block; padding:6px 12px; margin:3px; background:#eee; border-radius:25px; cursor:pointer; user-select:none; transition:0.2s; }
+  .chip:hover { transform:translateY(-1px); background:#ddd; }
+  .chip.selected { background:#4CAF50; color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
+  .chip.disabled { opacity:0.5; cursor:not-allowed; }
+  #contadorSeleccionados { margin-top:5px; font-size:14px; color:#555; }
+  textarea { height:220px; font-family:monospace; margin-top:10px; }
+  button { padding:10px; margin-top:10px; width:100%; font-size:16px; border:none; border-radius:8px; cursor:pointer; color:white; font-weight:bold; transition:0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
+  button:hover { transform:translateY(-2px); opacity:0.9; }
+  #generar { background:#2196F3; }
+  #whatsapp { background:#4CAF50; }
 </style>
 </head>
-
 <body>
 
-<h2>Generador de Accesos Movistar / CELECT</h2>
+<h2>Generador de Accesos a sitios MOVISTAR</h2>
 
-<label>Sitio</label>
-<div style="position:relative">
-  <input id="sitio" placeholder="Buscar sitio">
+<label for="sitio">Sitio:</label>
+<div style="position: relative;">
+  <input type="text" id="sitio" placeholder="Escriba el sitio..." autocomplete="off">
   <div id="listaSitios"></div>
 </div>
 
-<label>Actividad</label>
-<select id="actividad">
-  <option value="">Seleccione actividad</option>
-</select>
+<label for="actividad">Actividad:</label>
+<select id="actividad"><option value="">Seleccione una actividad</option></select>
 
-<label>Vehículo</label>
-<select id="vehiculo">
-  <option value="">Seleccione vehículo</option>
-</select>
+<label for="vehiculo">Vehículo:</label>
+<select id="vehiculo"><option value="">Seleccione un vehículo</option></select>
 
-<label>Técnico Principal</label>
-<select id="tecnicoPrincipal">
-  <option value="">Seleccione técnico</option>
-</select>
+<label for="tecnicoPrincipal">Técnico Principal:</label>
+<select id="tecnicoPrincipal"><option value="">Seleccione técnico principal</option></select>
 
-<label>Técnicos Adicionales</label>
+<label>Técnicos Adicionales:</label>
 <div id="tecnicosAdicionales"></div>
+<div id="contadorSeleccionados">Seleccionados: 0</div>
 
-<label>Vista previa</label>
-<textarea id="preview" readonly></textarea>
+<label>Vista Previa:</label>
+<textarea id="vistaPrevia" readonly placeholder="Complete los campos para generar el mensaje..."></textarea>
 
-<div class="error" id="errorBox">
-Completa los datos para generar mensaje.
-</div>
-
-<button id="generar">Generar y Copiar</button>
+<button id="generar">Generar y Copiar al Portapapeles</button>
 <button id="whatsapp">Enviar por WhatsApp</button>
 
 <script>
-// ================= VARIABLES =================
 let sitios=[], actividades=[], tecnicos=[], vehiculos=[];
 
-// ================= CSV =================
+// --- Cargar CSV ---
 async function cargarCSV(url){
   const res = await fetch(url);
   const text = await res.text();
-  const [head,...rows] = text.trim().split('\n');
-  const headers = head.split(';');
-  return rows.map(r=>{
-    const cols = r.split(';');
-    let o={};
-    headers.forEach((h,i)=>o[h.trim()]=cols[i]?.trim());
-    return o;
+  const lineas = text.trim().split('\n');
+  const headers = lineas[0].split(';');
+  return lineas.slice(1).map(l=>{
+    const cols = l.split(';'); let obj={};
+    headers.forEach((h,i)=>obj[h.trim()]=cols[i]?.trim());
+    return obj;
   });
 }
 
-// ================= INIT =================
-async function init(){
-  [sitios,actividades,tecnicos,vehiculos] = await Promise.all([
-    cargarCSV('sitios.csv'),
-    cargarCSV('actividad.csv'),
-    cargarCSV('tecnicos.csv'),
-    cargarCSV('vehiculos.csv')
-  ]);
-  cargarUI();
-}
-init();
+// --- Inicialización ---
+async function inicializar(){
+  sitios = await cargarCSV('sitios.csv');
+  actividades = await cargarCSV('actividad.csv');
+  tecnicos = await cargarCSV('tecnicos.csv');
+  vehiculos = await cargarCSV('vehiculos.csv');
 
-// ================= UI =================
-function cargarUI(){
+  // Llenar actividades
+  const selAct = document.getElementById('actividad');
   actividades.forEach(a=>{
-    const o=document.createElement('option');
-    o.value=a.ACTIVIDAD;
-    o.textContent=a.ACTIVIDAD;
-    actividad.appendChild(o);
+    const opt = document.createElement('option');
+    opt.value = a['ACTIVIDAD']; opt.textContent = a['ACTIVIDAD'];
+    selAct.appendChild(opt);
   });
 
+  // Llenar vehículos
+  const selVeh = document.getElementById('vehiculo');
   vehiculos.forEach(v=>{
-    const o=document.createElement('option');
-    o.textContent=`${v.Placa} - ${v.Marca} ${v.Modelo}`;
-    vehiculo.appendChild(o);
+    const opt = document.createElement('option');
+    opt.value = v.Placa; opt.textContent = `${v.Placa} - ${v.Marca} ${v.Modelo} (${v.Color})`;
+    selVeh.appendChild(opt);
   });
+
+  // Técnico principal y chips
+  const selTecPrin = document.getElementById('tecnicoPrincipal');
+  const divTecAdd = document.getElementById('tecnicosAdicionales');
 
   tecnicos.forEach((t,i)=>{
-    const o=document.createElement('option');
-    o.value=i;
-    o.textContent=`${t.TECNICO} (${t.DUI})`;
-    tecnicoPrincipal.appendChild(o);
+    // Principal
+    const opt = document.createElement('option'); opt.value=i; opt.textContent=`${t.TECNICO} (${t.DUI})`;
+    selTecPrin.appendChild(opt);
 
-    const chip=document.createElement('div');
-    chip.className='chip';
-    chip.textContent=`${t.TECNICO} (${t.DUI})`;
+    // Chip adicional
+    const chip = document.createElement('div');
+    chip.className='chip'; chip.textContent=`${t.TECNICO} (${t.DUI})`;
     chip.dataset.index=i;
-    chip.onclick=()=>chip.classList.toggle('selected');
-    tecnicosAdicionales.appendChild(chip);
+    chip.addEventListener('click',()=>{
+      if(parseInt(selTecPrin.value)===i) return; // no seleccionar principal
+      chip.classList.toggle('selected'); actualizarPreview(); actualizarContador();
+    });
+    divTecAdd.appendChild(chip);
   });
+
+  selTecPrin.addEventListener('change',()=>{
+    document.querySelectorAll('#tecnicosAdicionales .chip').forEach(chip=>{
+      const idx=parseInt(chip.dataset.index);
+      if(idx===parseInt(selTecPrin.value)){
+        chip.classList.remove('selected');
+        chip.classList.add('disabled');
+      }else{
+        chip.classList.remove('disabled');
+      }
+    });
+    actualizarPreview(); actualizarContador();
+  });
+
+  actualizarPreview(); actualizarContador();
 }
 
-// ================= SITIOS =================
-sitio.addEventListener('input',()=>{
-  listaSitios.innerHTML='';
-  const v=sitio.value.toLowerCase();
-  if(!v) return;
-  sitios.filter(s=>s['Nombre de Sitio'].toLowerCase().includes(v))
+function actualizarContador(){
+  const count=document.querySelectorAll('#tecnicosAdicionales .chip.selected').length;
+  document.getElementById('contadorSeleccionados').textContent=`Seleccionados: ${count}`;
+}
+
+// --- Autocompletado sitios ---
+const inputSitio=document.getElementById('sitio');
+const lista=document.getElementById('listaSitios');
+inputSitio.addEventListener('input',()=>{
+  const val=inputSitio.value.toLowerCase();
+  lista.innerHTML='';
+  if(!val) return;
+  sitios.filter(s=>s['Nombre de Sitio'].toLowerCase().includes(val))
     .slice(0,10)
     .forEach(s=>{
-      const d=document.createElement('div');
-      d.textContent=`${s['Nombre de Sitio']} (${s.SiteID})`;
-      d.onclick=()=>{
-        sitio.value=s['Nombre de Sitio'];
-        sitio.dataset.siteid=s.SiteID;
-        sitio.dataset.torrero=s.Torrero;
-        sitio.dataset.nombretorrero=s['Nombre Torrero'];
-        listaSitios.innerHTML='';
-        actualizarPreview();
-      };
-      listaSitios.appendChild(d);
+      const div=document.createElement('div');
+      div.textContent=`${s['Nombre de Sitio']} (${s.SiteID})`;
+      div.addEventListener('click',()=>{
+        inputSitio.value=s['Nombre de Sitio'];
+        inputSitio.dataset.siteid=s.SiteID;
+        inputSitio.dataset.torrero=s.Torrero;
+        inputSitio.dataset.nombretorrero=s['Nombre Torrero'];
+        lista.innerHTML=''; actualizarPreview();
+      });
+      lista.appendChild(div);
     });
 });
 
-// ================= VALIDACIÓN =================
-function validar(){
-  return sitio.dataset.siteid && actividad.value && tecnicoPrincipal.value;
-}
+document.addEventListener('click',e=>{
+  if(!inputSitio.contains(e.target)&&!lista.contains(e.target)) lista.innerHTML='';
+});
 
-// ================= MENSAJE =================
+// --- Generar mensaje ---
 function generarMensaje(){
-  const tp=tecnicos[tecnicoPrincipal.value];
-  const adicionales=[...document.querySelectorAll('.chip.selected')]
-    .map(c=>tecnicos[c.dataset.index]);
-  const veh=vehiculos[vehiculo.selectedIndex-1]||{};
+  const sitio={
+    SiteID: inputSitio.dataset.siteid||'',
+    Nombre: inputSitio.value||'',
+    Torrero: inputSitio.dataset.torrero||'',
+    NombreTorrero: inputSitio.dataset.nombretorrero||''
+  };
+  const actividad=document.getElementById('actividad').value;
+  const vehiculo=vehiculos[document.getElementById('vehiculo').selectedIndex-1]||{};
+  const tecPrinIndex=parseInt(document.getElementById('tecnicoPrincipal').value);
+  const tecnicoPrincipal=tecnicos[tecPrinIndex]||{};
+  const adicionales=Array.from(document.querySelectorAll('.chip.selected')).map(c=>tecnicos[c.dataset.index]);
+  const todos=[tecnicoPrincipal,...adicionales].filter(Boolean);
+  if(!sitio.SiteID||!actividad||!tecnicoPrincipal.TECNICO) return "Complete los datos para generar mensaje.";
 
-  const bloqueTecnicos=[tp,...adicionales]
-    .map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']||''})`)
-    .join('\n');
+  const bloqueTecnicos=todos.map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
 
   return `BUEN DIA
 SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
 ▬▬▬▬▬▬▬▬▬▬
-ID:${sitio.dataset.siteid}
-NOMBRE: ${sitio.value}
-PROPIETARIO: ${sitio.dataset.torrero}
-Nombre Torrero ${sitio.dataset.nombretorrero}
+ID:${sitio.SiteID}
+NOMBRE: ${sitio.Nombre}
+PROPIETARIO: ${sitio.Torrero}
+Nombre Torrero ${sitio.NombreTorrero}
 ▬▬▬▬▬▬▬▬▬▬
-ACTIVIDAD: ${actividad.value}
+ACTIVIDAD: ${actividad}
 ▬▬▬▬▬▬▬▬▬▬
 TECNICOS/DUI
 ${bloqueTecnicos}
 ▬▬▬▬▬▬▬▬▬▬
-Placa: ${veh.Placa||''}
-Marca: ${veh.Marca||''}
-Modelo: ${veh.Modelo||''}
-Color: ${veh.Color||''}
+Placa: ${vehiculo.Placa||''}
+Marca: ${vehiculo.Marca||''}
+Modelo: ${vehiculo.Modelo||''}
+Color: ${vehiculo.Color||''}
 ▬▬▬▬▬▬▬▬▬▬
 Empresa: CELECT SA DE CV
 Supervisor: José Rivas
 Teléfono supervisor:6161 4465
 ▬▬▬▬▬▬▬▬▬▬
-TELEFONO: ${tp.TELEFONO||''}
-CORREO: ${tp.CORREO||''} tecnicossv@celectcac.com`;
+TELEFONO: ${tecnicoPrincipal.TELEFONO||''}
+CORREO: ${tecnicoPrincipal.CORREO||''} tecnicossv@celectcac.com`;
 }
 
-// ================= PREVIEW =================
-function actualizarPreview(){
-  if(!validar()){
-    preview.value='';
-    errorBox.style.display='block';
-    return;
-  }
-  errorBox.style.display='none';
-  preview.value=generarMensaje();
-}
+function actualizarPreview(){ document.getElementById('vistaPrevia').value=generarMensaje(); }
 
-['actividad','vehiculo','tecnicoPrincipal']
-.forEach(id=>document.getElementById(id).addEventListener('change',actualizarPreview));
+// --- Listeners ---
+document.getElementById('actividad').addEventListener('change', actualizarPreview);
+document.getElementById('vehiculo').addEventListener('change', actualizarPreview);
+document.getElementById('tecnicoPrincipal').addEventListener('change', actualizarPreview);
 
-// ================= BOTONES =================
-generar.onclick=()=>{
-  if(!validar()) return;
-  navigator.clipboard.writeText(generarMensaje());
-  alert('Copiado al portapapeles');
-};
+document.getElementById('generar').addEventListener('click',()=>{
+  const msg=generarMensaje();
+  if(msg.startsWith("Complete")) return alert(msg);
+  navigator.clipboard.writeText(msg).then(()=>alert('Copiado al portapapeles'));
+});
 
-whatsapp.onclick=()=>{
-  if(!validar()) return;
-  window.open(`https://wa.me/?text=${encodeURIComponent(generarMensaje())}`);
-};
+document.getElementById('whatsapp').addEventListener('click',()=>{
+  const msg=generarMensaje();
+  if(msg.startsWith("Complete")) return alert(msg);
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+});
+
+// --- Inicializar ---
+inicializar();
 </script>
 
 </body>
 </html>
+
+</body>
+</html>
+
 
