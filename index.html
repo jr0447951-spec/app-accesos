@@ -22,6 +22,7 @@
   button:hover { transform:translateY(-2px); opacity:0.9; }
   #generar { background:#2196F3; }
   #whatsapp { background:#4CAF50; }
+  #pag2 { background:#FF9800; }
 </style>
 </head>
 <body>
@@ -52,6 +53,7 @@
 
 <button id="generar">Generar y Copiar al Portapapeles</button>
 <button id="whatsapp">Enviar por WhatsApp</button>
+<button id="pag2">Ir a INGRESO/SALIDA</button>
 
 <script>
 let sitios=[], actividades=[], tecnicos=[], vehiculos=[];
@@ -223,6 +225,11 @@ document.getElementById('whatsapp').addEventListener('click',()=>{
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
 });
 
+// --- Botón para pag2.html ---
+document.getElementById('pag2').addEventListener('click',()=>{
+  window.location.href='pag2.html';
+});
+
 // --- Inicializar ---
 inicializar();
 </script>
@@ -230,7 +237,5 @@ inicializar();
 </body>
 </html>
 
-</body>
-</html>
 
 
