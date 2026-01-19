@@ -137,9 +137,14 @@ async function inicializar() {
   reportes = await cargarCSV('reportes.csv');
   trabajos = await cargarCSV('trabajos.csv');
 
+  // Mostrar todas las opciones al inicio
+  actualizarReportes();
+  actualizarTrabajos();
+  
   document.getElementById('porte').addEventListener('change', () => {
-    actualizarReportes();
-    actualizarTrabajos();
+    // YA NO FILTRAMOS, solo actualizamos la vista previa si el porte es parte del mensaje final (opcional)
+    // actualizarReportes();  <-- COMENTADO
+    // actualizarTrabajos();  <-- COMENTADO
     actualizarVistaPrevia();
   });
 
@@ -156,14 +161,15 @@ async function inicializar() {
   divVal.appendChild(chipVal);
 }
 
-// Actualizar reportes según porte con emoji
+// Actualizar reportes (AHORA MUESTRA TODOS SIN FILTRAR)
 function actualizarReportes() {
-  const porte = document.getElementById('porte').value;
+  // const porte = document.getElementById('porte').value; <-- YA NO SE USA
   const divRep = document.getElementById('reportes');
   divRep.innerHTML = '';
-  if(!porte) return;
+  // if(!porte) return; <-- YA NO SE USA
 
-  reportes.filter(r => r.PORTE === porte).forEach((r,i) => {
+  // Se muestran TODOS los reportes sin filtro
+  reportes.forEach((r,i) => { 
     const chip = document.createElement('div');
     chip.className = 'chip';
     chip.textContent = "📝 " + r.CORTO;
@@ -176,14 +182,15 @@ function actualizarReportes() {
   });
 }
 
-// Actualizar trabajos según porte con emoji
+// Actualizar trabajos (AHORA MUESTRA TODOS SIN FILTRAR)
 function actualizarTrabajos() {
-  const porte = document.getElementById('porte').value;
+  // const porte = document.getElementById('porte').value; <-- YA NO SE USA
   const divTrabajos = document.getElementById('trabajos');
   divTrabajos.innerHTML = '';
-  if(!porte) return;
+  // if(!porte) return; <-- YA NO SE USA
 
-  trabajos.filter(t => t.PORTE === porte).forEach((t,i) => {
+  // Se muestran TODOS los trabajos sin filtro
+  trabajos.forEach((t,i) => {
     const chip = document.createElement('div');
     chip.className = 'chip';
     chip.textContent = "🔧 " + t.CORTO;
@@ -235,16 +242,20 @@ function generarMensaje() {
   const porte = document.getElementById('porte').value;
   let mensajeBase = "Mantenimiento preventivo finalizado.";
 
+  // Ahora se pueden seleccionar de la lista completa
   const repSeleccionados = Array.from(document.querySelectorAll('#reportes .chip.selected'))
     .map(c => reportes[c.dataset.index].DETALLADO);
   
+  // Ahora se pueden seleccionar de la lista completa
   const trabajosSeleccionados = Array.from(document.querySelectorAll('#trabajos .chip.selected'))
     .map(c => obtenerTextoAleatorio(trabajos[c.dataset.index]));
 
   const valSeleccionada = document.querySelector('#validacion .chip.selected');
   const valTexto = valSeleccionada ? valSeleccionada.textContent : '';
 
-  if(!sitioNombre || !porte) return null;
+  // IMPORTANTE: Ahora el mensaje se genera aunque no se haya seleccionado porte.
+  // Se elimina la condición: if(!sitioNombre || !porte) return null;
+  if(!sitioNombre) return null;
 
   let msg = `${sitioNombre}\nID: ${sitioID}\n\n${mensajeBase}\n`;
   if(repSeleccionados.length) msg += `\nSe realizaron los siguientes reportes:\n• ${repSeleccionados.join('\n• ')}\n`;
