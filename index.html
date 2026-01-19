@@ -11,18 +11,16 @@ body{
   padding: 15px;
   background: linear-gradient(135deg,#f0f4ff,#e0f7f1);
 }
-
 h2{text-align:center;}
-
 label{font-weight:bold;margin-top:12px;display:block;}
-input,select{
+input,select,textarea{
   width:100%;
   padding:10px;
   margin-top:5px;
   border-radius:6px;
   border:1px solid #ccc;
+  box-sizing:border-box;
 }
-
 #listaSitios{
   position:absolute;
   background:#fff;
@@ -32,13 +30,11 @@ input,select{
   overflow:auto;
   z-index:1000;
 }
-
 #listaSitios div{
   padding:8px;
   cursor:pointer;
 }
 #listaSitios div:hover{background:#f1f1f1;}
-
 .chip{
   display:inline-block;
   padding:6px 12px;
@@ -51,7 +47,6 @@ input,select{
   background:#4CAF50;
   color:white;
 }
-
 button{
   margin-top:15px;
   padding:12px;
@@ -61,19 +56,18 @@ button{
   border-radius:8px;
   cursor:pointer;
 }
-
 #generar{background:#2196F3;color:white;}
 #whatsapp{background:#4CAF50;color:white;}
-
 textarea{
-  width:100%;
-  height:200px;
+  height:220px;
   margin-top:10px;
+  font-family:monospace;
 }
 .error{
   color:#d32f2f;
   font-weight:bold;
   display:none;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -114,7 +108,7 @@ Completa los datos para generar mensaje.
 </div>
 
 <button id="generar">Generar y Copiar</button>
-<button id="whatsapp">Enviar WhatsApp</button>
+<button id="whatsapp">Enviar por WhatsApp</button>
 
 <script>
 // ================= VARIABLES =================
@@ -142,99 +136,105 @@ async function init(){
     cargarCSV('tecnicos.csv'),
     cargarCSV('vehiculos.csv')
   ]);
-
-  cargarSelects();
+  cargarUI();
 }
 init();
 
-// ================= UI LOAD =================
-function cargarSelects(){
-  const actSel=document.getElementById('actividad');
+// ================= UI =================
+function cargarUI(){
   actividades.forEach(a=>{
     const o=document.createElement('option');
     o.value=a.ACTIVIDAD;
     o.textContent=a.ACTIVIDAD;
-    actSel.appendChild(o);
+    actividad.appendChild(o);
   });
 
-  const vehSel=document.getElementById('vehiculo');
   vehiculos.forEach(v=>{
     const o=document.createElement('option');
-    o.value=v.Placa;
     o.textContent=`${v.Placa} - ${v.Marca} ${v.Modelo}`;
-    vehSel.appendChild(o);
+    vehiculo.appendChild(o);
   });
 
-  const tecSel=document.getElementById('tecnicoPrincipal');
   tecnicos.forEach((t,i)=>{
     const o=document.createElement('option');
     o.value=i;
     o.textContent=`${t.TECNICO} (${t.DUI})`;
-    tecSel.appendChild(o);
-  });
+    tecnicoPrincipal.appendChild(o);
 
-  const divAdd=document.getElementById('tecnicosAdicionales');
-  tecnicos.forEach((t,i)=>{
     const chip=document.createElement('div');
     chip.className='chip';
     chip.textContent=`${t.TECNICO} (${t.DUI})`;
     chip.dataset.index=i;
     chip.onclick=()=>chip.classList.toggle('selected');
-    divAdd.appendChild(chip);
+    tecnicosAdicionales.appendChild(chip);
   });
 }
 
 // ================= SITIOS =================
-const inputSitio=document.getElementById('sitio');
-const lista=document.getElementById('listaSitios');
-
-inputSitio.addEventListener('input',()=>{
-  lista.innerHTML='';
-  const v=inputSitio.value.toLowerCase();
+sitio.addEventListener('input',()=>{
+  listaSitios.innerHTML='';
+  const v=sitio.value.toLowerCase();
   if(!v) return;
   sitios.filter(s=>s['Nombre de Sitio'].toLowerCase().includes(v))
-  .slice(0,10)
-  .forEach(s=>{
-    const d=document.createElement('div');
-    d.textContent=`${s['Nombre de Sitio']} (${s.SiteID})`;
-    d.onclick=()=>{
-      inputSitio.value=s['Nombre de Sitio'];
-      inputSitio.dataset.siteid=s.SiteID;
-      inputSitio.dataset.torrero=s.Torrero;
-      inputSitio.dataset.nombretorrero=s['Nombre Torrero'];
-      lista.innerHTML='';
-      actualizarPreview();
-    };
-    lista.appendChild(d);
-  });
+    .slice(0,10)
+    .forEach(s=>{
+      const d=document.createElement('div');
+      d.textContent=`${s['Nombre de Sitio']} (${s.SiteID})`;
+      d.onclick=()=>{
+        sitio.value=s['Nombre de Sitio'];
+        sitio.dataset.siteid=s.SiteID;
+        sitio.dataset.torrero=s.Torrero;
+        sitio.dataset.nombretorrero=s['Nombre Torrero'];
+        listaSitios.innerHTML='';
+        actualizarPreview();
+      };
+      listaSitios.appendChild(d);
+    });
 });
 
-// ================= MENSAJE =================
+// ================= VALIDACIÓN =================
 function validar(){
-  return inputSitio.dataset.siteid &&
-         actividad.value &&
-         tecnicoPrincipal.value;
+  return sitio.dataset.siteid && actividad.value && tecnicoPrincipal.value;
 }
 
+// ================= MENSAJE =================
 function generarMensaje(){
   const tp=tecnicos[tecnicoPrincipal.value];
   const adicionales=[...document.querySelectorAll('.chip.selected')]
     .map(c=>tecnicos[c.dataset.index]);
+  const veh=vehiculos[vehiculo.selectedIndex-1]||{};
 
-  return `BUEN DÍA
-SOLICITAMOS ACCESO:
+  const bloqueTecnicos=[tp,...adicionales]
+    .map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']||''})`)
+    .join('\n');
 
-ID: ${inputSitio.dataset.siteid}
-SITIO: ${inputSitio.value}
-
+  return `BUEN DIA
+SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
+▬▬▬▬▬▬▬▬▬▬
+ID:${sitio.dataset.siteid}
+NOMBRE: ${sitio.value}
+PROPIETARIO: ${sitio.dataset.torrero}
+Nombre Torrero ${sitio.dataset.nombretorrero}
+▬▬▬▬▬▬▬▬▬▬
 ACTIVIDAD: ${actividad.value}
-
-PERSONAL:
-${[tp,...adicionales].map(t=>`${t.TECNICO} ${t.DUI}`).join('\n')}
-
-EMPRESA: CELECT SA DE CV`;
+▬▬▬▬▬▬▬▬▬▬
+TECNICOS/DUI
+${bloqueTecnicos}
+▬▬▬▬▬▬▬▬▬▬
+Placa: ${veh.Placa||''}
+Marca: ${veh.Marca||''}
+Modelo: ${veh.Modelo||''}
+Color: ${veh.Color||''}
+▬▬▬▬▬▬▬▬▬▬
+Empresa: CELECT SA DE CV
+Supervisor: José Rivas
+Teléfono supervisor:6161 4465
+▬▬▬▬▬▬▬▬▬▬
+TELEFONO: ${tp.TELEFONO||''}
+CORREO: ${tp.CORREO||''} tecnicossv@celectcac.com`;
 }
 
+// ================= PREVIEW =================
 function actualizarPreview(){
   if(!validar()){
     preview.value='';
@@ -245,17 +245,17 @@ function actualizarPreview(){
   preview.value=generarMensaje();
 }
 
-// ================= EVENTS =================
-['actividad','tecnicoPrincipal','vehiculo']
+['actividad','vehiculo','tecnicoPrincipal']
 .forEach(id=>document.getElementById(id).addEventListener('change',actualizarPreview));
 
-document.getElementById('generar').onclick=()=>{
+// ================= BOTONES =================
+generar.onclick=()=>{
   if(!validar()) return;
   navigator.clipboard.writeText(generarMensaje());
-  alert('Copiado');
+  alert('Copiado al portapapeles');
 };
 
-document.getElementById('whatsapp').onclick=()=>{
+whatsapp.onclick=()=>{
   if(!validar()) return;
   window.open(`https://wa.me/?text=${encodeURIComponent(generarMensaje())}`);
 };
@@ -263,5 +263,4 @@ document.getElementById('whatsapp').onclick=()=>{
 
 </body>
 </html>
-
 
