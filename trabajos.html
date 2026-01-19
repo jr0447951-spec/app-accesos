@@ -97,10 +97,10 @@
   <option value="PEQUEÑO">Pequeño Porte</option>
 </select>
 
-<label>Reportes:</label>
+<label>Reportes (Se filtran por porte):</label>
 <div id="reportes"></div>
 
-<label>Trabajos realizados:</label>
+<label>Trabajos realizados (Todos disponibles):</label>
 <div id="trabajos"></div>
 
 <label>Validación:</label>
@@ -137,14 +137,12 @@ async function inicializar() {
   reportes = await cargarCSV('reportes.csv');
   trabajos = await cargarCSV('trabajos.csv');
 
-  // Mostrar todas las opciones al inicio
-  actualizarReportes();
+  // CAMBIO: Cargar todos los trabajos al inicio, sin esperar selección de porte
   actualizarTrabajos();
-  
+
   document.getElementById('porte').addEventListener('change', () => {
-    // YA NO FILTRAMOS, solo actualizamos la vista previa si el porte es parte del mensaje final (opcional)
-    // actualizarReportes();  <-- COMENTADO
-    // actualizarTrabajos();  <-- COMENTADO
+    actualizarReportes(); // Los reportes SÍ dependen del porte
+    // actualizarTrabajos(); // CAMBIO: Ya no actualizamos trabajos aquí porque no dependen del porte
     actualizarVistaPrevia();
   });
 
@@ -161,15 +159,15 @@ async function inicializar() {
   divVal.appendChild(chipVal);
 }
 
-// Actualizar reportes (AHORA MUESTRA TODOS SIN FILTRAR)
+// Actualizar reportes según porte (ESTO SE MANTIENE IGUAL QUE AL PRINCIPIO)
 function actualizarReportes() {
-  // const porte = document.getElementById('porte').value; <-- YA NO SE USA
+  const porte = document.getElementById('porte').value;
   const divRep = document.getElementById('reportes');
   divRep.innerHTML = '';
-  // if(!porte) return; <-- YA NO SE USA
+  if(!porte) return;
 
-  // Se muestran TODOS los reportes sin filtro
-  reportes.forEach((r,i) => { 
+  // Sigue filtrando por PORTE
+  reportes.filter(r => r.PORTE === porte).forEach((r,i) => {
     const chip = document.createElement('div');
     chip.className = 'chip';
     chip.textContent = "📝 " + r.CORTO;
@@ -182,14 +180,15 @@ function actualizarReportes() {
   });
 }
 
-// Actualizar trabajos (AHORA MUESTRA TODOS SIN FILTRAR)
+// Actualizar trabajos (CAMBIO: AHORA MUESTRA TODOS SIN FILTRAR)
 function actualizarTrabajos() {
-  // const porte = document.getElementById('porte').value; <-- YA NO SE USA
+  // CAMBIO: Eliminamos la dependencia del valor 'porte'
   const divTrabajos = document.getElementById('trabajos');
   divTrabajos.innerHTML = '';
-  // if(!porte) return; <-- YA NO SE USA
+  
+  // CAMBIO: Eliminamos el 'if(!porte) return;' para que siempre se muestren
 
-  // Se muestran TODOS los trabajos sin filtro
+  // CAMBIO: Usamos forEach directamente en 'trabajos' sin .filter()
   trabajos.forEach((t,i) => {
     const chip = document.createElement('div');
     chip.className = 'chip';
@@ -242,20 +241,17 @@ function generarMensaje() {
   const porte = document.getElementById('porte').value;
   let mensajeBase = "Mantenimiento preventivo finalizado.";
 
-  // Ahora se pueden seleccionar de la lista completa
   const repSeleccionados = Array.from(document.querySelectorAll('#reportes .chip.selected'))
     .map(c => reportes[c.dataset.index].DETALLADO);
   
-  // Ahora se pueden seleccionar de la lista completa
   const trabajosSeleccionados = Array.from(document.querySelectorAll('#trabajos .chip.selected'))
     .map(c => obtenerTextoAleatorio(trabajos[c.dataset.index]));
 
   const valSeleccionada = document.querySelector('#validacion .chip.selected');
   const valTexto = valSeleccionada ? valSeleccionada.textContent : '';
 
-  // IMPORTANTE: Ahora el mensaje se genera aunque no se haya seleccionado porte.
-  // Se elimina la condición: if(!sitioNombre || !porte) return null;
-  if(!sitioNombre) return null;
+  // Se mantiene la validación de que se requiere sitio y porte para generar el mensaje final
+  if(!sitioNombre || !porte) return null;
 
   let msg = `${sitioNombre}\nID: ${sitioID}\n\n${mensajeBase}\n`;
   if(repSeleccionados.length) msg += `\nSe realizaron los siguientes reportes:\n• ${repSeleccionados.join('\n• ')}\n`;
