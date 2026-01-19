@@ -3,7 +3,7 @@ ID;CORTO;VARIANTE1;VARIANTE2;VARIANTE3
 2;Limpieza de gabinete;Se realizó limpieza en gabinetes, equipos y TX;Se ejecutó limpieza en gabinetes y equipos de tecnologías;Se limpiaron gabinetes y equipos de TX
 3;Prueba de alarmas;Se probaron alarmas externas correctamente;Se verificó funcionamiento de alarmas externas;Alarmas externas probadas y funcionando;Verificación  y prueba de Alarmas externas
 4;Limpieza de placas de tierra;Limpieza y lubricación de las placas de puesta a tierra;Engrasado y limpieza de placa a tierra
-5;Extra Backup;Se extraen Backup de equipos
+5;Extracción de un backup;Se extraen Backup de equipos
 6;Reaprete en tornilleria;Se reapreta borneras AC y DC; se ajusta aprete en coxiones electricas;Verificación y apriete de bornes AC/DC;Se verifico el torque de las borneras AC y DC;Apreté de Terminales y Limpieza general en Caja Principal 220VAC. 
 7;RRUS sin aterrizaje; Equipos en Torre no cuentan con aterrizaje
 8;Acometida Provisional;Sitio cuenta con acometida provisonal;Sitio requiere formalizacion de acometida
