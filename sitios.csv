@@ -470,6 +470,7 @@ SiteID;Nombre de Sitio;Torrero;Nombre Torrero
 391266;COLONIA SANTA MARiA USULUTAN;KGI;Colonia Santa Maria
 391465;LOS ANGELES CONCHAGUA;TETRA;4-051-SV Los Angeles Conchagua
 391468;LA LEONA INTIPUCA;TETRA;TBS02049 La Leona
+390293;AMATECAMPO 2;PHOENIX;SV-PA-1004 AMATECAMPO 
 IBW;Nodo CV1
 IBW;Nodo CV2
 IBW;Nodo San Benito (Poste)
@@ -490,3 +491,4 @@ IBW;Nodo av los andes (poste)
 IBW;Nodo 8 (Fuentes Beethoven)
 IBW;Nodo Escalon 7bis(shelter)
 IBW;Nodo Torre 91 (Poste)
+
