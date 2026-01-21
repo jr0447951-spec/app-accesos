@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>base de datos con nic</name>
+    <NetworkLink>
+      <name>RED MOVISTAR 2/2024</name>
+      <Link>
+        <href><![CDATA[https://www.google.com/maps/d/u/0/kml?forcekml=1&mid=1qGhCb342mLE48Ph1UKkXwr2fGHu0vo4&lid=kRujjmnQBRc]]></href>
+      </Link>
+    </NetworkLink>
+  </Document>
+</kml>
