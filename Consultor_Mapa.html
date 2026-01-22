@@ -1,74 +1,90 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Consultor de Sitios - Logística</title>
-<style>
-    :root { --primary: #1e3a8a; --accent: #3b82f6; --bg: #f1f5f9; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin:0; display:flex; flex-direction:column; align-items:center; color: #334155; }
-    h1 { text-align:center; color: var(--primary); margin: 20px 0 5px; font-size: 1.6rem; }
-    .status { font-size: 0.85rem; margin-bottom: 15px; font-weight: 500; }
-    
-    .search-box { width:90%; max-width:500px; position:relative; margin-bottom: 20px; }
-    input[type="text"] { 
-        width:100%; padding:14px 45px 14px 16px; font-size:1rem; border-radius:12px; 
-        border:2px solid #cbd5e1; box-sizing: border-box; outline: none; transition: 0.3s;
-    }
-    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultor Mapa de Sitios</title>
+    <style>
+        :root { --primary: #1e3a8a; --accent: #3b82f6; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin:0; display:flex; flex-direction:column; align-items:center; color: #334155; padding-bottom: 20px; }
+        
+        header { width: 100%; background: white; padding: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.4rem; }
+        
+        .status { font-size: 0.8rem; margin-top: 5px; color: #64748b; }
+        
+        .search-container { width: 90%; max-width: 500px; position: relative; margin-bottom: 10px; }
+        input[type="text"] { 
+            width: 100%; padding: 14px 45px 14px 16px; font-size: 1rem; border-radius: 12px; 
+            border: 2px solid #cbd5e1; box-sizing: border-box; outline: none; transition: 0.3s;
+        }
+        input[type="text"]:focus { border-color: var(--accent); }
 
-    .clear-btn { 
-        position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
-        background: #94a3b8; color: white; width: 22px; height: 22px; border-radius: 50%;
-        display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 12px;
-    }
+        .clear-btn { 
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: #cbd5e1; color: white; width: 24px; height: 24px; border-radius: 50%;
+            display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 14px;
+        }
 
-    .suggestions { 
-        position:absolute; top:110%; left:0; right:0; background:white; border-radius:12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-height:280px; overflow-y:auto; z-index: 1000;
-    }
-    .suggestion-item { padding:14px; cursor:pointer; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; }
-    .suggestion-item:hover { background: #f8fafc; }
-    .suggestion-item span { font-size: 0.8rem; color: #64748b; }
+        .suggestions { 
+            position: absolute; top: 105%; left: 0; right: 0; background: white; 
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            max-height: 250px; overflow-y: auto; z-index: 1000;
+        }
+        .suggestion-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .suggestion-item:hover { background: #eff6ff; }
+        .suggestion-item strong { color: var(--accent); display: block; }
+        .suggestion-item span { font-size: 0.85rem; color: #64748b; }
 
-    .card { 
-        background:white; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.08);
-        width:92%; max-width:500px; padding:20px; box-sizing: border-box; margin-bottom: 30px;
-        animation: slideUp 0.3s ease-out;
-    }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card { 
+            background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 90%; max-width: 500px; padding: 20px; box-sizing: border-box; 
+            margin-bottom: 30px; animation: fadeIn 0.4s ease-out; position: relative;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    .map-preview iframe { width:100%; height:220px; border-radius:15px; border:none; background:#e2e8f0; margin-bottom:15px; }
-    
-    .dist-badge { 
-        background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 12px;
-        text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 0.95rem;
-    }
+        .copy-hint { 
+            cursor: pointer; position: relative; display: inline-block; 
+            background: #f8fafc; padding: 2px 8px; border-radius: 6px; border: 1px dashed #cbd5e1;
+        }
+        .copy-hint:active { background: #e2e8f0; }
+        .toast {
+            position: fixed; bottom: 20px; background: #334155; color: white;
+            padding: 10px 20px; border-radius: 30px; font-size: 0.9rem;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2000;
+        }
 
-    .info-table { width:100%; border-collapse: collapse; }
-    .info-table td { padding: 10px 5px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-    .label { color: #64748b; font-weight: 600; width: 40%; }
+        .map-preview { width: 100%; height: 200px; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .map-preview iframe { width: 100%; height: 100%; border: none; }
+        
+        .dist-info { background: #dbeafe; color: #1e40af; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 0.9rem; }
 
-    .nav-btn { 
-        display: block; background: var(--accent); color: white; text-align: center;
-        padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold;
-        margin-top: 20px; transition: 0.2s;
-    }
-    .nav-btn:hover { background: #2563eb; }
-</style>
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table td { padding: 8px 4px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; vertical-align: top; }
+        .label { font-weight: 600; color: #64748b; width: 40%; }
+
+        .go-button { 
+            display: block; background: #2563eb; color: white; text-align: center;
+            padding: 14px; border-radius: 12px; text-decoration: none; font-weight: bold;
+            margin-top: 20px; font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Consultor de Sitios</h1>
-<div id="status" class="status">Cargando datos...</div>
+<header>
+    <h1>Consultor de Sitios</h1>
+    <div id="status" class="status">Cargando base de datos...</div>
+</header>
 
-<div class="search-box">
-    <input type="text" id="siteSearch" placeholder="Escribe Nombre o ID del sitio..." disabled>
-    <div id="clearBtn" class="clear-btn">✕</div>
+<div class="search-container">
+    <input type="text" id="siteSearch" placeholder="Escribe SITEID o Nombre..." disabled>
+    <div id="clearSearch" class="clear-btn">✕</div>
     <div id="suggestions" class="suggestions"></div>
 </div>
 
 <div id="result"></div>
+<div id="toast" class="toast">¡Copiado al portapapeles!</div>
 
 <script>
 let sites = [];
@@ -77,64 +93,62 @@ let userPos = null;
 const input = document.getElementById('siteSearch');
 const suggestions = document.getElementById('suggestions');
 const statusDiv = document.getElementById('status');
-const clearBtn = document.getElementById('clearBtn');
+const clearBtn = document.getElementById('clearSearch');
+const toast = document.getElementById('toast');
 
-// 1. CARGA Y PROCESAMIENTO
-// IMPORTANTE: Asegúrate de que esta URL sea la versión RAW de tu GitHub
-const URL_CSV = 'https://raw.githubusercontent.com/tu_usuario/tu_repo/main/Mapa_Base.csv';
+const CSV_URL = 'https://raw.githubusercontent.com/jr0447951-spec/app-accesos/main/Mapa_Base.csv';
 
-fetch(URL_CSV)
-    .then(res => res.text())
-    .then(csvText => {
-        const rows = csvText.split(/\r?\n/).filter(row => row.trim() !== '');
-        if(rows.length < 2) throw new Error("Archivo vacío");
-
+// 1. CARGA DE DATOS
+fetch(CSV_URL)
+    .then(res => {
+        if (!res.ok) throw new Error();
+        return res.text();
+    })
+    .then(data => {
+        const rows = data.split(/\r?\n/).filter(row => row.trim() !== '');
         const headers = rows[0].split(';').map(h => h.trim());
         
         sites = rows.slice(1).map(row => {
-            const cols = row.split(';');
-            let d = {};
+            const values = row.split(';');
+            let obj = {};
             headers.forEach((h, i) => {
-                // Limpiamos los nombres de columnas de caracteres extraños como la ¢
-                let cleanHeader = h.replace(/[^\x00-\x7F]/g, "o"); 
-                d[cleanHeader] = cols[i] ? cols[i].trim() : '';
+                obj[h] = values[i] ? values[i].trim() : '';
             });
-            return d;
+            return obj;
         });
 
-        statusDiv.innerHTML = `✅ <b>${sites.length} sitios</b> listos para consultar.`;
+        statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios cargados.`;
         input.disabled = false;
     })
-    .catch(err => {
-        statusDiv.innerHTML = "❌ Error al cargar el CSV. Revisa la URL.";
-        console.error(err);
+    .catch(() => {
+        statusDiv.innerHTML = "❌ Error al cargar. Verifica conexión.";
     });
 
-// 2. GEOLOCALIZACIÓN
+// 2. GPS
 if(navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(p => {
-        userPos = { lat: p.coords.latitude, lon: p.coords.longitude };
+    navigator.geolocation.getCurrentPosition(pos => {
+        userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
     });
 }
 
 // 3. BUSCADOR
 input.addEventListener('input', () => {
-    const val = input.value.toLowerCase().trim();
+    const query = input.value.toLowerCase().trim();
     suggestions.innerHTML = '';
-    clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
+    clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
 
-    if(val.length > 1) {
-        const matches = sites.filter(s => 
-            (s['NOMBRE DE SITIO'] && s['NOMBRE DE SITIO'].toLowerCase().includes(val)) ||
-            (s['SITEID'] && s['SITEID'].includes(val))
-        ).slice(0, 10);
+    if (query.length > 1) {
+        const filtered = sites.filter(s => 
+            (s['SITEID'] && s['SITEID'].toLowerCase().includes(query)) ||
+            (s['NOMBRE DE SITIO'] && s['NOMBRE DE SITIO'].toLowerCase().includes(query))
+        ).slice(0, 8);
 
-        matches.forEach(s => {
-            const item = document.createElement('div');
-            item.className = 'suggestion-item';
-            item.innerHTML = `<strong>${s['SITEID']}</strong><span>${s['NOMBRE DE SITIO']}</span>`;
-            item.onclick = () => showSite(s);
-            suggestions.appendChild(item);
+        filtered.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            div.innerHTML = `<strong>${s['SITEID']}</strong><span>${s['NOMBRE DE SITIO']}</span>`;
+            div.onclick = () => selectSite(s);
+            suggestions.appendChild(div);
         });
     }
 });
@@ -147,53 +161,67 @@ clearBtn.onclick = () => {
     input.focus();
 };
 
-function getKm(lat1, lon1, lat2, lon2) {
+function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
-    const dLat = (lat2-lat1) * Math.PI/180;
-    const dLon = (lon2-lon1) * Math.PI/180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
-function showSite(s) {
+// 4. FUNCIÓN COPIAR FORMATO
+function copyToClipboard(id, nombre) {
+    const text = `*${id} - ${nombre}*`;
+    navigator.clipboard.writeText(text).then(() => {
+        toast.style.opacity = '1';
+        setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+    });
+}
+
+// 5. MOSTRAR SITIO
+function selectSite(s) {
     suggestions.innerHTML = '';
     input.value = s['NOMBRE DE SITIO'];
     
-    const lat = parseFloat(s.LATITUDE.replace(',', '.'));
-    const lon = parseFloat(s.LONGITUDE.replace(',', '.'));
-    
+    const lat = parseFloat(s.LATITUDE);
+    const lon = parseFloat(s.LONGITUDE);
+
     let distHtml = '';
-    if(userPos && !isNaN(lat)) {
-        const km = getKm(userPos.lat, userPos.lon, lat, lon);
-        distHtml = `<div class="dist-badge">📍 A ${km.toFixed(2)} km de tu ubicación</div>`;
+    if (userPos && !isNaN(lat)) {
+        const km = getDistance(userPos.lat, userPos.lon, lat, lon);
+        distHtml = `<div class="dist-info">📏 Estás a ${km.toFixed(2)} km del sitio</div>`;
     }
 
-    const embedUrl = `https://www.google.com/maps?q=${lat},${lon}&output=embed`;
+    const embedMap = `https://www.google.com/maps?q=${lat},${lon}&output=embed`;
     const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
 
     document.getElementById('result').innerHTML = `
         <div class="card">
-            <h2 style="margin:0; color:var(--primary)">${s.SITEID}</h2>
-            <p style="margin:5px 0 15px; color:#64748b; font-weight:500;">${s['NOMBRE DE SITIO']}</p>
+            <div class="copy-hint" title="Click para copiar" onclick="copyToClipboard('${s['SITEID']}', '${s['NOMBRE DE SITIO']}')">
+                <h2 style="margin:0; color:#1e3a8a; display:inline;">${s['SITEID']}</h2> 
+                <small style="color:var(--accent); margin-left:10px;">📋 Copiar</small>
+            </div>
+            <p style="margin: 5px 0 15px; color:#64748b;">${s['NOMBRE DE SITIO']}</p>
             
-            <iframe class="map-preview" src="${embedUrl}"></iframe>
-            
+            <div class="map-preview">
+                <iframe src="${embedMap}"></iframe>
+            </div>
+
             ${distHtml}
 
-            <table class="info-table">
-                <tr><td class="label">NIC/NIS</td><td>${s['NIC/NIS'] || '---'}</td></tr>
-                <tr><td class="label">Distribuidora</td><td>${s['Distribuidora'] || '---'}</td></tr>
-                <tr><td class="label">Municipio</td><td>${s['Municipio'] || '---'}</td></tr>
-                <tr><td class="label">Dirección</td><td>${s['Direccion'] || s['Direcciioo n'] || 'Ver mapa'}</td></tr>
-                <tr><td class="label">Llave Requerida</td><td>${s['Llave Requerida'] || 'No'}</td></tr>
-                <tr><td class="label">Tecnología</td><td>${s['Tech'] || '---'}</td></tr>
+            <table class="data-table">
+                <tr><td class="label">Municipio:</td><td>${s['Municipio']}</td></tr>
+                <tr><td class="label">Dirección:</td><td>${s['Direcci¢n']}</td></tr>
+                <tr><td class="label">NIC/NIS:</td><td>${s['NIC/NIS']}</td></tr>
+                <tr><td class="label">Distribuidora:</td><td>${s['Distribuidora']}</td></tr>
+                <tr><td class="label">Llave:</td><td>${s['Llave Requerida'] || 'No'}</td></tr>
+                <tr><td class="label">Propietario:</td><td>${s['Propietario']}</td></tr>
             </table>
 
-            <a href="${navUrl}" target="_blank" class="nav-btn">INICIAR NAVEGACIÓN GPS</a>
+            <a href="${navUrl}" target="_blank" class="go-button">📍 ABRIR NAVEGACIÓN GPS</a>
         </div>
     `;
 }
 </script>
-
 </body>
 </html>
