@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultor Mapa de Sitios</title>
+    <title>Consultor de Sitios</title>
     <style>
         :root { --primary: #1e3a8a; --accent: #3b82f6; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin:0; display:flex; flex-direction:column; align-items:center; color: #334155; padding-bottom: 20px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin:0; display:flex; flex-direction:column; align-items:center; color: #334155; padding-bottom: 40px; }
         
         header { width: 100%; background: white; padding: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
-        h1 { margin: 0; color: var(--primary); font-size: 1.4rem; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.3rem; }
+        .status { font-size: 0.75rem; margin-top: 5px; color: #64748b; }
         
-        .status { font-size: 0.8rem; margin-top: 5px; color: #64748b; }
-        
-        .search-container { width: 90%; max-width: 500px; position: relative; margin-bottom: 10px; }
+        .search-container { width: 92%; max-width: 500px; position: relative; margin-bottom: 10px; }
         input[type="text"] { 
             width: 100%; padding: 14px 45px 14px 16px; font-size: 1rem; border-radius: 12px; 
-            border: 2px solid #cbd5e1; box-sizing: border-box; outline: none; transition: 0.3s;
+            border: 2px solid #cbd5e1; box-sizing: border-box; outline: none;
         }
-        input[type="text"]:focus { border-color: var(--accent); }
 
         .clear-btn { 
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            background: #cbd5e1; color: white; width: 24px; height: 24px; border-radius: 50%;
-            display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 14px;
+            background: #cbd5e1; color: white; width: 26px; height: 26px; border-radius: 50%;
+            display: none; align-items: center; justify-content: center; cursor: pointer;
         }
 
         .suggestions { 
@@ -31,56 +29,54 @@
             border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
             max-height: 250px; overflow-y: auto; z-index: 1000;
         }
-        .suggestion-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
-        .suggestion-item:hover { background: #eff6ff; }
+        .suggestion-item { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
         .suggestion-item strong { color: var(--accent); display: block; }
 
         .card { 
             background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            width: 90%; max-width: 500px; padding: 20px; box-sizing: border-box; 
-            margin-bottom: 30px; animation: fadeIn 0.4s ease-out;
+            width: 92%; max-width: 500px; padding: 20px; box-sizing: border-box; animation: fadeIn 0.4s ease-out;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
         .header-title { 
-            cursor: pointer; background: #f8fafc; padding: 12px; border-radius: 12px;
-            border: 1px dashed var(--accent); margin-bottom: 15px; transition: 0.2s;
+            cursor: pointer; background: #eff6ff; padding: 15px; border-radius: 12px;
+            border: 1px dashed var(--accent); margin-bottom: 15px; text-align: center;
         }
-        .header-title:active { transform: scale(0.98); background: #e2e8f0; }
-        .header-title h2 { margin:0; color: #1e3a8a; font-size: 1.1rem; line-height: 1.3; }
-        .copy-tag { font-size: 0.7rem; color: var(--accent); font-weight: bold; text-transform: uppercase; display: block; margin-top: 5px; }
+        .header-title h2 { margin:0; color: #1e3a8a; font-size: 1.1rem; }
+        .copy-tag { font-size: 0.65rem; color: var(--accent); font-weight: bold; display: block; margin-top: 5px; }
 
-        .map-preview { width: 100%; height: 200px; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .map-preview { width: 100%; height: 180px; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .map-preview iframe { width: 100%; height: 100%; border: none; }
         
-        .dist-info { background: #dbeafe; color: #1e40af; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 0.85rem; }
+        .dist-info { background: #f0fdf4; color: #166534; padding: 8px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 0.8rem; border: 1px solid #bbf7d0; }
 
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table td { padding: 10px 4px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; vertical-align: top; }
-        .label { font-weight: 600; color: #64748b; width: 35%; }
-        .val { color: #1e293b; }
+        .info-box { margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .info-box:last-child { border-bottom: none; }
+        .label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+        .val { font-size: 1rem; color: #1e293b; display: block; line-height: 1.4; }
+        .highlight { color: #2563eb; font-weight: 700; }
 
         .go-button { 
             display: block; background: #2563eb; color: white; text-align: center;
-            padding: 14px; border-radius: 12px; text-decoration: none; font-weight: bold;
-            margin-top: 20px; font-size: 1rem;
+            padding: 16px; border-radius: 12px; text-decoration: none; font-weight: bold;
+            margin-top: 10px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
         .toast {
             position: fixed; bottom: 30px; background: #1e293b; color: white;
             padding: 10px 25px; border-radius: 50px; font-size: 0.85rem;
-            opacity: 0; transition: 0.3s; pointer-events: none; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0; transition: 0.3s; pointer-events: none; z-index: 2000;
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Consultor de Sitios</h1>
+    <h1>Consultor de Acceso</h1>
     <div id="status" class="status">Cargando base de datos...</div>
 </header>
 
 <div class="search-container">
-    <input type="text" id="siteSearch" placeholder="Escribe ID o Nombre del sitio..." disabled>
+    <input type="text" id="siteSearch" placeholder="ID o Nombre del sitio..." disabled>
     <div id="clearSearch" class="clear-btn">✕</div>
     <div id="suggestions" class="suggestions"></div>
 </div>
@@ -100,7 +96,7 @@ const toast = document.getElementById('toast');
 
 const CSV_URL = 'https://raw.githubusercontent.com/jr0447951-spec/app-accesos/main/Mapa_Base.csv';
 
-// CARGA DE DATOS
+// 1. CARGA DE DATOS
 fetch(CSV_URL)
     .then(res => res.text())
     .then(data => {
@@ -111,26 +107,27 @@ fetch(CSV_URL)
             const values = row.split(';');
             let obj = {};
             headers.forEach((h, i) => {
-                // Normalizamos el nombre de la columna Dirección por el error de caracteres
-                let headerName = h;
-                if(h.includes('Direcci')) headerName = 'DIRECCION';
-                obj[headerName] = values[i] ? values[i].trim() : '';
+                let key = h.toUpperCase();
+                // Normalización de llaves importantes
+                if(key.includes('DIRECCI')) key = 'DIRECCION';
+                if(key.includes('PROPIETARIO')) key = 'NOMBRE_PROPIETARIO';
+                obj[key] = values[i] ? values[i].trim() : '';
             });
             return obj;
         });
-        statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios listos.`;
+        statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios cargados.`;
         input.disabled = false;
     })
     .catch(() => statusDiv.innerHTML = "❌ Error de conexión.");
 
-// GPS
+// 2. GPS
 if(navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
         userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
     });
 }
 
-// BUSCADOR
+// 3. BUSCADOR
 input.addEventListener('input', () => {
     const query = input.value.toLowerCase().trim();
     suggestions.innerHTML = '';
@@ -171,36 +168,53 @@ function selectSite(s) {
         const dLon = (lon - userPos.lon) * Math.PI / 180;
         const a = Math.sin(dLat/2)**2 + Math.cos(userPos.lat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
         const km = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-        distHtml = `<div class="dist-info">📍 A ${km.toFixed(2)} km de tu posición</div>`;
+        distHtml = `<div class="dist-info">📍 A ${km.toFixed(2)} km de tu ubicación</div>`;
     }
 
-    // Lógica Emoji Llave
-    const llaveVal = s['Llave Requerida'] ? s['Llave Requerida'].toUpperCase() : '';
-    const llaveRow = (llaveVal === 'SI') ? `<tr><td class="label">Llave:</td><td class="val">🔑 SI</td></tr>` : '';
+    const llaveVal = s['LLAVE REQUERIDA'] ? s['LLAVE REQUERIDA'].toUpperCase() : '';
+    const llaveBox = (llaveVal === 'SI') ? `<div class="info-box"><span class="label">Acceso:</span><span class="val">🔑 LLAVE REQUERIDA</span></div>` : '';
 
     document.getElementById('result').innerHTML = `
         <div class="card">
             <div class="header-title" onclick="copyFormat('${s['SITEID']}', '${s['NOMBRE DE SITIO']}')">
                 <h2>${s['SITEID']} - ${s['NOMBRE DE SITIO']}</h2>
-                <span class="copy-tag">📋 Toca para copiar formato</span>
+                <span class="copy-tag">📋 TOCAR PARA COPIAR FORMATO</span>
             </div>
             
             <div class="map-preview">
-                <iframe src="https://maps.google.com/maps?q=${lat},${lon}&z=15&output=embed"></iframe>
+                <iframe src="https://maps.google.com/maps?q=${lat},${lon}&z=16&output=embed"></iframe>
             </div>
 
             ${distHtml}
 
-            <table class="data-table">
-                <tr><td class="label">NIC/NIS:</td><td class="val"><b>${s['NIC/NIS'] || 'N/A'}</b></td></tr>
-                <tr><td class="label">Dirección:</td><td class="val">${s['DIRECCION'] || 'No disponible'}</td></tr>
-                <tr><td class="label">Municipio:</td><td class="val">${s['Municipio']}</td></tr>
-                ${llaveRow}
-                <tr><td class="label">Distribuidora:</td><td class="val">${s['Distribuidora']}</td></tr>
-                <tr><td class="label">Propietario:</td><td class="val">${s['Propietario']}</td></tr>
-            </table>
+            <div class="info-box">
+                <span class="label">NIC/NIS:</span>
+                <span class="val highlight">${s['NIC/NIS'] || 'N/A'}</span>
+            </div>
 
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR RUTA GPS</a>
+            <div class="info-box">
+                <span class="label">Dirección:</span>
+                <span class="val">${s['DIRECCION'] || 'No disponible'}</span>
+            </div>
+
+            <div class="info-box">
+                <span class="label">Municipio:</span>
+                <span class="val">${s['MUNICIPIO']}</span>
+            </div>
+
+            ${llaveBox}
+
+            <div class="info-box">
+                <span class="label">Nombre de Propietario:</span>
+                <span class="val"><b>${s['NOMBRE_PROPIETARIO'] || 'No disponible'}</b></span>
+            </div>
+
+            <div class="info-box">
+                <span class="label">Distribuidora:</span>
+                <span class="val">${s['DISTRIBUIDORA']}</span>
+            </div>
+
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 ABRIR EN GOOGLE MAPS</a>
         </div>
     `;
 }
