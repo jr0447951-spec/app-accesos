@@ -27,14 +27,14 @@
         #pinOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(25px);
             z-index: 10000;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.5s ease, visibility 0.5s;
+            transition: opacity 0.5s ease;
         }
 
         .pin-box {
@@ -44,53 +44,78 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            max-width: 320px;
+            width: 90%;
         }
 
-        .pin-box h2 { margin-bottom: 20px; font-size: 1.2rem; letter-spacing: 2px; }
+        .pin-box h2 { 
+            margin-bottom: 20px; 
+            font-size: 1rem; 
+            letter-spacing: 2px; 
+            color: var(--primary);
+            text-transform: uppercase;
+        }
 
         #pinInput {
-            background: rgba(0,0,0,0.3);
-            border: 2px solid var(--primary);
-            border-radius: 12px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
             padding: 15px;
             color: white;
             font-size: 2rem;
-            width: 150px;
+            width: 160px;
             text-align: center;
-            letter-spacing: 10px;
+            letter-spacing: 8px;
             outline: none;
             margin-bottom: 20px;
         }
 
         .btn-unlock {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), #0076ff);
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
+            padding: 15px 40px;
+            border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
+            width: 100%;
+        }
+
+        /* CONTENIDO PRINCIPAL */
+        #mainContent { 
+            width: 100%; 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        header { text-align: center; padding: 40px 20px; }
+        .menu-container { width: 90%; max-width: 450px; display: flex; flex-direction: column; gap: 15px; }
+        
+        .nav-card {
+            background: rgba(255,255,255,0.06); 
+            backdrop-filter: blur(10px);
+            border-radius: 24px; 
+            padding: 20px; 
+            display: flex; 
+            align-items: center;
+            gap: 20px; 
+            text-decoration: none; 
+            color: white; 
+            border: 1px solid rgba(255,255,255,0.1);
             transition: 0.3s;
         }
 
-        .btn-unlock:active { transform: scale(0.95); }
+        .nav-card:hover { transform: translateY(-5px); border-color: var(--primary); }
 
-        /* EL RESTO DEL DISEÑO (Oculto inicialmente) */
-        #mainContent { display: none; width: 100%; display: flex; flex-direction: column; align-items: center; }
-
-        /* Estilos del Home (Simplificados para brevedad, mantén los tuyos) */
-        header { text-align: center; padding: 50px 20px; }
-        .menu-container { width: 90%; max-width: 480px; display: flex; flex-direction: column; gap: 18px; }
-        .nav-card {
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-            border-radius: 22px; padding: 20px; display: flex; align-items: center;
-            gap: 20px; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.1);
-        }
-        .icon-box { width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        .icon-box { width: 55px; height: 55px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
         .bg-map { background: linear-gradient(135deg, #1e40af, #3b82f6); }
         .bg-access { background: linear-gradient(135deg, #065f46, #10b981); }
         .bg-report { background: linear-gradient(135deg, #5b21b6, #8b5cf6); }
-        footer { margin-top: auto; padding: 40px; font-size: 0.7rem; color: #475569; text-align: center; }
+
+        footer { margin-top: auto; padding: 40px; font-size: 0.75rem; color: #475569; text-align: center; }
     </style>
 </head>
 <body>
@@ -98,19 +123,18 @@
     <div id="pinOverlay">
         <div class="pin-box">
             <div style="font-size: 3rem; margin-bottom: 10px;">🔐</div>
-            <h2>ACCESO RESTRINGIDO</h2>
-            <input type="password" id="pinInput" maxlength="4" placeholder="****" inputmode="numeric">
-            <br>
-            <button class="btn-unlock" onclick="checkPin()">DESBLOQUEAR</button>
-            <p id="errorMsg" style="color: #f43f5e; font-size: 0.8rem; margin-top: 15px; display: none;">PIN Incorrecto. Intente de nuevo.</p>
+            <h2>Acceso de Seguridad</h2>
+            <input type="password" id="pinInput" maxlength="4" placeholder="••••" inputmode="numeric">
+            <button class="btn-unlock" onclick="checkPin()">ENTRAR AL NODO</button>
+            <p id="errorMsg" style="color: #f43f5e; font-size: 0.8rem; margin-top: 15px; display: none;">⚠️ PIN Incorrecto</p>
         </div>
     </div>
 
-    <div id="mainContent" style="display: none;">
+    <div id="mainContent">
         <header>
             <div style="font-size: 3.5rem;">📡</div>
             <h1>Network Ops Center</h1>
-            <p style="color: #64748b;">Material de apoyo</p>
+            <p style="color: #64748b;">Gestión de Infraestructura Crítica</p>
         </header>
 
         <div class="menu-container">
@@ -120,7 +144,7 @@
             </a>
             <a href="pag1.html" class="nav-card">
                 <div class="icon-box bg-access">🔑</div>
-                <div><h3>Accesos MOVISTAR</h3><p>Generación de permisos.</p></div>
+                <div><h3>Accesos MOVISTAR</h3><p>Generación de formatos.</p></div>
             </a>
             <a href="pag2.html" class="nav-card">
                 <div class="icon-box bg-report">📝</div>
@@ -130,37 +154,51 @@
 
         <footer>
             <p>V 2.2.0 | TECHNOLOGY OPERATIONS</p>
-            <p>SYSTEM STATUS: <span style="color:var(--movistar)">SECURE</span></p>
-        </div>
+            <p>ESTADO: <span style="color:var(--movistar)">● SEGURO</span></p>
+        </footer>
     </div>
 
     <script>
+        const PIN_CORRECTO = "0614";
+        const DURACION_24H = 86400000; // 24h en milisegundos
+
         function checkPin() {
             const pin = document.getElementById('pinInput').value;
-            const correctPin = "0614";
-            const overlay = document.getElementById('pinOverlay');
-            const content = document.getElementById('mainContent');
-            const error = document.getElementById('errorMsg');
-
-            if (pin === correctPin) {
-                overlay.style.opacity = "0";
-                setTimeout(() => {
-                    overlay.style.display = "none";
-                    content.style.display = "flex";
-                }, 500);
+            if (pin === PIN_CORRECTO) {
+                localStorage.setItem('acceso_tecnico_eebb', new Date().getTime());
+                mostrarHome();
             } else {
-                error.style.display = "block";
+                document.getElementById('errorMsg').style.display = "block";
                 document.getElementById('pinInput').value = "";
-                // Pequeña vibración visual
-                document.querySelector('.pin-box').animate([
-                    { transform: 'translateX(-5px)' },
-                    { transform: 'translateX(5px)' }
-                ], { duration: 100, iterations: 3 });
             }
         }
 
-        // Permitir Enter para entrar
-        document.getElementById('pinInput').addEventListener('keypress', function (e) {
+        function mostrarHome() {
+            document.getElementById('pinOverlay').style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById('pinOverlay').style.display = "none";
+                const main = document.getElementById('mainContent');
+                main.style.display = "flex";
+                setTimeout(() => main.style.opacity = "1", 50);
+            }, 500);
+        }
+
+        window.onload = () => {
+            const loginTime = localStorage.getItem('acceso_tecnico_eebb');
+            const ahora = new Date().getTime();
+
+            if (loginTime && (ahora - loginTime < DURACION_24H)) {
+                document.getElementById('pinOverlay').style.display = "none";
+                const main = document.getElementById('mainContent');
+                main.style.display = "flex";
+                main.style.opacity = "1";
+            } else {
+                localStorage.removeItem('acceso_tecnico_eebb');
+                document.getElementById('pinInput').focus();
+            }
+        };
+
+        document.getElementById('pinInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') checkPin();
         });
     </script>
