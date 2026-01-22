@@ -3,62 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultor de Acceso - Google Sheets</title>
+    <title>Consultor Acceso - Ultra Rápido</title>
     <style>
         :root { --primary: #1e3a8a; --accent: #3b82f6; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin:0; display:flex; flex-direction:column; align-items:center; color: #334155; padding-bottom: 40px; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); margin:0; padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; }
         
-        header { width: 100%; background: white; padding: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
-        h1 { margin: 0; color: var(--primary); font-size: 1.2rem; }
-        .status { font-size: 0.7rem; color: #64748b; margin-top: 4px; }
+        header { width: 100%; background: white; padding: 12px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; position: sticky; top: 0; z-index: 2000; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.1rem; }
+        .status { font-size: 0.65rem; color: #64748b; margin-top: 2px; }
         
-        .search-container { width: 92%; max-width: 500px; position: relative; margin-bottom: 10px; }
-        input[type="text"] { 
-            width: 100%; padding: 14px 16px; font-size: 1rem; border-radius: 12px; 
+        .search-container { width: 94%; max-width: 500px; margin: 15px 0; position: relative; }
+        #siteSearch { 
+            width: 100%; padding: 16px; font-size: 1rem; border-radius: 14px; 
             border: 2px solid #cbd5e1; box-sizing: border-box; outline: none;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
         }
+        #siteSearch:focus { border-color: var(--accent); }
 
+        /* Lista de sugerencias optimizada */
         .suggestions { 
-            position: absolute; top: 105%; left: 0; right: 0; background: white; 
-            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            max-height: 250px; overflow-y: auto; z-index: 1000;
+            position: absolute; top: 100%; left: 0; right: 0; background: white; 
+            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+            max-height: 350px; overflow-y: auto; z-index: 1000; display: none;
+            margin-top: 8px; border: 1px solid #e2e8f0;
         }
-        .suggestion-item { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
-        .suggestion-item strong { color: var(--accent); display: block; font-size: 0.9rem; }
-        .suggestion-item span { font-size: 0.8rem; color: #64748b; }
+        .suggestion-item { 
+            padding: 14px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer;
+            display: flex; flex-direction: column;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item strong { color: var(--primary); font-size: 0.95rem; }
+        .suggestion-item span { color: #64748b; font-size: 0.8rem; margin-top: 2px; }
+        .suggestion-item:active { background: #eff6ff; }
 
         .card { 
-            background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            width: 92%; max-width: 500px; padding: 20px; box-sizing: border-box; animation: fadeIn 0.4s ease-out;
+            background: white; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 94%; max-width: 500px; padding: 20px; box-sizing: border-box;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        .header-title { background: #f0f7ff; padding: 15px; border-radius: 16px; text-align: center; margin-bottom: 15px; border: 1px solid #dbeafe; }
+        .header-title h2 { margin: 0; color: #1e40af; font-size: 1rem; }
 
-        .header-title { 
-            background: #eff6ff; padding: 15px; border-radius: 12px;
-            border: 1px dashed var(--accent); margin-bottom: 15px; text-align: center;
-        }
-        .header-title h2 { margin:0; color: #1e3a8a; font-size: 1.1rem; }
-
-        .map-preview { width: 100%; height: 180px; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        .map-preview iframe { width: 100%; height: 100%; border: none; }
+        .map-preview { width: 100%; height: 200px; border-radius: 16px; overflow: hidden; margin-bottom: 15px; background: #e5e7eb; border: 1px solid #e2e8f0; }
         
-        .info-box { margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-        .info-box:last-child { border-bottom: none; }
-        .label { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px; }
-        .val { font-size: 0.95rem; color: #1e293b; display: block; line-height: 1.4; }
+        .info-grid { display: grid; gap: 12px; }
+        .info-box { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .label { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; display: block; }
+        .val { font-size: 0.95rem; color: #1e293b; font-weight: 500; }
         .highlight { color: #2563eb; font-weight: 700; }
-        .key-required { color: #e11d48; font-weight: 700; background: #fff1f2; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+        .key-required { color: #be123c; font-weight: 800; background: #fff1f2; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; }
 
         .go-button { 
             display: block; background: #2563eb; color: white; text-align: center;
-            padding: 16px; border-radius: 12px; text-decoration: none; font-weight: bold;
-            margin-top: 15px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-        }
-        
-        .admin-link {
-            display: block; text-align: center; margin-top: 20px; color: #94a3b8;
-            font-size: 0.75rem; text-decoration: none; border: 1px solid #e2e8f0;
-            padding: 8px; border-radius: 8px;
+            padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 700;
+            margin-top: 20px; font-size: 1rem;
         }
     </style>
 </head>
@@ -66,11 +63,11 @@
 
 <header>
     <h1>Consultor de Acceso</h1>
-    <div id="status" class="status">Sincronizando con Google Sheets...</div>
+    <div id="status" class="status">Sincronizando 1,196 sitios...</div>
 </header>
 
 <div class="search-container">
-    <input type="text" id="siteSearch" placeholder="ID o Nombre del sitio..." disabled>
+    <input type="text" id="siteSearch" placeholder="🔍 Buscar por ID o Nombre..." autocomplete="off" disabled>
     <div id="suggestions" class="suggestions"></div>
 </div>
 
@@ -80,153 +77,110 @@
 let sites = [];
 const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
 
-// 1. CARGA DE DATOS DESDE GOOGLE SHEETS
+// 1. CARGA Y PROCESAMIENTO INICIAL (UNA SOLA VEZ)
 fetch(SHEETS_CSV_URL)
     .then(res => res.text())
     .then(data => {
-        // Parsear CSV de Google Sheets (usa comas)
-        const rows = data.split(/\r?\n/).filter(row => row.trim() !== '');
+        const rows = data.split(/\r?\n/).filter(row => row.trim().length > 0);
         const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
         
         sites = rows.slice(1).map(row => {
-            // Manejo básico de comas dentro de comillas si existieran
-            const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(',');
+            const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
             let obj = {};
             headers.forEach((h, i) => {
                 let key = h;
                 let val = values[i] ? values[i].trim().replace(/"/g, '') : '';
-                
-                // Normalización de nombres de columnas según CSV del usuario
                 if(key.includes('Direcci')) key = 'DIRECCION';
                 if(key.includes('Nombre para Propietario')) key = 'NOM_PROPIETARIO';
                 if(key === 'Propietario') key = 'TIPO_PROPIETARIO';
                 if(key === 'Tipo de Transmision') key = 'TRANS';
-                
                 obj[key] = val;
             });
             return obj;
         });
-        document.getElementById('status').innerHTML = `✅ Base de datos lista: ${sites.length} sitios`;
+        document.getElementById('status').innerHTML = `✅ Base de datos lista (${sites.length} sitios)`;
         document.getElementById('siteSearch').disabled = false;
-    })
-    .catch(err => {
-        document.getElementById('status').innerHTML = "❌ Error de sincronización";
-        console.error(err);
     });
 
-// 2. BUSCADOR
+// 2. BUSCADOR DE ALTO RENDIMIENTO
 const input = document.getElementById('siteSearch');
 const sugDiv = document.getElementById('suggestions');
 
-input.addEventListener('input', () => {
-    const query = input.value.toLowerCase().trim();
-    sugDiv.innerHTML = '';
-    if (query.length > 1) {
-        const filtered = sites.filter(s => 
-            (s['SITEID'] && s['SITEID'].toLowerCase().includes(query)) ||
-            (s['NOMBRE DE SITIO'] && s['NOMBRE DE SITIO'].toLowerCase().includes(query))
-        ).slice(0, 8);
-        
-        filtered.forEach(s => {
-            const div = document.createElement('div');
-            div.className = 'suggestion-item';
-            div.innerHTML = `<strong>${s['SITEID']}</strong><span>${s['NOMBRE DE SITIO']}</span>`;
-            div.onclick = () => selectSite(s);
-            sugDiv.appendChild(div);
-        });
+input.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 2) {
+        sugDiv.style.display = 'none';
+        return;
+    }
+
+    // Filtrado ultra rápido
+    const matches = [];
+    for (let i = 0; i < sites.length; i++) {
+        const s = sites[i];
+        if (s.SITEID.toLowerCase().includes(query) || s['NOMBRE DE SITIO'].toLowerCase().includes(query)) {
+            matches.push(s);
+        }
+        if (matches.length >= 15) break; // Mostramos máximo 15 para no saturar el scroll
+    }
+
+    if (matches.length > 0) {
+        sugDiv.innerHTML = matches.map(s => `
+            <div class="suggestion-item" onclick="seleccionarSitio('${s.SITEID}')">
+                <strong>${s.SITEID}</strong>
+                <span>${s['NOMBRE DE SITIO']}</span>
+            </div>
+        `).join('');
+        sugDiv.style.display = 'block';
+    } else {
+        sugDiv.style.display = 'none';
     }
 });
 
-function selectSite(s) {
-    sugDiv.innerHTML = '';
-    input.value = s['NOMBRE DE SITIO'];
-    const lat = s.LATITUDE;
-    const lon = s.LONGITUDE;
+// Cerrar sugerencias al tocar fuera
+document.addEventListener('click', (e) => {
+    if (!input.contains(e.target)) sugDiv.style.display = 'none';
+});
 
-    const llaveVal = s['Llave Requerida'] ? s['Llave Requerida'].toUpperCase() : '';
-    const llaveBox = (llaveVal === 'SI') ? `
-        <div class="info-box">
-            <span class="label">Acceso:</span>
-            <span class="val key-required">🔑 LLAVE REQUERIDA</span>
-        </div>` : '';
+function seleccionarSitio(id) {
+    const s = sites.find(item => item.SITEID === id);
+    sugDiv.style.display = 'none';
+    input.value = s['NOMBRE DE SITIO'];
+
+    const llaveBox = (s['Llave Requerida']?.toUpperCase() === 'SI') ? 
+        `<div class="info-box"><span class="label">Acceso:</span><span class="val key-required">🔑 REQUIERE LLAVE</span></div>` : '';
+
+    const lat = s.LATITUDE || '0';
+    const lon = s.LONGITUDE || '0';
 
     document.getElementById('result').innerHTML = `
         <div class="card">
-            <div class="header-title">
-                <h2>${s['SITEID']} - ${s['NOMBRE DE SITIO']}</h2>
-            </div>
+            <div class="header-title"><h2>${s.SITEID} - ${s['NOMBRE DE SITIO']}</h2></div>
             
             <div class="map-preview">
-                <iframe src="https://maps.google.com/maps?q=${lat},${lon}&hl=es&z=16&output=embed"></iframe>
+                <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=${lat},${lon}&hl=es&z=15&ie=UTF8&iwloc=&output=embed"></iframe>
             </div>
 
-            <div class="info-box">
-                <span class="label">NIC/NIS:</span>
-                <span class="val highlight">${s['NIC/NIS'] || 'N/A'}</span>
+            <div class="info-grid">
+                <div class="info-box"><span class="label">NIC/NIS:</span><span class="val highlight">${s['NIC/NIS'] || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">Distribuidora:</span><span class="val">${s.Distribuidora || 'N/A'}</span></div>
+                ${llaveBox}
+                <div class="info-box"><span class="label">Altura:</span><span class="val">${s.Altura || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">Porte:</span><span class="val">${s.Porte || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">Tecnología:</span><span class="val">${s.Tech || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">Transmisión:</span><span class="val">${s.TRANS || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">Nombre Propietario:</span><span class="val">${s.NOM_PROPIETARIO || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">Tipo Propietario:</span><span class="val">${s.TIPO_PROPIETARIO || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">Municipio:</span><span class="val">${s.Municipio || 'N/A'}</span></div>
+                <div class="info-box" style="border:none;"><span class="label">Dirección:</span><span class="val">${s.DIRECCION || 'N/A'}</span></div>
             </div>
 
-            <div class="info-box">
-                <span class="label">Distribuidora:</span>
-                <span class="val">${s['Distribuidora'] || 'N/A'}</span>
-            </div>
-
-            ${llaveBox}
-
-            <div class="info-box">
-                <span class="label">Altura:</span>
-                <span class="val">${s['Altura'] || 'N/A'}</span>
-            </div>
-
-            <div class="info-box">
-                <span class="label">Porte:</span>
-                <span class="val">${s['Porte'] || 'N/A'}</span>
-            </div>
-
-            <div class="info-box">
-                <span class="label">Tech:</span>
-                <span class="val">${s['Tech'] || 'N/A'}</span>
-            </div>
-
-            <div class="info-box">
-                <span class="label">Tipo de Transmisión:</span>
-                <span class="val">${s['TRANS'] || 'N/A'}</span>
-            </div>
-
-            <div class="info-box">
-                <span class="label">Nombre para Propietario:</span>
-                <span class="val">${s['NOM_PROPIETARIO'] || 'N/A'}</span>
-            </div>
-
-            <div class="info-box">
-                <span class="label">Propietario:</span>
-                <span class="val">${s['TIPO_PROPIETARIO'] || 'N/A'}</span>
-            </div>
-
-            <div class="info-box">
-                <span class="label">Municipio:</span>
-                <span class="val">${s['Municipio'] || 'N/A'}</span>
-            </div>
-
-            <div class="info-box">
-                <span class="label">Dirección:</span>
-                <span class="val">${s['DIRECCION'] || 'No disponible'}</span>
-            </div>
-
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR RUTA GPS</a>
-            
-            <a href="#" onclick="adminPanel()" class="admin-link">🔒 Panel Administrativo (Solo Admin)</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR GPS</a>
         </div>
     `;
-}
-
-function adminPanel() {
-    const p = prompt("Clave de Administrador:");
-    if(p === "ADMIN2026") { 
-        // Enlace directo a la hoja para edición
-        window.open('https://docs.google.com/spreadsheets/d/1TE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/edit', '_blank');
-    } else {
-        alert("Clave incorrecta");
-    }
+    
+    // Desplazar automáticamente hacia la tarjeta
+    window.scrollTo({ top: document.getElementById('result').offsetTop - 20, behavior: 'smooth' });
 }
 </script>
 </body>
