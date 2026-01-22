@@ -1,241 +1,310 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generador de Accesos a sitios MOVISTAR</title>
-<style>
-  body { font-family: Arial, sans-serif; padding: 15px; background: #f0f8ff; color:#333; }
-  h2 { text-align:center; color:#2c3e50; }
-  label { display:block; margin-top:10px; font-weight:bold; }
-  input, select, textarea { width:100%; padding:8px; margin-top:5px; box-sizing:border-box; border-radius:6px; border:1px solid #ccc; }
-  #listaSitios { position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #ccc; max-height:150px; overflow-y:auto; z-index:1000; border-radius:0 0 6px 6px; }
-  #listaSitios div { padding:5px; cursor:pointer; }
-  #listaSitios div:hover { background:#f1f9fe; }
-  .chip { display:inline-block; padding:6px 12px; margin:3px; background:#eee; border-radius:25px; cursor:pointer; user-select:none; transition:0.2s; }
-  .chip:hover { transform:translateY(-1px); background:#ddd; }
-  .chip.selected { background:#4CAF50; color:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
-  .chip.disabled { opacity:0.5; cursor:not-allowed; }
-  #contadorSeleccionados { margin-top:5px; font-size:14px; color:#555; }
-  textarea { height:220px; font-family:monospace; margin-top:10px; }
-  button { padding:10px; margin-top:10px; width:100%; font-size:16px; border:none; border-radius:8px; cursor:pointer; color:white; font-weight:bold; transition:0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
-  button:hover { transform:translateY(-2px); opacity:0.9; }
-  #generar { background:#2196F3; }
-  #whatsapp { background:#4CAF50; }
-  #pag2 { background:#FF9800; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Network Ops - Independiente</title>
+    <style>
+        :root { 
+            --primary: #00a1ff; 
+            --movistar: #5bc500;
+            --dark-bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.07);
+        }
+
+        /* FONDO TECNOLÓGICO UNIFICADO */
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px 15px 100px;
+            background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(0, 161, 255, 0.05) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(0, 161, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -2;
+        }
+
+        header { text-align: center; margin-bottom: 25px; }
+        h2 { margin: 0; font-size: 1.4rem; letter-spacing: 1px; color: white; text-transform: uppercase; }
+        .subtitle { color: var(--primary); font-size: 0.8rem; font-weight: bold; }
+
+        /* CONTENEDOR TIPO CARD GLASS */
+        .form-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus, select:focus { border-color: var(--primary); }
+
+        /* BUSCADOR DE SITIOS */
+        #listaSitios {
+            position: absolute;
+            width: 100%;
+            background: #1e293b;
+            border-radius: 10px;
+            z-index: 1000;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--primary);
+            margin-top: 5px;
+        }
+        #listaSitios div { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 13px; }
+
+        /* CHIPS DE PERSONAL */
+        #contenedorPersonal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chip {
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chip.selected {
+            background: var(--movistar);
+            color: white;
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(91, 197, 0, 0.4);
+        }
+
+        textarea {
+            height: 120px;
+            background: rgba(0,0,0,0.5);
+            color: #00ff41; /* Estilo terminal para la vista previa */
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid rgba(0, 161, 255, 0.3);
+        }
+
+        /* BOTONES DE ACCIÓN */
+        .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .btn {
+            flex: 1; padding: 15px; border: none; border-radius: 12px;
+            font-weight: bold; cursor: pointer; transition: 0.3s; color: white;
+        }
+        .btn-copy { background: #3b82f6; }
+        .btn-wa { background: #25d366; }
+        .btn:active { transform: scale(0.95); }
+
+        /* BOTONES FLOTANTES (ESTILO INDEX) */
+        .btn-access, .btn-home {
+            position: fixed; right: 25px; display: flex; align-items: center; gap: 10px;
+            padding: 8px 20px 8px 8px; color: white; text-decoration: none; border-radius: 50px;
+            font-weight: 700; font-size: 0.9rem; z-index: 9999; border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: 0.4s;
+        }
+        .btn-access { bottom: 90px; background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); }
+        .btn-home { bottom: 25px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        .icon-circle { background: rgba(255,255,255,0.2); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+    </style>
 </head>
+
 <body>
 
-<h2>Generador de Accesos a sitios MOVISTAR</h2>
+<header>
+    <h2>Registro Operativo</h2>
+    <div class="subtitle">EEBB - NETWORK OPERATIONS</div>
+</header>
 
-<label for="sitio">Sitio:</label>
-<div style="position: relative;">
-  <input type="text" id="sitio" placeholder="Escriba el sitio..." autocomplete="off">
-  <div id="listaSitios"></div>
+<div class="form-card">
+    <label>1. Buscar Sitio</label>
+    <div style="position: relative;">
+        <input type="text" id="sitioBuscador" placeholder="ID o Nombre del sitio..." autocomplete="off">
+        <div id="listaSitios"></div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label>2. Tipo</label>
+            <select id="tipoReporte">
+                <option value="Entrada">Entrada</option>
+                <option value="Salida">Salida</option>
+            </select>
+        </div>
+        <div style="flex: 2;">
+            <label>3. Actividad</label>
+            <select id="actividadSelect">
+                <option value="">Cargando...</option>
+            </select>
+        </div>
+    </div>
+
+    <label>4. Personal Técnico</label>
+    <div id="contenedorPersonal">
+        <span style="font-size: 10px; opacity: 0.5;">Cargando base de datos...</span>
+    </div>
+
+    <label>Vista Previa del Reporte</label>
+    <textarea id="mensaje" readonly></textarea>
+
+    <div class="action-buttons">
+        <button class="btn btn-copy" id="copiar">COPIAR</button>
+        <button class="btn btn-wa" id="whatsapp">WHATSAPP</button>
+    </div>
 </div>
 
-<label for="actividad">Actividad:</label>
-<select id="actividad"><option value="">Seleccione una actividad</option></select>
+<a href="pag1.html" class="btn-access">
+    <div class="icon-circle">🔑</div>
+    <span>Accesos</span>
+</a>
 
-<label for="vehiculo">Vehículo:</label>
-<select id="vehiculo"><option value="">Seleccione un vehículo</option></select>
-
-<label for="tecnicoPrincipal">Técnico Principal:</label>
-<select id="tecnicoPrincipal"><option value="">Seleccione técnico principal</option></select>
-
-<label>Técnicos Adicionales:</label>
-<div id="tecnicosAdicionales"></div>
-<div id="contadorSeleccionados">Seleccionados: 0</div>
-
-<label>Vista Previa:</label>
-<textarea id="vistaPrevia" readonly placeholder="Complete los campos para generar el mensaje..."></textarea>
-
-<button id="generar">Generar y Copiar al Portapapeles</button>
-<button id="whatsapp">Enviar por WhatsApp</button>
-<button id="pag2">Ir a INGRESO/SALIDA</button>
+<a href="index.html" class="btn-home">
+    <div class="icon-circle">🏠</div>
+    <span>Inicio</span>
+</a>
 
 <script>
-let sitios=[], actividades=[], tecnicos=[], vehiculos=[];
+// --- Lógica de Datos ---
+let sitiosData = [];
 
-// --- Cargar CSV ---
-async function cargarCSV(url){
-  const res = await fetch(url);
-  const text = await res.text();
-  const lineas = text.trim().split('\n');
-  const headers = lineas[0].split(';');
-  return lineas.slice(1).map(l=>{
-    const cols = l.split(';'); let obj={};
-    headers.forEach((h,i)=>obj[h.trim()]=cols[i]?.trim());
-    return obj;
-  });
+async function cargarCSV(url) {
+    try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const lineas = text.trim().split('\n');
+        const headers = lineas[0].split(';');
+        return lineas.slice(1).map(l => {
+            const cols = l.split(';');
+            let obj = {};
+            headers.forEach((h,i) => obj[h.trim()] = cols[i]?.trim());
+            return obj;
+        });
+    } catch (e) { return []; }
 }
 
-// --- Inicialización ---
-async function inicializar(){
-  sitios = await cargarCSV('sitios.csv');
-  actividades = await cargarCSV('actividad.csv');
-  tecnicos = await cargarCSV('tecnicos.csv');
-  vehiculos = await cargarCSV('vehiculos.csv');
+async function inicializar() {
+    const [sitios, actividades, tecnicos] = await Promise.all([
+        cargarCSV('sitios.csv'),
+        cargarCSV('actividad.csv'),
+        cargarCSV('tecnicos.csv')
+    ]);
 
-  // Llenar actividades
-  const selAct = document.getElementById('actividad');
-  actividades.forEach(a=>{
-    const opt = document.createElement('option');
-    opt.value = a['ACTIVIDAD']; opt.textContent = a['ACTIVIDAD'];
-    selAct.appendChild(opt);
-  });
+    sitiosData = sitios;
 
-  // Llenar vehículos
-  const selVeh = document.getElementById('vehiculo');
-  vehiculos.forEach(v=>{
-    const opt = document.createElement('option');
-    opt.value = v.Placa; opt.textContent = `${v.Placa} - ${v.Marca} ${v.Modelo} (${v.Color})`;
-    selVeh.appendChild(opt);
-  });
-
-  // Técnico principal y chips
-  const selTecPrin = document.getElementById('tecnicoPrincipal');
-  const divTecAdd = document.getElementById('tecnicosAdicionales');
-
-  tecnicos.forEach((t,i)=>{
-    // Principal
-    const opt = document.createElement('option'); opt.value=i; opt.textContent=`${t.TECNICO} (${t.DUI})`;
-    selTecPrin.appendChild(opt);
-
-    // Chip adicional
-    const chip = document.createElement('div');
-    chip.className='chip'; chip.textContent=`${t.TECNICO} (${t.DUI})`;
-    chip.dataset.index=i;
-    chip.addEventListener('click',()=>{
-      if(parseInt(selTecPrin.value)===i) return; // no seleccionar principal
-      chip.classList.toggle('selected'); actualizarPreview(); actualizarContador();
+    actividadSelect.innerHTML = '<option value="">-- Seleccione --</option>';
+    actividades.forEach(a => {
+        if(a['ACTIVIDAD']) {
+            const opt = document.createElement('option');
+            opt.value = a['ACTIVIDAD'];
+            opt.textContent = a['ACTIVIDAD'];
+            actividadSelect.appendChild(opt);
+        }
     });
-    divTecAdd.appendChild(chip);
-  });
 
-  selTecPrin.addEventListener('change',()=>{
-    document.querySelectorAll('#tecnicosAdicionales .chip').forEach(chip=>{
-      const idx=parseInt(chip.dataset.index);
-      if(idx===parseInt(selTecPrin.value)){
-        chip.classList.remove('selected');
-        chip.classList.add('disabled');
-      }else{
-        chip.classList.remove('disabled');
-      }
+    contenedorPersonal.innerHTML = '';
+    tecnicos.forEach(t => {
+        if(t['TECNICO']) {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.textContent = `${t['TECNICO']} (${t['DUI'] || 'S/D'})`;
+            chip.onclick = () => {
+                chip.classList.toggle('selected');
+                actualizarVistaPrevia();
+            };
+            contenedorPersonal.appendChild(chip);
+        }
     });
-    actualizarPreview(); actualizarContador();
-  });
-
-  actualizarPreview(); actualizarContador();
 }
 
-function actualizarContador(){
-  const count=document.querySelectorAll('#tecnicosAdicionales .chip.selected').length;
-  document.getElementById('contadorSeleccionados').textContent=`Seleccionados: ${count}`;
+// --- Buscador y Mensaje ---
+const inputSitio = document.getElementById('sitioBuscador');
+const listaSitiosDiv = document.getElementById('listaSitios');
+const textarea = document.getElementById('mensaje');
+const tipoSelect = document.getElementById('tipoReporte');
+const actividadSelect = document.getElementById('actividadSelect');
+const contenedorPersonal = document.getElementById('contenedorPersonal');
+
+inputSitio.addEventListener('input', () => {
+    const val = inputSitio.value.toLowerCase();
+    listaSitiosDiv.innerHTML = '';
+    if (!val) return;
+    sitiosData.filter(s => s['Nombre de Sitio']?.toLowerCase().includes(val) || s.SiteID?.toLowerCase().includes(val))
+        .slice(0, 5).forEach(s => {
+            const div = document.createElement('div');
+            div.textContent = `${s.SiteID} - ${s['Nombre de Sitio']}`;
+            div.onclick = () => {
+                inputSitio.value = s['Nombre de Sitio'];
+                inputSitio.dataset.siteid = s.SiteID;
+                listaSitiosDiv.innerHTML = '';
+                actualizarVistaPrevia();
+            };
+            listaSitiosDiv.appendChild(div);
+        });
+});
+
+function generarMensaje() {
+    const idSitio = inputSitio.dataset.siteid;
+    const actividad = actividadSelect.value;
+    const personal = Array.from(contenedorPersonal.querySelectorAll('.chip.selected')).map(c => c.textContent);
+
+    if (!idSitio || !actividad || personal.length === 0) return "Esperando datos completos...";
+
+    return `Buen día\nReportamos ${tipoSelect.value} al sitio\n\n${idSitio} - ${inputSitio.value}\n\nPersonal:\n${personal.join('\n')}\n\nEmpresa:\nCELECT SA DE CV\n\nÁrea: EEBB\nActividad: ${actividad}`;
 }
 
-// --- Autocompletado sitios ---
-const inputSitio=document.getElementById('sitio');
-const lista=document.getElementById('listaSitios');
-inputSitio.addEventListener('input',()=>{
-  const val=inputSitio.value.toLowerCase();
-  lista.innerHTML='';
-  if(!val) return;
-  sitios.filter(s=>s['Nombre de Sitio'].toLowerCase().includes(val))
-    .slice(0,10)
-    .forEach(s=>{
-      const div=document.createElement('div');
-      div.textContent=`${s['Nombre de Sitio']} (${s.SiteID})`;
-      div.addEventListener('click',()=>{
-        inputSitio.value=s['Nombre de Sitio'];
-        inputSitio.dataset.siteid=s.SiteID;
-        inputSitio.dataset.torrero=s.Torrero;
-        inputSitio.dataset.nombretorrero=s['Nombre Torrero'];
-        lista.innerHTML=''; actualizarPreview();
-      });
-      lista.appendChild(div);
-    });
-});
+function actualizarVistaPrevia() { textarea.value = generarMensaje(); }
+tipoSelect.onchange = actualizarVistaPrevia;
+actividadSelect.onchange = actualizarVistaPrevia;
 
-document.addEventListener('click',e=>{
-  if(!inputSitio.contains(e.target)&&!lista.contains(e.target)) lista.innerHTML='';
-});
+document.getElementById('copiar').onclick = () => {
+    navigator.clipboard.writeText(textarea.value);
+    alert("¡Copiado!");
+};
 
-// --- Generar mensaje ---
-function generarMensaje(){
-  const sitio={
-    SiteID: inputSitio.dataset.siteid||'',
-    Nombre: inputSitio.value||'',
-    Torrero: inputSitio.dataset.torrero||'',
-    NombreTorrero: inputSitio.dataset.nombretorrero||''
-  };
-  const actividad=document.getElementById('actividad').value;
-  const vehiculo=vehiculos[document.getElementById('vehiculo').selectedIndex-1]||{};
-  const tecPrinIndex=parseInt(document.getElementById('tecnicoPrincipal').value);
-  const tecnicoPrincipal=tecnicos[tecPrinIndex]||{};
-  const adicionales=Array.from(document.querySelectorAll('.chip.selected')).map(c=>tecnicos[c.dataset.index]);
-  const todos=[tecnicoPrincipal,...adicionales].filter(Boolean);
-  if(!sitio.SiteID||!actividad||!tecnicoPrincipal.TECNICO) return "Complete los datos para generar mensaje.";
+document.getElementById('whatsapp').onclick = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(textarea.value)}`, '_blank');
+};
 
-  const bloqueTecnicos=todos.map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
-
-  return `BUEN DIA
-SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
-▬▬▬▬▬▬▬▬▬▬
-ID:${sitio.SiteID}
-NOMBRE: ${sitio.Nombre}
-PROPIETARIO: ${sitio.Torrero}
-Nombre Torrero ${sitio.NombreTorrero}
-▬▬▬▬▬▬▬▬▬▬
-ACTIVIDAD: ${actividad}
-▬▬▬▬▬▬▬▬▬▬
-TECNICOS/DUI
-${bloqueTecnicos}
-▬▬▬▬▬▬▬▬▬▬
-Placa: ${vehiculo.Placa||''}
-Marca: ${vehiculo.Marca||''}
-Modelo: ${vehiculo.Modelo||''}
-Color: ${vehiculo.Color||''}
-▬▬▬▬▬▬▬▬▬▬
-Empresa: CELECT SA DE CV
-Supervisor: José Rivas
-Teléfono supervisor:6161 4465
-▬▬▬▬▬▬▬▬▬▬
-TELEFONO: ${tecnicoPrincipal.TELEFONO||''}
-CORREO: ${tecnicoPrincipal.CORREO||''} tecnicossv@celectcac.com`;
-}
-
-function actualizarPreview(){ document.getElementById('vistaPrevia').value=generarMensaje(); }
-
-// --- Listeners ---
-document.getElementById('actividad').addEventListener('change', actualizarPreview);
-document.getElementById('vehiculo').addEventListener('change', actualizarPreview);
-document.getElementById('tecnicoPrincipal').addEventListener('change', actualizarPreview);
-
-document.getElementById('generar').addEventListener('click',()=>{
-  const msg=generarMensaje();
-  if(msg.startsWith("Complete")) return alert(msg);
-  navigator.clipboard.writeText(msg).then(()=>alert('Copiado al portapapeles'));
-});
-
-document.getElementById('whatsapp').addEventListener('click',()=>{
-  const msg=generarMensaje();
-  if(msg.startsWith("Complete")) return alert(msg);
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
-});
-
-// --- Botón para pag2.html ---
-document.getElementById('pag2').addEventListener('click',()=>{
-  window.location.href='pag2.html';
-});
-
-// --- Inicializar ---
 inicializar();
 </script>
-
 </body>
 </html>
-
-
-
