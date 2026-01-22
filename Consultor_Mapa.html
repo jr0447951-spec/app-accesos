@@ -3,25 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultor de Acceso</title>
+    <title>Consultor de Acceso - Google Sheets</title>
     <style>
         :root { --primary: #1e3a8a; --accent: #3b82f6; --bg: #f1f5f9; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin:0; display:flex; flex-direction:column; align-items:center; color: #334155; padding-bottom: 40px; }
         
         header { width: 100%; background: white; padding: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
-        h1 { margin: 0; color: var(--primary); font-size: 1.3rem; }
-        .status { font-size: 0.75rem; margin-top: 5px; color: #64748b; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.2rem; }
+        .status { font-size: 0.7rem; color: #64748b; margin-top: 4px; }
         
         .search-container { width: 92%; max-width: 500px; position: relative; margin-bottom: 10px; }
         input[type="text"] { 
-            width: 100%; padding: 14px 45px 14px 16px; font-size: 1rem; border-radius: 12px; 
+            width: 100%; padding: 14px 16px; font-size: 1rem; border-radius: 12px; 
             border: 2px solid #cbd5e1; box-sizing: border-box; outline: none;
-        }
-
-        .clear-btn { 
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            background: #cbd5e1; color: white; width: 26px; height: 26px; border-radius: 50%;
-            display: none; align-items: center; justify-content: center; cursor: pointer;
         }
 
         .suggestions { 
@@ -30,7 +24,8 @@
             max-height: 250px; overflow-y: auto; z-index: 1000;
         }
         .suggestion-item { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
-        .suggestion-item strong { color: var(--accent); display: block; }
+        .suggestion-item strong { color: var(--accent); display: block; font-size: 0.9rem; }
+        .suggestion-item span { font-size: 0.8rem; color: #64748b; }
 
         .card { 
             background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
@@ -39,33 +34,31 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
         .header-title { 
-            cursor: pointer; background: #eff6ff; padding: 15px; border-radius: 12px;
+            background: #eff6ff; padding: 15px; border-radius: 12px;
             border: 1px dashed var(--accent); margin-bottom: 15px; text-align: center;
         }
         .header-title h2 { margin:0; color: #1e3a8a; font-size: 1.1rem; }
-        .copy-tag { font-size: 0.65rem; color: var(--accent); font-weight: bold; display: block; margin-top: 5px; }
 
         .map-preview { width: 100%; height: 180px; border-radius: 15px; overflow: hidden; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .map-preview iframe { width: 100%; height: 100%; border: none; }
         
-        .dist-info { background: #f0fdf4; color: #166534; padding: 8px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 0.8rem; border: 1px solid #bbf7d0; }
-
         .info-box { margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
         .info-box:last-child { border-bottom: none; }
-        .label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
-        .val { font-size: 1rem; color: #1e293b; display: block; line-height: 1.4; }
+        .label { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px; }
+        .val { font-size: 0.95rem; color: #1e293b; display: block; line-height: 1.4; }
         .highlight { color: #2563eb; font-weight: 700; }
-        .key-required { color: #e11d48; font-weight: 700; }
+        .key-required { color: #e11d48; font-weight: 700; background: #fff1f2; padding: 4px 8px; border-radius: 6px; display: inline-block; }
 
         .go-button { 
             display: block; background: #2563eb; color: white; text-align: center;
             padding: 16px; border-radius: 12px; text-decoration: none; font-weight: bold;
-            margin-top: 10px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            margin-top: 15px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
-        .toast {
-            position: fixed; bottom: 30px; background: #1e293b; color: white;
-            padding: 10px 25px; border-radius: 50px; font-size: 0.85rem;
-            opacity: 0; transition: 0.3s; pointer-events: none; z-index: 2000;
+        
+        .admin-link {
+            display: block; text-align: center; margin-top: 20px; color: #94a3b8;
+            font-size: 0.75rem; text-decoration: none; border: 1px solid #e2e8f0;
+            padding: 8px; border-radius: 8px;
         }
     </style>
 </head>
@@ -73,107 +66,82 @@
 
 <header>
     <h1>Consultor de Acceso</h1>
-    <div id="status" class="status">Cargando base de datos...</div>
+    <div id="status" class="status">Sincronizando con Google Sheets...</div>
 </header>
 
 <div class="search-container">
     <input type="text" id="siteSearch" placeholder="ID o Nombre del sitio..." disabled>
-    <div id="clearSearch" class="clear-btn">✕</div>
     <div id="suggestions" class="suggestions"></div>
 </div>
 
 <div id="result"></div>
-<div id="toast" class="toast">📋 Formato copiado para reporte</div>
 
 <script>
 let sites = [];
-let userPos = null;
+const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
 
-const input = document.getElementById('siteSearch');
-const suggestions = document.getElementById('suggestions');
-const statusDiv = document.getElementById('status');
-const clearBtn = document.getElementById('clearSearch');
-const toast = document.getElementById('toast');
-
-const CSV_URL = 'https://raw.githubusercontent.com/jr0447951-spec/app-accesos/main/Mapa_Base.csv';
-
-// CARGA DE DATOS
-fetch(CSV_URL)
+// 1. CARGA DE DATOS DESDE GOOGLE SHEETS
+fetch(SHEETS_CSV_URL)
     .then(res => res.text())
     .then(data => {
+        // Parsear CSV de Google Sheets (usa comas)
         const rows = data.split(/\r?\n/).filter(row => row.trim() !== '');
-        const headers = rows[0].split(';');
+        const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
         
         sites = rows.slice(1).map(row => {
-            const values = row.split(';');
+            // Manejo básico de comas dentro de comillas si existieran
+            const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(',');
             let obj = {};
             headers.forEach((h, i) => {
-                let key = h.trim();
-                // Normalización de campos
+                let key = h;
+                let val = values[i] ? values[i].trim().replace(/"/g, '') : '';
+                
+                // Normalización de nombres de columnas según CSV del usuario
                 if(key.includes('Direcci')) key = 'DIRECCION';
                 if(key.includes('Nombre para Propietario')) key = 'NOM_PROPIETARIO';
                 if(key === 'Propietario') key = 'TIPO_PROPIETARIO';
                 if(key === 'Tipo de Transmision') key = 'TRANS';
                 
-                obj[key] = values[i] ? values[i].trim() : '';
+                obj[key] = val;
             });
             return obj;
         });
-        statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios cargados.`;
-        input.disabled = false;
+        document.getElementById('status').innerHTML = `✅ Base de datos lista: ${sites.length} sitios`;
+        document.getElementById('siteSearch').disabled = false;
     })
-    .catch(() => statusDiv.innerHTML = "❌ Error al cargar CSV.");
-
-// GPS
-if(navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-        userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+    .catch(err => {
+        document.getElementById('status').innerHTML = "❌ Error de sincronización";
+        console.error(err);
     });
-}
 
-// BUSCADOR
+// 2. BUSCADOR
+const input = document.getElementById('siteSearch');
+const sugDiv = document.getElementById('suggestions');
+
 input.addEventListener('input', () => {
     const query = input.value.toLowerCase().trim();
-    suggestions.innerHTML = '';
-    clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
+    sugDiv.innerHTML = '';
     if (query.length > 1) {
         const filtered = sites.filter(s => 
             (s['SITEID'] && s['SITEID'].toLowerCase().includes(query)) ||
             (s['NOMBRE DE SITIO'] && s['NOMBRE DE SITIO'].toLowerCase().includes(query))
         ).slice(0, 8);
+        
         filtered.forEach(s => {
             const div = document.createElement('div');
             div.className = 'suggestion-item';
             div.innerHTML = `<strong>${s['SITEID']}</strong><span>${s['NOMBRE DE SITIO']}</span>`;
             div.onclick = () => selectSite(s);
-            suggestions.appendChild(div);
+            sugDiv.appendChild(div);
         });
     }
 });
 
-function copyFormat(id, nombre) {
-    const text = `*${id} - ${nombre}*`;
-    navigator.clipboard.writeText(text).then(() => {
-        toast.style.opacity = '1';
-        setTimeout(() => toast.style.opacity = '0', 2000);
-    });
-}
-
 function selectSite(s) {
-    suggestions.innerHTML = '';
+    sugDiv.innerHTML = '';
     input.value = s['NOMBRE DE SITIO'];
-    const lat = parseFloat(s.LATITUDE);
-    const lon = parseFloat(s.LONGITUDE);
-
-    let distHtml = '';
-    if (userPos && !isNaN(lat)) {
-        const R = 6371;
-        const dLat = (lat - userPos.lat) * Math.PI / 180;
-        const dLon = (lon - userPos.lon) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(userPos.lat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
-        const km = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-        distHtml = `<div class="dist-info">📍 A ${km.toFixed(2)} km de tu ubicación</div>`;
-    }
+    const lat = s.LATITUDE;
+    const lon = s.LONGITUDE;
 
     const llaveVal = s['Llave Requerida'] ? s['Llave Requerida'].toUpperCase() : '';
     const llaveBox = (llaveVal === 'SI') ? `
@@ -184,16 +152,13 @@ function selectSite(s) {
 
     document.getElementById('result').innerHTML = `
         <div class="card">
-            <div class="header-title" onclick="copyFormat('${s['SITEID']}', '${s['NOMBRE DE SITIO']}')">
+            <div class="header-title">
                 <h2>${s['SITEID']} - ${s['NOMBRE DE SITIO']}</h2>
-                <span class="copy-tag">📋 TOCAR PARA COPIAR FORMATO</span>
             </div>
             
             <div class="map-preview">
                 <iframe src="https://maps.google.com/maps?q=${lat},${lon}&hl=es&z=16&output=embed"></iframe>
             </div>
-
-            ${distHtml}
 
             <div class="info-box">
                 <span class="label">NIC/NIS:</span>
@@ -248,16 +213,21 @@ function selectSite(s) {
             </div>
 
             <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR RUTA GPS</a>
+            
+            <a href="#" onclick="adminPanel()" class="admin-link">🔒 Panel Administrativo (Solo Admin)</a>
         </div>
     `;
 }
 
-clearBtn.onclick = () => {
-    input.value = '';
-    suggestions.innerHTML = '';
-    document.getElementById('result').innerHTML = '';
-    clearBtn.style.display = 'none';
-};
+function adminPanel() {
+    const p = prompt("Clave de Administrador:");
+    if(p === "ADMIN2026") { 
+        // Enlace directo a la hoja para edición
+        window.open('https://docs.google.com/spreadsheets/d/1TE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/edit', '_blank');
+    } else {
+        alert("Clave incorrecta");
+    }
+}
 </script>
 </body>
 </html>
