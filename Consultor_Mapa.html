@@ -2,247 +2,215 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Consultor de Sitios</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consultor Mapa</title>
 <style>
-body{
-  margin:0;
-  min-height:100vh;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto;
-  background: linear-gradient(180deg,#f7f9fc,#eef2f7);
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-}
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom, #f7f9fc, #eef2f7);
+    margin:0; padding:0;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  h1 {
+    text-align:center;
+    color:#1e3a8a;
+    margin:20px 0 10px;
+  }
+  .search-container {
+    width:90%;
+    max-width:500px;
+    margin-bottom:20px;
+    position:relative;
+  }
+  input[type="text"] {
+    width:100%;
+    padding:10px 14px;
+    font-size:1rem;
+    border-radius:14px;
+    border:1px solid #cbd5e1;
+    box-shadow:0 2px 4px rgba(0,0,0,0.1);
+  }
+  .suggestions {
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    background:white;
+    border:1px solid #cbd5e1;
+    border-top:none;
+    max-height:150px;
+    overflow-y:auto;
+    z-index:10;
+    border-radius:0 0 14px 14px;
+  }
+  .suggestion-item {
+    padding:8px 12px;
+    cursor:pointer;
+  }
+  .suggestion-item:hover {
+    background:#e0f2fe;
+  }
 
-.app{
-  width:100%;
-  max-width:560px;
-  padding:18px 16px 32px;
-}
-
-h1{
-  text-align:center;
-  font-size:1.3rem;
-  margin:6px 0 14px;
-  color:#1f2937;
-}
-
-input{
-  width:100%;
-  padding:16px;
-  font-size:1rem;
-  border-radius:18px;
-  border:1px solid #d1d5db;
-  background:#ffffff;
-  box-shadow:0 4px 14px rgba(0,0,0,.06);
-}
-
-.suggestions{
-  margin-top:8px;
-  background:#ffffff;
-  border-radius:18px;
-  box-shadow:0 10px 28px rgba(0,0,0,.14);
-  max-height:260px;
-  overflow-y:auto;
-}
-
-.suggestions div{
-  padding:14px;
-  cursor:pointer;
-}
-
-.suggestions div:hover{
-  background:#f2f5f9;
-}
-
-.card{
-  margin-top:20px;
-  background:#ffffff;
-  border-radius:26px;
-  box-shadow:0 18px 40px rgba(0,0,0,.12);
-  overflow:hidden;
-}
-
-.card-header{
-  padding:16px 18px;
-  background: linear-gradient(135deg,#e0eaff,#f0f4ff);
-  color:#1a3faa;
-}
-
-.card-header h2{
-  margin:0;
-  font-size:1.05rem;
-  line-height:1.4;
-  text-align:center;
-}
-
-.map-preview{
-  width:100%;
-  height:180px;
-  margin:14px 0;
-  border-radius:20px;
-  overflow:hidden;
-  box-shadow:0 8px 22px rgba(0,0,0,.12);
-}
-
-.map-preview iframe{
-  width:100%;
-  height:100%;
-  border:0;
-}
-
-.table{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px 16px;
-  padding:16px 18px 6px;
-}
-
-.row-label{
-  color:#6b7280;
-  font-size:.88rem;
-}
-
-.row-value{
-  font-weight:600;
-  color:#111827;
-}
-
-.full{
-  grid-column:1 / -1;
-}
-
-.badge-yes{
-  color:#b91c1c;
-  font-weight:700;
-}
-
-.badge-no{
-  color:#15803d;
-  font-weight:700;
-}
-
-.card-footer{
-  padding:18px;
-}
-
-.btn{
-  width:100%;
-  padding:18px;
-  border:none;
-  border-radius:20px;
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  color:white;
-  font-size:1.05rem;
-  font-weight:700;
-  box-shadow:0 10px 26px rgba(37,99,235,.35);
-}
+  .card {
+    background:white;
+    border-radius:16px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    width:90%;
+    max-width:500px;
+    margin-bottom:30px;
+    padding:15px;
+  }
+  .card h2 {
+    font-size:1.1rem;
+    margin-bottom:8px;
+    color:#1e3a8a;
+  }
+  .map-preview iframe {
+    width:100%;
+    height:180px;
+    border-radius:12px;
+    border:none;
+  }
+  .distance{
+    margin:10px 0;
+    padding:10px 14px;
+    background:#f0f4ff;
+    color:#1e40af;
+    border-radius:14px;
+    font-weight:600;
+    text-align:center;
+    font-size:.95rem;
+  }
+  .data-table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+  }
+  .data-table td {
+    padding:6px 8px;
+    border-bottom:1px solid #e2e8f0;
+  }
+  .data-table td.label {
+    font-weight:600;
+    color:#475569;
+    width:40%;
+  }
+  .go-button {
+    display:block;
+    margin:15px auto 0;
+    width:90%;
+    max-width:400px;
+    padding:12px;
+    text-align:center;
+    background:linear-gradient(90deg,#3b82f6,#60a5fa);
+    color:white;
+    border:none;
+    border-radius:14px;
+    font-weight:600;
+    font-size:1rem;
+    cursor:pointer;
+    text-decoration:none;
+  }
 </style>
 </head>
-
 <body>
-<div class="app">
-  <h1>Consulta de Sitios</h1>
+<h1>Consulta de Sitios</h1>
 
-  <input id="search" placeholder="Buscar por nombre del sitio" autocomplete="off">
-  <div id="sug" class="suggestions" style="display:none"></div>
-
-  <div id="result"></div>
+<div class="search-container">
+  <input type="text" id="siteSearch" placeholder="Buscar por nombre del sitio">
+  <div id="suggestions" class="suggestions"></div>
 </div>
 
+<div id="result"></div>
+
 <script>
-const CSV_URL = "https://raw.githubusercontent.com/USUARIO/REPOSITORIO/main/Mapa_Base.csv";
+let sites = []; // Aquí se cargará el CSV
+let userPosition = null;
 
-let data = [];
-
-fetch(CSV_URL)
-  .then(r => r.text())
-  .then(text => {
-    const lines = text.trim().split("\n");
-    const headers = lines.shift().split(";");
-
-    data = lines.map(line => {
-      const values = line.split(";");
-      const obj = {};
-      headers.forEach((h,i)=> obj[h.trim()] = values[i]?.trim());
-      return obj;
-    });
+// Cargar CSV desde GitHub (asegúrate de poner la URL raw correcta)
+fetch('https://raw.githubusercontent.com/tu_usuario/tu_repo/main/Mapa_Base.csv')
+.then(res => res.text())
+.then(data => {
+  const lines = data.split('\n').filter(l => l.trim() !== '');
+  const headers = lines[0].split(';');
+  sites = lines.slice(1).map(line => {
+    const values = line.split(';');
+    let obj = {};
+    headers.forEach((h,i) => obj[h.trim()] = values[i]?.trim() || '');
+    return obj;
   });
-
-const search = document.getElementById("search");
-const sug = document.getElementById("sug");
-const result = document.getElementById("result");
-
-search.addEventListener("input",()=>{
-  const v = search.value.toLowerCase();
-  sug.innerHTML="";
-  if(!v){sug.style.display="none";return;}
-
-  data.filter(d => d["NOMBRE DE SITIO"]?.toLowerCase().includes(v))
-      .slice(0,6)
-      .forEach(d=>{
-        const div=document.createElement("div");
-        div.textContent=d["NOMBRE DE SITIO"];
-        div.onclick=()=>selectSite(d);
-        sug.appendChild(div);
-      });
-
-  sug.style.display="block";
 });
 
+// Obtener ubicación del usuario
+if(navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(
+    pos => { userPosition = {lat:pos.coords.latitude, lon:pos.coords.longitude}; },
+    err => { console.warn("GPS no permitido"); }
+  );
+}
+
+// Buscar sugerencias
+const input = document.getElementById('siteSearch');
+const suggestions = document.getElementById('suggestions');
+input.addEventListener('input', ()=>{
+  const query = input.value.toLowerCase();
+  suggestions.innerHTML = '';
+  if(query.length>0){
+    sites.filter(s=>s['NOMBRE DE SITIO'].toLowerCase().includes(query))
+         .slice(0,10)
+         .forEach(s=>{
+      const div = document.createElement('div');
+      div.className='suggestion-item';
+      div.textContent = s['NOMBRE DE SITIO'];
+      div.onclick = ()=>selectSite(s);
+      suggestions.appendChild(div);
+    });
+  }
+});
+
+// Función Haversine para distancia
+function getDistance(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R*c;
+}
+
+// Mostrar datos del sitio
 function selectSite(d){
-  sug.style.display="none";
-  search.value=d["NOMBRE DE SITIO"];
+  suggestions.innerHTML='';
+  input.value = d['NOMBRE DE SITIO'];
+  let distanceHTML = `<div class="distance">📏 Distancia: ubicación no disponible</div>`;
+  if(userPosition){
+    const km = getDistance(userPosition.lat, userPosition.lon, parseFloat(d.LATITUDE), parseFloat(d.LONGITUDE));
+    distanceHTML = `<div class="distance">📏 Distancia desde tu ubicación: ${km.toFixed(1)} km</div>`;
+  }
 
-  result.innerHTML=`
+  document.getElementById('result').innerHTML = `
     <div class="card">
-
-      <div class="card-header">
-        <h2>${d.SITEID} - ${d["NOMBRE DE SITIO"]}</h2>
-      </div>
-
+      <h2>${d['SITEID']} - ${d['NOMBRE DE SITIO']}</h2>
       <div class="map-preview">
-        <iframe
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps?q=${d.LATITUDE},${d.LONGITUDE}&z=15&output=embed">
-        </iframe>
+        <iframe src="https://www.google.com/maps?q=${d.LATITUDE},${d.LONGITUDE}&hl=es;z=15&output=embed"></iframe>
       </div>
-
-      <div class="table">
-        <div class="row-label">NIC/NIS</div><div class="row-value">${d["NIC/NIS"]}</div>
-        <div class="row-label">Distribuidora</div><div class="row-value">${d.Distribuidora}</div>
-
-        <div class="row-label">Llave requerida</div>
-        <div class="row-value ${d["Llave Requerida"] === "SI" ? "badge-yes" : "badge-no"}">
-          ${d["Llave Requerida"]}
-        </div>
-
-        <div class="row-label">Altura</div><div class="row-value">${d.Altura} m</div>
-        <div class="row-label">In-Building</div><div class="row-value">${d["In-Building"]}</div>
-        <div class="row-label">Support Type</div><div class="row-value">${d["Support Type"]}</div>
-        <div class="row-label">Porte</div><div class="row-value">${d.Porte}</div>
-        <div class="row-label">Tecnología</div><div class="row-value">${d.Tech}</div>
-        <div class="row-label">Transmisión</div><div class="row-value">${d["Tipo de Transmision"]}</div>
-        <div class="row-label">Propietario</div><div class="row-value">${d.Propietario}</div>
-        <div class="row-label">Tipo Ubicación</div><div class="row-value">${d["Tipo Ubicacion"]}</div>
-
-        <div class="row-label full">Dirección</div>
-        <div class="row-value full">${d.Direccion}</div>
-
-        <div class="row-label">Municipio</div>
-        <div class="row-value">${d.Municipio}</div>
-      </div>
-
-      <div class="card-footer">
-        <button class="btn"
-          onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${d.LATITUDE},${d.LONGITUDE}','_blank')">
-          📍 Ir a Google Maps
-        </button>
-      </div>
-
+      ${distanceHTML}
+      <table class="data-table">
+        <tr><td class="label">NIC/NIS</td><td>${d['NIC/NIS']}</td></tr>
+        <tr><td class="label">Distribuidora</td><td>${d['Distribuidora']}</td></tr>
+        <tr><td class="label">Llave requerida</td><td>${d['Llave Requerida']}</td></tr>
+        <tr><td class="label">Altura</td><td>${d['Altura']}</td></tr>
+        <tr><td class="label">In-Building</td><td>${d['In-Building']}</td></tr>
+        <tr><td class="label">Support Type</td><td>${d['Support Type']}</td></tr>
+        <tr><td class="label">Porte</td><td>${d['Porte']}</td></tr>
+        <tr><td class="label">Tech</td><td>${d['Tech']}</td></tr>
+        <tr><td class="label">Tipo de Transmision</td><td>${d['Tipo de Transmision']}</td></tr>
+        <tr><td class="label">Propietario</td><td>${d['Propietario']}</td></tr>
+        <tr><td class="label">Tipo Ubicacion</td><td>${d['Tipo Ubicacion']}</td></tr>
+        <tr><td class="label">Direccion</td><td>${d['Direccion']}</td></tr>
+        <tr><td class="label">Municipio</td><td>${d['Municipio']}</td></tr>
+      </table>
+      <a class="go-button" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${d.LATITUDE},${d.LONGITUDE}">📍 Ir a Google Maps</a>
     </div>
   `;
 }
