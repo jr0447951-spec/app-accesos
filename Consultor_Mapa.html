@@ -55,6 +55,7 @@
         .label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
         .val { font-size: 1rem; color: #1e293b; display: block; line-height: 1.4; }
         .highlight { color: #2563eb; font-weight: 700; }
+        .key-required { color: #e11d48; font-weight: 700; }
 
         .go-button { 
             display: block; background: #2563eb; color: white; text-align: center;
@@ -96,6 +97,7 @@ const toast = document.getElementById('toast');
 
 const CSV_URL = 'https://raw.githubusercontent.com/jr0447951-spec/app-accesos/main/Mapa_Base.csv';
 
+// 1. CARGA DE DATOS
 fetch(CSV_URL)
     .then(res => res.text())
     .then(data => {
@@ -107,7 +109,6 @@ fetch(CSV_URL)
             let obj = {};
             headers.forEach((h, i) => {
                 let key = h.trim();
-                // Normalización de columnas con caracteres especiales o espacios
                 if(key.includes('Direcci')) key = 'DIRECCION';
                 if(key.includes('Nombre para Propietario')) key = 'NOM_PROPIETARIO';
                 if(key === 'Propietario') key = 'TIPO_PROPIETARIO';
@@ -116,17 +117,19 @@ fetch(CSV_URL)
             });
             return obj;
         });
-        statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios listos.`;
+        statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios cargados.`;
         input.disabled = false;
     })
-    .catch(() => statusDiv.innerHTML = "❌ Error al conectar con GitHub.");
+    .catch(() => statusDiv.innerHTML = "❌ Error de conexión.");
 
+// 2. GPS
 if(navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
         userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
     });
 }
 
+// 3. BUSCADOR
 input.addEventListener('input', () => {
     const query = input.value.toLowerCase().trim();
     suggestions.innerHTML = '';
@@ -167,21 +170,25 @@ function selectSite(s) {
         const dLon = (lon - userPos.lon) * Math.PI / 180;
         const a = Math.sin(dLat/2)**2 + Math.cos(userPos.lat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
         const km = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-        distHtml = `<div class="dist-info">📍 A ${km.toFixed(2)} km de distancia</div>`;
+        distHtml = `<div class="dist-info">📍 A ${km.toFixed(2)} km de tu ubicación</div>`;
     }
 
     const llaveVal = s['Llave Requerida'] ? s['Llave Requerida'].toUpperCase() : '';
-    const llaveBox = (llaveVal === 'SI') ? `<div class="info-box"><span class="label">Acceso:</span><span class="val">🔑 LLAVE REQUERIDA</span></div>` : '';
+    const llaveBox = (llaveVal === 'SI') ? `
+        <div class="info-box">
+            <span class="label">Acceso:</span>
+            <span class="val key-required">🔑 LLAVE REQUERIDA</span>
+        </div>` : '';
 
     document.getElementById('result').innerHTML = `
         <div class="card">
             <div class="header-title" onclick="copyFormat('${s['SITEID']}', '${s['NOMBRE DE SITIO']}')">
                 <h2>${s['SITEID']} - ${s['NOMBRE DE SITIO']}</h2>
-                <span class="copy-tag">📋 TOCAR PARA COPIAR</span>
+                <span class="copy-tag">📋 TOCAR PARA COPIAR FORMATO</span>
             </div>
             
             <div class="map-preview">
-                <iframe src="https://maps.google.com/maps?q=${lat},${lon}&z=16&output=embed"></iframe>
+                <iframe src="https://maps.google.com/maps?q=${lat},${lon}&hl=es&z=16&output=embed"></iframe>
             </div>
 
             ${distHtml}
@@ -192,20 +199,15 @@ function selectSite(s) {
             </div>
 
             <div class="info-box">
-                <span class="label">Dirección:</span>
-                <span class="val">${s['DIRECCION'] || 'No disponible'}</span>
-            </div>
-
-            <div class="info-box">
-                <span class="label">Municipio:</span>
-                <span class="val">${s['Municipio']}</span>
+                <span class="label">Distribuidora:</span>
+                <span class="val">${s['Distribuidora'] || 'N/A'}</span>
             </div>
 
             ${llaveBox}
 
             <div class="info-box">
                 <span class="label">Nombre para Propietario:</span>
-                <span class="val"><b>${s['NOM_PROPIETARIO'] || 'N/A'}</b></span>
+                <span class="val">${s['NOM_PROPIETARIO'] || 'N/A'}</span>
             </div>
 
             <div class="info-box">
@@ -214,8 +216,13 @@ function selectSite(s) {
             </div>
 
             <div class="info-box">
-                <span class="label">Distribuidora:</span>
-                <span class="val">${s['Distribuidora']}</span>
+                <span class="label">Dirección:</span>
+                <span class="val">${s['DIRECCION'] || 'No disponible'}</span>
+            </div>
+
+            <div class="info-box">
+                <span class="label">Municipio:</span>
+                <span class="val">${s['Municipio'] || 'N/A'}</span>
             </div>
 
             <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR RUTA GPS</a>
