@@ -97,7 +97,7 @@ const toast = document.getElementById('toast');
 
 const CSV_URL = 'https://raw.githubusercontent.com/jr0447951-spec/app-accesos/main/Mapa_Base.csv';
 
-// 1. CARGA DE DATOS
+// CARGA DE DATOS
 fetch(CSV_URL)
     .then(res => res.text())
     .then(data => {
@@ -109,9 +109,11 @@ fetch(CSV_URL)
             let obj = {};
             headers.forEach((h, i) => {
                 let key = h.trim();
+                // Normalización de campos
                 if(key.includes('Direcci')) key = 'DIRECCION';
                 if(key.includes('Nombre para Propietario')) key = 'NOM_PROPIETARIO';
                 if(key === 'Propietario') key = 'TIPO_PROPIETARIO';
+                if(key === 'Tipo de Transmision') key = 'TRANS';
                 
                 obj[key] = values[i] ? values[i].trim() : '';
             });
@@ -120,16 +122,16 @@ fetch(CSV_URL)
         statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios cargados.`;
         input.disabled = false;
     })
-    .catch(() => statusDiv.innerHTML = "❌ Error de conexión.");
+    .catch(() => statusDiv.innerHTML = "❌ Error al cargar CSV.");
 
-// 2. GPS
+// GPS
 if(navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
         userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
     });
 }
 
-// 3. BUSCADOR
+// BUSCADOR
 input.addEventListener('input', () => {
     const query = input.value.toLowerCase().trim();
     suggestions.innerHTML = '';
@@ -206,6 +208,26 @@ function selectSite(s) {
             ${llaveBox}
 
             <div class="info-box">
+                <span class="label">Altura:</span>
+                <span class="val">${s['Altura'] || 'N/A'}</span>
+            </div>
+
+            <div class="info-box">
+                <span class="label">Porte:</span>
+                <span class="val">${s['Porte'] || 'N/A'}</span>
+            </div>
+
+            <div class="info-box">
+                <span class="label">Tech:</span>
+                <span class="val">${s['Tech'] || 'N/A'}</span>
+            </div>
+
+            <div class="info-box">
+                <span class="label">Tipo de Transmisión:</span>
+                <span class="val">${s['TRANS'] || 'N/A'}</span>
+            </div>
+
+            <div class="info-box">
                 <span class="label">Nombre para Propietario:</span>
                 <span class="val">${s['NOM_PROPIETARIO'] || 'N/A'}</span>
             </div>
@@ -216,13 +238,13 @@ function selectSite(s) {
             </div>
 
             <div class="info-box">
-                <span class="label">Dirección:</span>
-                <span class="val">${s['DIRECCION'] || 'No disponible'}</span>
+                <span class="label">Municipio:</span>
+                <span class="val">${s['Municipio'] || 'N/A'}</span>
             </div>
 
             <div class="info-box">
-                <span class="label">Municipio:</span>
-                <span class="val">${s['Municipio'] || 'N/A'}</span>
+                <span class="label">Dirección:</span>
+                <span class="val">${s['DIRECCION'] || 'No disponible'}</span>
             </div>
 
             <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR RUTA GPS</a>
