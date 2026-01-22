@@ -1,172 +1,261 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reporte de Entrada / Salida Independiente</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Network Ops - Independiente</title>
+    <style>
+        :root { 
+            --primary: #00a1ff; 
+            --movistar: #5bc500;
+            --dark-bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.07);
+        }
 
-<style>
-  /* --- 1. ESTILOS BASE (Fondo degradado de reportes anteriores) --- */
-  body {
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    padding: 15px;
-    background: linear-gradient(135deg, #f0f4ff, #e0f7f1); /* Fondo solicitado */
-    min-height: 100vh;
-    color: #333;
-  }
-  h2 {
-    text-align: center;
-    color: #2c3e50;
-    margin-bottom: 20px;
-  }
-  label {
-    font-weight: 600;
-    display: block;
-    margin-top: 15px;
-    margin-bottom: 5px;
-    color: #444;
-  }
+        /* FONDO TECNOLÓGICO UNIFICADO */
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px 15px 100px;
+            background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-  /* --- 2. ESTILOS DE INPUTS Y SELECTS --- */
-  input, select, textarea {
-    width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
-    border-radius: 6px;
-    border: 1px solid #bdc3c7;
-    font-size: 14px;
-    background-color: #fff;
-  }
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(0, 161, 255, 0.05) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(0, 161, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -2;
+        }
 
-  /* --- 3. ESTILOS DEL BUSCADOR DE SITIOS (Replicado del index) --- */
-  #listaSitios {
-    position: absolute;
-    top: 100%; left: 0; right: 0;
-    background: white;
-    border: 1px solid #bdc3c7;
-    border-top: none;
-    max-height: 150px;
-    overflow-y: auto;
-    z-index: 1000;
-    border-radius: 0 0 6px 6px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  }
-  #listaSitios div {
-    padding: 10px;
-    cursor: pointer;
-    border-bottom: 1px solid #eee;
-  }
-  #listaSitios div:hover {
-    background-color: #f1f9fe; /* Color suave al pasar el mouse */
-  }
+        header { text-align: center; margin-bottom: 25px; }
+        h2 { margin: 0; font-size: 1.4rem; letter-spacing: 1px; color: white; text-transform: uppercase; }
+        .subtitle { color: var(--primary); font-size: 0.8rem; font-weight: bold; }
 
-  /* --- 4. ESTILOS PARA PERSONAL (CHIPS/BOTONES POP) --- */
-  #contenedorPersonal {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px;
-    background: rgba(255,255,255,0.6);
-    border-radius: 6px;
-    border: 1px solid #bdc3c7;
-    min-height: 40px;
-    align-items: center;
-  }
-  .chip {
-    display: inline-block;
-    padding: 8px 12px;
-    background: #e0e0e0; /* Gris inicial */
-    border-radius: 25px; /* Bordes muy redondeados como en el index */
-    cursor: pointer;
-    user-select: none;
-    font-size: 13px;
-    transition: all 0.2s ease;
-  }
-  .chip:hover {
-    background: #d5d5d5;
-    transform: translateY(-1px);
-  }
-  /* Estilo cuando el chip está seleccionado (Verde del index) */
-  .chip.selected {
-    background: #4CAF50; 
-    color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
+        /* CONTENEDOR TIPO CARD GLASS */
+        .form-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
 
-  /* --- 5. ÁREA DE TEXTO Y BOTONES --- */
-  textarea {
-    height: 180px;
-    font-family: monospace;
-    background-color: #fcfcfc;
-    margin-top: 5px;
-  }
-  /* Contenedor para botones en fila */
-  .action-buttons {
-      display: flex; gap: 10px; margin-top: 15px;
-  }
-  button {
-    flex: 1; padding: 12px; font-size: 16px; border: none; border-radius: 8px;
-    cursor: pointer; transition: all 0.2s ease; color: white; font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
-  button:hover { opacity: 0.9; transform: translateY(-2px);}
-  #copiar { background: #2196F3; } /* Azul */
-  #whatsapp { background: #4CAF50; } /* Verde */
-  #home { background: #607D8B; margin-top: 20px; width: 100%; } /* Gris */
-  
-  .loading { color: #888; font-style: italic; }
-</style>
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus, select:focus { border-color: var(--primary); }
+
+        /* BUSCADOR DE SITIOS */
+        #listaSitios {
+            position: absolute;
+            width: 100%;
+            background: #1e293b;
+            border-radius: 10px;
+            z-index: 1000;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--primary);
+            margin-top: 5px;
+        }
+        #listaSitios div { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 13px; }
+
+        /* CHIPS DE PERSONAL */
+        #contenedorPersonal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chip {
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chip.selected {
+            background: var(--movistar);
+            color: white;
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(91, 197, 0, 0.4);
+        }
+
+        textarea {
+            height: 120px;
+            background: rgba(0,0,0,0.5);
+            color: #00ff41; /* Estilo terminal para la vista previa */
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid rgba(0, 161, 255, 0.3);
+        }
+
+        /* BOTONES DE ACCIÓN */
+        .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .btn {
+            flex: 1; padding: 15px; border: none; border-radius: 12px;
+            font-weight: bold; cursor: pointer; transition: 0.3s; color: white;
+        }
+        .btn-copy { background: #3b82f6; }
+        .btn-wa { background: #25d366; }
+        .btn:active { transform: scale(0.95); }
+
+        /* BOTONES FLOTANTES (ESTILO INDEX) */
+        .btn-access, .btn-home {
+            position: fixed; right: 25px; display: flex; align-items: center; gap: 10px;
+            padding: 8px 20px 8px 8px; color: white; text-decoration: none; border-radius: 50px;
+            font-weight: 700; font-size: 0.9rem; z-index: 9999; border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: 0.4s;
+        }
+        .btn-access { bottom: 90px; background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); }
+        .btn-home { bottom: 25px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        .icon-circle { background: rgba(255,255,255,0.2); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+    </style>
 </head>
 
 <body>
 
-<h2>Reporte de Entrada / Salida</h2>
+<header>
+    <h2>Registro Operativo</h2>
+    <div class="subtitle">EEBB - NETWORK OPERATIONS</div>
+</header>
 
-<label for="sitioBuscador">1. Sitio:</label>
-<div style="position: relative;">
-  <input type="text" id="sitioBuscador" placeholder="Escriba para buscar sitio..." autocomplete="off">
-  <div id="listaSitios"></div>
-</div>
-
-<div style="display: flex; gap: 15px; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 150px;">
-        <label for="tipoReporte">2. Tipo:</label>
-        <select id="tipoReporte">
-            <option value="Entrada">Entrada</option>
-            <option value="Salida">Salida</option>
-        </select>
+<div class="form-card">
+    <label>1. Buscar Sitio</label>
+    <div style="position: relative;">
+        <input type="text" id="sitioBuscador" placeholder="ID o Nombre del sitio..." autocomplete="off">
+        <div id="listaSitios"></div>
     </div>
-    
-    <div style="flex: 2; min-width: 200px;">
-        <label for="actividadSelect">3. Actividad:</label>
-        <select id="actividadSelect">
-            <option value="">Cargando actividades...</option>
-        </select>
+
+    <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label>2. Tipo</label>
+            <select id="tipoReporte">
+                <option value="Entrada">Entrada</option>
+                <option value="Salida">Salida</option>
+            </select>
+        </div>
+        <div style="flex: 2;">
+            <label>3. Actividad</label>
+            <select id="actividadSelect">
+                <option value="">Cargando...</option>
+            </select>
+        </div>
+    </div>
+
+    <label>4. Personal Técnico</label>
+    <div id="contenedorPersonal">
+        <span style="font-size: 10px; opacity: 0.5;">Cargando base de datos...</span>
+    </div>
+
+    <label>Vista Previa del Reporte</label>
+    <textarea id="mensaje" readonly></textarea>
+
+    <div class="action-buttons">
+        <button class="btn btn-copy" id="copiar">COPIAR</button>
+        <button class="btn btn-wa" id="whatsapp">WHATSAPP</button>
     </div>
 </div>
 
+<a href="pag1.html" class="btn-access">
+    <div class="icon-circle">🔑</div>
+    <span>Accesos</span>
+</a>
 
-<label>4. Personal (Clic para seleccionar):</label>
-<div id="contenedorPersonal">
-    <span class="loading">Cargando técnicos...</span>
-</div>
-
-
-<label>Vista Previa:</label>
-<textarea id="mensaje" readonly placeholder="Complete los campos para generar el mensaje..."></textarea>
-
-<div class="action-buttons">
-    <button id="copiar">Copiar Mensaje</button>
-    <button id="whatsapp">Enviar WhatsApp</button>
-</div>
-
-<button id="home">🏠 Inicio</button>
+<a href="index.html" class="btn-home">
+    <div class="icon-circle">🏠</div>
+    <span>Inicio</span>
+</a>
 
 <script>
-// --- Variables Globales ---
+// --- Lógica de Datos ---
 let sitiosData = [];
 
-// --- Referencias al DOM ---
+async function cargarCSV(url) {
+    try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const lineas = text.trim().split('\n');
+        const headers = lineas[0].split(';');
+        return lineas.slice(1).map(l => {
+            const cols = l.split(';');
+            let obj = {};
+            headers.forEach((h,i) => obj[h.trim()] = cols[i]?.trim());
+            return obj;
+        });
+    } catch (e) { return []; }
+}
+
+async function inicializar() {
+    const [sitios, actividades, tecnicos] = await Promise.all([
+        cargarCSV('sitios.csv'),
+        cargarCSV('actividad.csv'),
+        cargarCSV('tecnicos.csv')
+    ]);
+
+    sitiosData = sitios;
+
+    actividadSelect.innerHTML = '<option value="">-- Seleccione --</option>';
+    actividades.forEach(a => {
+        if(a['ACTIVIDAD']) {
+            const opt = document.createElement('option');
+            opt.value = a['ACTIVIDAD'];
+            opt.textContent = a['ACTIVIDAD'];
+            actividadSelect.appendChild(opt);
+        }
+    });
+
+    contenedorPersonal.innerHTML = '';
+    tecnicos.forEach(t => {
+        if(t['TECNICO']) {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.textContent = `${t['TECNICO']} (${t['DUI'] || 'S/D'})`;
+            chip.onclick = () => {
+                chip.classList.toggle('selected');
+                actualizarVistaPrevia();
+            };
+            contenedorPersonal.appendChild(chip);
+        }
+    });
+}
+
+// --- Buscador y Mensaje ---
 const inputSitio = document.getElementById('sitioBuscador');
 const listaSitiosDiv = document.getElementById('listaSitios');
 const textarea = document.getElementById('mensaje');
@@ -174,171 +263,48 @@ const tipoSelect = document.getElementById('tipoReporte');
 const actividadSelect = document.getElementById('actividadSelect');
 const contenedorPersonal = document.getElementById('contenedorPersonal');
 
-
-// --- FUNCIÓN CARGAR CSV (Tomada del index de referencia) ---
-async function cargarCSV(url) {
-  try {
-      const res = await fetch(url);
-      const text = await res.text();
-      const lineas = text.trim().split('\n');
-      const headers = lineas[0].split(';');
-      return lineas.slice(1).map(l => {
-        const cols = l.split(';');
-        let obj = {};
-        headers.forEach((h,i) => obj[h.trim()] = cols[i]?.trim());
-        return obj;
-      });
-  } catch (e) {
-      console.error("Error cargando CSV:", url, e);
-      return [];
-  }
-}
-
-// --- INICIALIZACIÓN DE DATOS ---
-async function inicializar() {
-  // 1. Cargar los 3 archivos CSV
-  const [sitios, actividades, tecnicos] = await Promise.all([
-      cargarCSV('sitios.csv'),
-      cargarCSV('actividad.csv'),
-      cargarCSV('tecnicos.csv')
-  ]);
-
-  // 2. Guardar sitios para el buscador
-  sitiosData = sitios;
-
-  // 3. Llenar dropdown de Actividades
-  actividadSelect.innerHTML = '<option value="">-- Seleccione Actividad --</option>';
-  actividades.forEach(a => {
-      // Usa el nombre de columna exacto del index de referencia: 'ACTIVIDAD'
-      if(a['ACTIVIDAD']) { 
-          const option = document.createElement('option');
-          option.value = a['ACTIVIDAD'];
-          option.textContent = a['ACTIVIDAD'];
-          actividadSelect.appendChild(option);
-      }
-  });
-  
-  // 4. Llenar chips de Personal
-  contenedorPersonal.innerHTML = ''; // Limpiar mensaje de carga
-  if(tecnicos.length === 0) contenedorPersonal.textContent = "No se encontraron técnicos.";
-  
-  tecnicos.forEach((t, i) => {
-       // Usa columnas del index de referencia: 'TECNICO' y 'DUI'
-      if(t['TECNICO']) {
-          const chip = document.createElement('div');
-          chip.className = 'chip';
-          // Formato: Nombre (DUI)
-          chip.textContent = `${t['TECNICO']} (${t['DUI'] || 'S/DUI'})`;
-          chip.dataset.index = i; // Guardamos índice por si necesitamos más datos del objeto original
-
-          // Evento click para seleccionar/deseleccionar
-          chip.addEventListener('click', () => {
-              chip.classList.toggle('selected');
-              actualizarVistaPrevia(); // Actualizar mensaje al instante
-          });
-          contenedorPersonal.appendChild(chip);
-      }
-  });
-
-  // Generar vista previa inicial
-  actualizarVistaPrevia();
-}
-
-
-// --- LÓGICA DEL BUSCADOR DE SITIOS (Adaptada del index) ---
 inputSitio.addEventListener('input', () => {
-  const val = inputSitio.value.toLowerCase();
-  listaSitiosDiv.innerHTML = '';
-  if (!val) return;
-
-  // Usa columna del index de referencia: 'Nombre de Sitio'
-  sitiosData.filter(s => s['Nombre de Sitio']?.toLowerCase().includes(val))
-    .slice(0, 10) // Limitar resultados
-    .forEach(s => {
-      const div = document.createElement('div');
-      // Usa columnas: 'Nombre de Sitio' y 'SiteID'
-      div.textContent = `${s['Nombre de Sitio']} (${s.SiteID})`;
-      div.addEventListener('click', () => {
-        inputSitio.value = s['Nombre de Sitio'];
-        inputSitio.dataset.siteid = s.SiteID; // Guardar ID oculto
-        listaSitiosDiv.innerHTML = '';
-        actualizarVistaPrevia();
-      });
-      listaSitiosDiv.appendChild(div);
-    });
+    const val = inputSitio.value.toLowerCase();
+    listaSitiosDiv.innerHTML = '';
+    if (!val) return;
+    sitiosData.filter(s => s['Nombre de Sitio']?.toLowerCase().includes(val) || s.SiteID?.toLowerCase().includes(val))
+        .slice(0, 5).forEach(s => {
+            const div = document.createElement('div');
+            div.textContent = `${s.SiteID} - ${s['Nombre de Sitio']}`;
+            div.onclick = () => {
+                inputSitio.value = s['Nombre de Sitio'];
+                inputSitio.dataset.siteid = s.SiteID;
+                listaSitiosDiv.innerHTML = '';
+                actualizarVistaPrevia();
+            };
+            listaSitiosDiv.appendChild(div);
+        });
 });
 
-// Cerrar lista al hacer clic fuera
-document.addEventListener('click', (e) => {
-  if(!inputSitio.contains(e.target) && !listaSitiosDiv.contains(e.target)) listaSitiosDiv.innerHTML = '';
-});
-
-
-// --- GENERACIÓN DEL MENSAJE ---
 function generarMensaje() {
-  const tipo = tipoSelect.value;
-  const nombreSitio = inputSitio.value;
-  const idSitio = inputSitio.dataset.siteid;
-  const actividad = actividadSelect.value;
+    const idSitio = inputSitio.dataset.siteid;
+    const actividad = actividadSelect.value;
+    const personal = Array.from(contenedorPersonal.querySelectorAll('.chip.selected')).map(c => c.textContent);
 
-  // Obtener texto de los chips seleccionados
-  const personalSeleccionado = Array.from(contenedorPersonal.querySelectorAll('.chip.selected'))
-                                    .map(chip => chip.textContent);
+    if (!idSitio || !actividad || personal.length === 0) return "Esperando datos completos...";
 
-  // Validaciones
-  if (!idSitio || !actividad || personalSeleccionado.length === 0) {
-      return "Por favor complete: Sitio, Actividad y al menos un Técnico.";
-  }
-
-  const personalString = personalSeleccionado.join('\n');
-
-  // Formato del mensaje de Entrada/Salida
-  return `Buen día
-Reportamos ${tipo} al sitio
-
-${idSitio} - ${nombreSitio}
-
-Personal:
-${personalString}
-
-Empresa:
-CELECT SA DE CV
-
-Área de Movistar Responsable: EEBB
-
-Actividad a Realizar: ${actividad}`;
+    return `Buen día\nReportamos ${tipoSelect.value} al sitio\n\n${idSitio} - ${inputSitio.value}\n\nPersonal:\n${personal.join('\n')}\n\nEmpresa:\nCELECT SA DE CV\n\nÁrea: EEBB\nActividad: ${actividad}`;
 }
 
-// Función auxiliar
-function actualizarVistaPrevia() {
-    textarea.value = generarMensaje();
-}
+function actualizarVistaPrevia() { textarea.value = generarMensaje(); }
+tipoSelect.onchange = actualizarVistaPrevia;
+actividadSelect.onchange = actualizarVistaPrevia;
 
-// --- LISTENERS DE CAMBIO ---
-tipoSelect.addEventListener('change', actualizarVistaPrevia);
-actividadSelect.addEventListener('change', actualizarVistaPrevia);
+document.getElementById('copiar').onclick = () => {
+    navigator.clipboard.writeText(textarea.value);
+    alert("¡Copiado!");
+};
 
-// --- BOTONES ---
-document.getElementById('copiar').addEventListener('click', () => {
-  const msg = textarea.value;
-  if (msg.startsWith("Por favor")) {alert("Faltan datos."); return;}
-  navigator.clipboard.writeText(msg).then(() => alert('Copiado al portapapeles'));
-});
+document.getElementById('whatsapp').onclick = () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(textarea.value)}`, '_blank');
+};
 
-document.getElementById('whatsapp').addEventListener('click', () => {
-  const msg = textarea.value;
-  if (msg.startsWith("Por favor")) {alert("Faltan datos."); return;}
-  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url,'_blank');
-});
-
-document.getElementById('home').addEventListener('click', () => {
-  window.location.href = 'index.html'; // Redirige al index principal
-});
-
-// --- INICIAR ---
 inicializar();
 </script>
-
 </body>
 </html>
