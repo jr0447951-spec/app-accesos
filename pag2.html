@@ -118,7 +118,7 @@
         textarea {
             height: 120px;
             background: rgba(0,0,0,0.5);
-            color: #00ff41; /* Estilo terminal para la vista previa */
+            color: #00ff41; 
             font-family: 'Courier New', monospace;
             font-size: 12px;
             border: 1px solid rgba(0, 161, 255, 0.3);
@@ -134,7 +134,7 @@
         .btn-wa { background: #25d366; }
         .btn:active { transform: scale(0.95); }
 
-        /* BOTONES FLOTANTES (ESTILO INDEX) */
+        /* BOTONES FLOTANTES */
         .btn-access, .btn-home {
             position: fixed; right: 25px; display: flex; align-items: center; gap: 10px;
             padding: 8px 20px 8px 8px; color: white; text-decoration: none; border-radius: 50px;
@@ -203,6 +203,19 @@
 </a>
 
 <script>
+// --- SEGURIDAD 24 HORAS (SIEMPRE AL PRINCIPIO) ---
+(function verificarAcceso() {
+    const loginTime = localStorage.getItem('acceso_tecnico_eebb');
+    const ahora = new Date().getTime();
+    const DURACION_24H = 86400000;
+
+    if (!loginTime || (ahora - loginTime > DURACION_24H)) {
+        localStorage.removeItem('acceso_tecnico_eebb');
+        alert("Sesión expirada. Ingrese el PIN de seguridad.");
+        window.location.href = 'index.html';
+    }
+})();
+
 // --- Lógica de Datos ---
 let sitiosData = [];
 
