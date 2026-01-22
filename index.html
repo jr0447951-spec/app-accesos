@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Operations - Home</title>
+    <title>Network Operations - Secure Access</title>
     <style>
         :root {
             --primary: #00a1ff;
             --movistar: #5bc500;
-            --accent: #f43f5e;
             --dark-bg: #0f172a;
         }
 
@@ -24,218 +23,146 @@
             overflow-x: hidden;
         }
 
-        /* Animación de ondas de red en el fondo */
-        body::before {
-            content: "";
+        /* CAPA DE BLOQUEO (OVERLAY) */
+        #pinOverlay {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 200%;
-            height: 200%;
-            border: 1px solid rgba(0, 161, 255, 0.1);
-            border-radius: 40%;
-            animation: rotate 20s linear infinite;
-            transform: translate(-50%, -50%);
-            z-index: -1;
-        }
-
-        @keyframes rotate {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .logo-area {
-            font-size: 3rem;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            background: linear-gradient(to right, #fff, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p.subtitle {
-            color: #94a3b8;
-            font-size: 0.9rem;
-            margin-top: 5px;
-        }
-
-        .menu-container {
-            width: 90%;
-            max-width: 500px;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 10000;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            padding: 20px;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s;
         }
 
-        .nav-card {
+        .pin-box {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            text-decoration: none;
-            color: white;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            animation: slideInUp 0.6s ease-out both;
-        }
-
-        .nav-card::after {
-            content: ">>";
-            position: absolute;
-            right: -20px;
-            opacity: 0;
-            transition: 0.3s;
-            color: var(--primary);
-            font-weight: bold;
-        }
-
-        .nav-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 30px rgba(0, 161, 255, 0.2);
-        }
-
-        .nav-card:hover::after {
-            right: 20px;
-            opacity: 1;
-        }
-
-        .icon-box {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            flex-shrink: 0;
-        }
-
-        /* Colores temáticos por botón */
-        .bg-map { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
-        .bg-access { background: linear-gradient(135deg, #059669, #5bc500); }
-        .bg-report { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
-
-        .text-info h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: #f8fafc;
-        }
-
-        .text-info p {
-            margin: 5px 0 0;
-            font-size: 0.8rem;
-            color: #94a3b8;
-            line-height: 1.3;
-        }
-
-        footer {
-            margin-top: auto;
-            padding: 30px;
-            font-size: 0.75rem;
-            color: #475569;
             text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
 
-        .signal-dots {
-            display: flex;
-            gap: 4px;
-            justify-content: center;
-            margin-top: 10px;
+        .pin-box h2 { margin-bottom: 20px; font-size: 1.2rem; letter-spacing: 2px; }
+
+        #pinInput {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            font-size: 2rem;
+            width: 150px;
+            text-align: center;
+            letter-spacing: 10px;
+            outline: none;
+            margin-bottom: 20px;
         }
 
-        .dot {
-            width: 4px;
-            height: 12px;
-            background: #334155;
-            border-radius: 2px;
-            animation: signal 1.5s infinite;
-        }
-        .dot:nth-child(2) { animation-delay: 0.2s; height: 16px; }
-        .dot:nth-child(3) { animation-delay: 0.4s; height: 20px; }
-        .dot:nth-child(4) { animation-delay: 0.6s; height: 24px; }
-
-        @keyframes signal {
-            0%, 100% { background: #334155; }
-            50% { background: var(--primary); }
+        .btn-unlock {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
         }
 
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .btn-unlock:active { transform: scale(0.95); }
 
-        @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* EL RESTO DEL DISEÑO (Oculto inicialmente) */
+        #mainContent { display: none; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+        /* Estilos del Home (Simplificados para brevedad, mantén los tuyos) */
+        header { text-align: center; padding: 50px 20px; }
+        .menu-container { width: 90%; max-width: 480px; display: flex; flex-direction: column; gap: 18px; }
+        .nav-card {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+            border-radius: 22px; padding: 20px; display: flex; align-items: center;
+            gap: 20px; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.1);
         }
+        .icon-box { width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        .bg-map { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+        .bg-access { background: linear-gradient(135deg, #065f46, #10b981); }
+        .bg-report { background: linear-gradient(135deg, #5b21b6, #8b5cf6); }
+        footer { margin-top: auto; padding: 40px; font-size: 0.7rem; color: #475569; text-align: center; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo-area">📡</div>
-        <h1>Network Operations Center</h1>
-        <p class="subtitle">Material de apoyo</p>
-    </header>
-
-    <div class="menu-container">
-        
-        <a href="Consultor_Mapa.html" class="nav-card" style="animation-delay: 0.1s;">
-            <div class="icon-box bg-map">📍</div>
-            <div class="text-info">
-                <h3>Consulta de Sitio</h3>
-                <p>Ubicación GPS, detalles técnicos y datos de infraestructura de red.</p>
-            </div>
-        </a>
-
-        <a href="pag1.html" class="nav-card" style="animation-delay: 0.2s;">
-            <div class="icon-box bg-access">🔑</div>
-            <div class="text-info">
-                <h3>Accesos MOVISTAR</h3>
-                <p>Generador de permisos para sitios Movistar.</p>
-            </div>
-        </a>
-
-        <a href="pag2.html" class="nav-card" style="animation-delay: 0.3s;">
-            <div class="icon-box bg-report">📝</div>
-            <div class="text-info">
-                <h3>Reporte de Bitácora</h3>
-                <p>Registro de entrada y salida de personal técnico.</p>
-            </div>
-        </a>
-
+    <div id="pinOverlay">
+        <div class="pin-box">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🔐</div>
+            <h2>ACCESO RESTRINGIDO</h2>
+            <input type="password" id="pinInput" maxlength="4" placeholder="****" inputmode="numeric">
+            <br>
+            <button class="btn-unlock" onclick="checkPin()">DESBLOQUEAR</button>
+            <p id="errorMsg" style="color: #f43f5e; font-size: 0.8rem; margin-top: 15px; display: none;">PIN Incorrecto. Intente de nuevo.</p>
+        </div>
     </div>
 
-    <footer>
-        <div class="signal-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
-        <p>Operational Technology | System Status: Online</p>
-        <p>&copy; 2026 Telecom Admin</p>
-    </footer>
+    <div id="mainContent" style="display: none;">
+        <header>
+            <div style="font-size: 3.5rem;">📡</div>
+            <h1>Network Ops Center</h1>
+            <p style="color: #64748b;">Material de apoyo</p>
+        </header>
 
+        <div class="menu-container">
+            <a href="Consultor_Mapa.html" class="nav-card">
+                <div class="icon-box bg-map">📍</div>
+                <div><h3>Consulta de Sitio</h3><p>Ubicación GPS y parámetros.</p></div>
+            </a>
+            <a href="pag1.html" class="nav-card">
+                <div class="icon-box bg-access">🔑</div>
+                <div><h3>Accesos MOVISTAR</h3><p>Generación de permisos.</p></div>
+            </a>
+            <a href="pag2.html" class="nav-card">
+                <div class="icon-box bg-report">📝</div>
+                <div><h3>Reporte de Bitácora</h3><p>Registro de ingresos.</p></div>
+            </a>
+        </div>
+
+        <footer>
+            <p>V 2.2.0 | TECHNOLOGY OPERATIONS</p>
+            <p>SYSTEM STATUS: <span style="color:var(--movistar)">SECURE</span></p>
+        </div>
+    </div>
+
+    <script>
+        function checkPin() {
+            const pin = document.getElementById('pinInput').value;
+            const correctPin = "0614";
+            const overlay = document.getElementById('pinOverlay');
+            const content = document.getElementById('mainContent');
+            const error = document.getElementById('errorMsg');
+
+            if (pin === correctPin) {
+                overlay.style.opacity = "0";
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                    content.style.display = "flex";
+                }, 500);
+            } else {
+                error.style.display = "block";
+                document.getElementById('pinInput').value = "";
+                // Pequeña vibración visual
+                document.querySelector('.pin-box').animate([
+                    { transform: 'translateX(-5px)' },
+                    { transform: 'translateX(5px)' }
+                ], { duration: 100, iterations: 3 });
+            }
+        }
+
+        // Permitir Enter para entrar
+        document.getElementById('pinInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkPin();
+        });
+    </script>
 </body>
 </html>
