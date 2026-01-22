@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Operations - Secure Access</title>
+    <title>Generador de Accesos - Network Ops</title>
     <style>
-        :root {
-            --primary: #00a1ff;
+        :root { 
+            --primary: #00a1ff; 
             --movistar: #5bc500;
             --dark-bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.07);
+            --danger: #f43f5e;
         }
 
+        /* FONDO TECNOLÓGICO UNIFICADO */
         body {
-            margin: 0;
             font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px 15px 140px;
             background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
             color: white;
             min-height: 100vh;
@@ -23,146 +27,404 @@
             overflow-x: hidden;
         }
 
-        /* CAPA DE BLOQUEO (OVERLAY) */
-        #pinOverlay {
+        body::after {
+            content: "";
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s ease, visibility 0.5s;
+            background-image: linear-gradient(rgba(0, 161, 255, 0.05) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(0, 161, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -2;
         }
 
-        .pin-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 30px;
+        header { text-align: center; margin-bottom: 20px; }
+        h2 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; color: white; text-transform: uppercase; }
+        .subtitle { color: var(--primary); font-size: 0.8rem; font-weight: bold; }
+
+        /* CONTENEDOR TIPO CARD GLASS */
+        .form-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border-radius: 24px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
         }
 
-        .pin-box h2 { margin-bottom: 20px; font-size: 1.2rem; letter-spacing: 2px; }
+        label {
+            display: block;
+            margin: 12px 0 5px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
 
-        #pinInput {
-            background: rgba(0,0,0,0.3);
-            border: 2px solid var(--primary);
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
-            padding: 15px;
             color: white;
-            font-size: 2rem;
-            width: 150px;
-            text-align: center;
-            letter-spacing: 10px;
+            font-size: 14px;
             outline: none;
-            margin-bottom: 20px;
-        }
-
-        .btn-unlock {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
             transition: 0.3s;
         }
 
-        .btn-unlock:active { transform: scale(0.95); }
+        input:focus, select:focus { border-color: var(--primary); background: rgba(0,0,0,0.6); }
+        option { background: #0f172a; color: white; }
 
-        /* EL RESTO DEL DISEÑO (Oculto inicialmente) */
-        #mainContent { display: none; width: 100%; display: flex; flex-direction: column; align-items: center; }
-
-        /* Estilos del Home (Simplificados para brevedad, mantén los tuyos) */
-        header { text-align: center; padding: 50px 20px; }
-        .menu-container { width: 90%; max-width: 480px; display: flex; flex-direction: column; gap: 18px; }
-        .nav-card {
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-            border-radius: 22px; padding: 20px; display: flex; align-items: center;
-            gap: 20px; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.1);
+        /* LISTA DE SITIOS */
+        #listaSitios {
+            position: absolute;
+            width: 100%;
+            background: #1e293b;
+            border-radius: 12px;
+            z-index: 1000;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid var(--primary);
+            margin-top: 5px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .icon-box { width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
-        .bg-map { background: linear-gradient(135deg, #1e40af, #3b82f6); }
-        .bg-access { background: linear-gradient(135deg, #065f46, #10b981); }
-        .bg-report { background: linear-gradient(135deg, #5b21b6, #8b5cf6); }
-        footer { margin-top: auto; padding: 40px; font-size: 0.7rem; color: #475569; text-align: center; }
+        #listaSitios div { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 13px; }
+        #listaSitios div:hover { background: rgba(0, 161, 255, 0.2); }
+
+        /* CHIPS TECNICOS */
+        #tecnicosAdicionales {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chip {
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .chip.selected { 
+            background: var(--movistar); 
+            color: white; 
+            border-color: #fff; 
+            box-shadow: 0 0 10px rgba(91, 197, 0, 0.3);
+        }
+        .chip.disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; }
+
+        #contadorSeleccionados { font-size: 11px; margin-top: 5px; color: #94a3b8; text-align: right; }
+
+        textarea {
+            height: 180px;
+            background: rgba(0,0,0,0.5);
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid rgba(0, 161, 255, 0.3);
+            line-height: 1.4;
+        }
+
+        /* BOTONES PRINCIPALES */
+        .main-btn {
+            padding: 15px; margin-top: 10px; width: 100%; font-size: 14px; border: none; 
+            border-radius: 12px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        #generar { background: #3b82f6; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+        #whatsapp { background: #25d366; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
+        
+        #btnLimpiar { 
+            background: rgba(244, 63, 94, 0.15); 
+            border: 1px solid var(--danger); 
+            color: var(--danger);
+            font-size: 11px;
+            padding: 8px;
+            margin-bottom: 5px;
+        }
+        #btnLimpiar:hover { background: var(--danger); color: white; }
+
+        /* NAVEGACIÓN FLOTANTE */
+        .btn-float-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 9999;
+        }
+
+        .btn-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px 10px 10px;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: 0.4s;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+        }
+        .nav-report { background: linear-gradient(135deg, #FF9800 0%, #ed6c02 100%); }
+        .nav-home { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        .icon-circle { background: rgba(255,255,255,0.25); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        
+        .btn-nav:hover { transform: translateY(-5px) scale(1.02); }
+
     </style>
 </head>
 <body>
 
-    <div id="pinOverlay">
-        <div class="pin-box">
-            <div style="font-size: 3rem; margin-bottom: 10px;">🔐</div>
-            <h2>ACCESO RESTRINGIDO</h2>
-            <input type="password" id="pinInput" maxlength="4" placeholder="****" inputmode="numeric">
-            <br>
-            <button class="btn-unlock" onclick="checkPin()">DESBLOQUEAR</button>
-            <p id="errorMsg" style="color: #f43f5e; font-size: 0.8rem; margin-top: 15px; display: none;">PIN Incorrecto. Intente de nuevo.</p>
+<header>
+    <h2>Generador de Accesos</h2>
+    <div class="subtitle">SISTEMA TECNOLOGÍA OPERATIVA</div>
+</header>
+
+<div class="form-card">
+    <label>📍 Sitio / Ubicación</label>
+    <div style="position: relative;">
+        <input type="text" id="sitio" placeholder="Escriba ID o Nombre..." autocomplete="off">
+        <div id="listaSitios"></div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label>🛠️ Actividad</label>
+            <select id="actividad"><option value="">Seleccione...</option></select>
+        </div>
+        <div style="flex: 1;">
+            <label>🚐 Vehículo</label>
+            <select id="vehiculo"><option value="">Seleccione...</option></select>
         </div>
     </div>
 
-    <div id="mainContent" style="display: none;">
-        <header>
-            <div style="font-size: 3.5rem;">📡</div>
-            <h1>Network Ops Center</h1>
-            <p style="color: #64748b;">Material de apoyo</p>
-        </header>
+    <label>👤 Técnico Responsable (Líder)</label>
+    <select id="tecnicoPrincipal"><option value="">Seleccione líder de equipo...</option></select>
 
-        <div class="menu-container">
-            <a href="Consultor_Mapa.html" class="nav-card">
-                <div class="icon-box bg-map">📍</div>
-                <div><h3>Consulta de Sitio</h3><p>Ubicación GPS y parámetros.</p></div>
-            </a>
-            <a href="pag1.html" class="nav-card">
-                <div class="icon-box bg-access">🔑</div>
-                <div><h3>Accesos MOVISTAR</h3><p>Generación de permisos.</p></div>
-            </a>
-            <a href="pag2.html" class="nav-card">
-                <div class="icon-box bg-report">📝</div>
-                <div><h3>Reporte de Bitácora</h3><p>Registro de ingresos.</p></div>
-            </a>
-        </div>
+    <label>👥 Técnicos de Apoyo</label>
+    <div id="tecnicosAdicionales"></div>
+    <div id="contadorSeleccionados">Seleccionados: 0</div>
 
-        <footer>
-            <p>V 2.2.0 | TECHNOLOGY OPERATIONS</p>
-            <p>SYSTEM STATUS: <span style="color:var(--movistar)">SECURE</span></p>
-        </div>
-    </div>
+    <hr style="opacity: 0.1; margin: 20px 0;">
 
-    <script>
-        function checkPin() {
-            const pin = document.getElementById('pinInput').value;
-            const correctPin = "0614";
-            const overlay = document.getElementById('pinOverlay');
-            const content = document.getElementById('mainContent');
-            const error = document.getElementById('errorMsg');
+    <button id="btnLimpiar" class="main-btn">🗑️ Limpiar Formulario</button>
+    
+    <label>📝 Vista Previa del Mensaje</label>
+    <textarea id="vistaPrevia" readonly></textarea>
 
-            if (pin === correctPin) {
-                overlay.style.opacity = "0";
-                setTimeout(() => {
-                    overlay.style.display = "none";
-                    content.style.display = "flex";
-                }, 500);
-            } else {
-                error.style.display = "block";
-                document.getElementById('pinInput').value = "";
-                // Pequeña vibración visual
-                document.querySelector('.pin-box').animate([
-                    { transform: 'translateX(-5px)' },
-                    { transform: 'translateX(5px)' }
-                ], { duration: 100, iterations: 3 });
-            }
-        }
+    <button id="generar" class="main-btn">Copiar al Portapapeles</button>
+    <button id="whatsapp" class="main-btn">Enviar a WhatsApp</button>
+</div>
 
-        // Permitir Enter para entrar
-        document.getElementById('pinInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') checkPin();
+<div class="btn-float-container">
+    <a href="pag2.html" class="btn-nav nav-report">
+        <div class="icon-circle">📝</div>
+        <span>Ingreso/Salida</span>
+    </a>
+    <a href="index.html" class="btn-nav nav-home">
+        <div class="icon-circle">🏠</div>
+        <span>Ir al Inicio</span>
+    </a>
+</div>
+
+<script>
+let sitios=[], actividades=[], tecnicos=[], vehiculos=[];
+
+async function cargarCSV(url){
+    try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const lineas = text.trim().split('\n');
+        const headers = lineas[0].split(';');
+        return lineas.slice(1).map(l=>{
+            const cols = l.split(';'); let obj={};
+            headers.forEach((h,i)=>obj[h.trim()]=cols[i]?.trim());
+            return obj;
         });
-    </script>
+    } catch(e) { console.error("Error CSV:", e); return []; }
+}
+
+async function inicializar(){
+    // Carga de archivos
+    [sitios, actividades, tecnicos, vehiculos] = await Promise.all([
+        cargarCSV('sitios.csv'),
+        cargarCSV('actividad.csv'),
+        cargarCSV('tecnicos.csv'),
+        cargarCSV('vehiculos.csv')
+    ]);
+
+    // Llenar Actividades
+    const selAct = document.getElementById('actividad');
+    actividades.forEach(a=>{
+        if(a['ACTIVIDAD']) {
+            const opt = document.createElement('option');
+            opt.value = a['ACTIVIDAD']; opt.textContent = a['ACTIVIDAD'];
+            selAct.appendChild(opt);
+        }
+    });
+
+    // Llenar Vehículos
+    const selVeh = document.getElementById('vehiculo');
+    vehiculos.forEach(v=>{
+        const opt = document.createElement('option');
+        opt.value = v.Placa; opt.textContent = `${v.Placa} (${v.Marca})`;
+        selVeh.appendChild(opt);
+    });
+
+    // Llenar Técnico Principal y Chips
+    const selTecPrin = document.getElementById('tecnicoPrincipal');
+    const divTecAdd = document.getElementById('tecnicosAdicionales');
+
+    tecnicos.forEach((t,i)=>{
+        const opt = document.createElement('option'); opt.value=i; opt.textContent=`${t.TECNICO} (${t.DUI})`;
+        selTecPrin.appendChild(opt);
+
+        const chip = document.createElement('div');
+        chip.className='chip'; chip.textContent=t.TECNICO;
+        chip.dataset.index=i;
+        chip.onclick=()=>{
+            if(parseInt(selTecPrin.value)===i) return;
+            chip.classList.toggle('selected'); 
+            actualizarPreview(); 
+            actualizarContador();
+        };
+        divTecAdd.appendChild(chip);
+    });
+
+    selTecPrin.onchange=()=>{
+        document.querySelectorAll('#tecnicosAdicionales .chip').forEach(chip=>{
+            const idx=parseInt(chip.dataset.index);
+            if(idx===parseInt(selTecPrin.value)){
+                chip.classList.remove('selected');
+                chip.classList.add('disabled');
+            } else { chip.classList.remove('disabled'); }
+        });
+        actualizarPreview(); actualizarContador();
+    };
+    actualizarPreview();
+}
+
+function actualizarContador(){
+    const count=document.querySelectorAll('#tecnicosAdicionales .chip.selected').length;
+    document.getElementById('contadorSeleccionados').textContent=`Seleccionados: ${count}`;
+}
+
+// --- Autocompletado ---
+const inputSitio=document.getElementById('sitio');
+const lista=document.getElementById('listaSitios');
+inputSitio.oninput=()=>{
+    const val=inputSitio.value.toLowerCase();
+    lista.innerHTML='';
+    if(!val) return;
+    sitios.filter(s=>s['Nombre de Sitio']?.toLowerCase().includes(val) || s.SiteID?.toLowerCase().includes(val))
+        .slice(0,6).forEach(s=>{
+            const div=document.createElement('div');
+            div.textContent=`${s.SiteID} - ${s['Nombre de Sitio']}`;
+            div.onclick=()=>{
+                inputSitio.value = s['Nombre de Sitio'];
+                inputSitio.dataset.siteid = s.SiteID;
+                inputSitio.dataset.torrero = s.Torrero;
+                inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
+                lista.innerHTML=''; actualizarPreview();
+            };
+            lista.appendChild(div);
+        });
+};
+
+document.addEventListener('click', e => { if(!inputSitio.contains(e.target)) lista.innerHTML=''; });
+
+// --- Mensajería ---
+function generarMensaje(){
+    const sid = inputSitio.dataset.siteid;
+    const act = document.getElementById('actividad').value;
+    const tecIdx = document.getElementById('tecnicoPrincipal').value;
+    
+    if(!sid || !act || tecIdx==="") return "Complete los datos requeridos...";
+
+    const veh = vehiculos[document.getElementById('vehiculo').selectedIndex-1]||{};
+    const tPrin = tecnicos[tecIdx];
+    const tAdd = Array.from(document.querySelectorAll('.chip.selected')).map(c=>tecnicos[c.dataset.index]);
+    const todos = [tPrin, ...tAdd];
+
+    const tecBlock = todos.map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
+
+    return `BUEN DIA
+SU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :
+▬▬▬▬▬▬▬▬▬▬
+ID: ${sid}
+NOMBRE: ${inputSitio.value}
+PROPIETARIO: ${inputSitio.dataset.torrero || 'N/A'}
+Nombre Torrero: ${inputSitio.dataset.nombretorrero || 'N/A'}
+▬▬▬▬▬▬▬▬▬▬
+ACTIVIDAD: ${act}
+▬▬▬▬▬▬▬▬▬▬
+TECNICOS/DUI
+${tecBlock}
+▬▬▬▬▬▬▬▬▬▬
+Placa: ${veh.Placa||''}
+Marca: ${veh.Marca||''}
+Modelo: ${veh.Modelo||''}
+Color: ${veh.Color||''}
+▬▬▬▬▬▬▬▬▬▬
+Empresa: CELECT SA DE CV
+Supervisor: José Rivas
+Tel: 6161 4465
+▬▬▬▬▬▬▬▬▬▬
+TEL: ${tPrin.TELEFONO||''}
+CORREO: ${tPrin.CORREO||''} tecnicossv@celectcac.com`;
+}
+
+function actualizarPreview(){ document.getElementById('vistaPrevia').value=generarMensaje(); }
+
+document.getElementById('actividad').onchange = actualizarPreview;
+document.getElementById('vehiculo').onchange = actualizarPreview;
+
+// --- Botones de Acción ---
+document.getElementById('generar').onclick=()=>{
+    const msg = document.getElementById('vistaPrevia').value;
+    if(msg.includes("Complete")) return alert("Faltan datos");
+    navigator.clipboard.writeText(msg);
+    alert('✅ Mensaje copiado');
+};
+
+document.getElementById('whatsapp').onclick=()=>{
+    const msg = document.getElementById('vistaPrevia').value;
+    if(msg.includes("Complete")) return alert("Faltan datos");
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+};
+
+// --- FUNCIÓN LIMPIAR ---
+document.getElementById('btnLimpiar').onclick = () => {
+    if(confirm("¿Limpiar todo el formulario?")){
+        inputSitio.value = "";
+        delete inputSitio.dataset.siteid;
+        document.getElementById('actividad').value = "";
+        document.getElementById('vehiculo').value = "";
+        document.getElementById('tecnicoPrincipal').value = "";
+        document.querySelectorAll('.chip').forEach(c => {
+            c.classList.remove('selected');
+            c.classList.remove('disabled');
+        });
+        actualizarContador();
+        actualizarPreview();
+    }
+};
+
+inicializar();
+</script>
 </body>
 </html>
