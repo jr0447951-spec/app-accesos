@@ -3,234 +3,197 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Consultor Mapa</title>
+<title>Consultor de Sitios - Logística</title>
 <style>
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f1f5f9;
-    margin:0; padding:0;
-    display:flex; flex-direction:column; align-items:center;
-    color: #334155;
-  }
-  h1 { text-align:center; color:#1e3a8a; margin:20px 0 5px; font-size: 1.5rem; }
-  .loading-status { font-size: 0.8rem; margin-bottom: 15px; color: #64748b; }
-  
-  /* Contenedor del buscador con posición relativa */
-  .search-container {
-    width:90%;
-    max-width:500px;
-    margin-bottom:20px;
-    position:relative;
-  }
+    :root { --primary: #1e3a8a; --accent: #3b82f6; --bg: #f1f5f9; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin:0; display:flex; flex-direction:column; align-items:center; color: #334155; }
+    h1 { text-align:center; color: var(--primary); margin: 20px 0 5px; font-size: 1.6rem; }
+    .status { font-size: 0.85rem; margin-bottom: 15px; font-weight: 500; }
+    
+    .search-box { width:90%; max-width:500px; position:relative; margin-bottom: 20px; }
+    input[type="text"] { 
+        width:100%; padding:14px 45px 14px 16px; font-size:1rem; border-radius:12px; 
+        border:2px solid #cbd5e1; box-sizing: border-box; outline: none; transition: 0.3s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
 
-  input[type="text"] {
-    width:100%;
-    padding:12px 40px 12px 16px; /* Espacio a la derecha para la X */
-    font-size:1rem;
-    border-radius:12px;
-    border:2px solid #cbd5e1;
-    box-sizing: border-box;
-    outline: none;
-    transition: border 0.3s;
-  }
-  input[type="text"]:focus { border-color: #3b82f6; }
+    .clear-btn { 
+        position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+        background: #94a3b8; color: white; width: 22px; height: 22px; border-radius: 50%;
+        display: none; align-items: center; justify-content: center; cursor: pointer; font-size: 12px;
+    }
 
-  /* Botón de limpiar sutil */
-  .clear-btn {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #cbd5e1;
-    color: white;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: none; /* Oculto por defecto */
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    transition: background 0.2s;
-    user-select: none;
-  }
-  .clear-btn:hover { background: #94a3b8; }
+    .suggestions { 
+        position:absolute; top:110%; left:0; right:0; background:white; border-radius:12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-height:280px; overflow-y:auto; z-index: 1000;
+    }
+    .suggestion-item { padding:14px; cursor:pointer; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; }
+    .suggestion-item:hover { background: #f8fafc; }
+    .suggestion-item span { font-size: 0.8rem; color: #64748b; }
 
-  .suggestions {
-    position:absolute;
-    top:105%; left:0; right:0;
-    background:white;
-    border-radius:12px;
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-    max-height:250px;
-    overflow-y:auto;
-    z-index: 100;
-  }
-  .suggestion-item { padding:12px 16px; cursor:pointer; border-bottom: 1px solid #f1f5f9; }
-  .suggestion-item:hover { background:#eff6ff; }
+    .card { 
+        background:white; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        width:92%; max-width:500px; padding:20px; box-sizing: border-box; margin-bottom: 30px;
+        animation: slideUp 0.3s ease-out;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-  .card {
-    background:white;
-    border-radius:20px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.05);
-    width:90%;
-    max-width:500px;
-    margin-bottom:30px;
-    padding:20px;
-    animation: fadeIn 0.4s ease-out;
-  }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .map-preview iframe { width:100%; height:220px; border-radius:15px; border:none; background:#e2e8f0; margin-bottom:15px; }
+    
+    .dist-badge { 
+        background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 12px;
+        text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 0.95rem;
+    }
 
-  .map-preview iframe {
-    width:100%; height:200px;
-    border-radius:12px; border:none;
-    background: #e2e8f0;
-  }
-  .distance {
-    background:#dbeafe; color:#1e40af;
-    padding:10px; border-radius:10px;
-    text-align:center; font-weight:bold; margin: 15px 0;
-  }
-  .data-table { width:100%; border-collapse:collapse; }
-  .data-table td { padding:8px; border-bottom:1px solid #f1f5f9; font-size: 0.9rem; }
-  .label { font-weight:600; color:#64748b; width:45%; }
-  
-  .go-button {
-    display:block; text-align:center;
-    background:#2563eb; color:white;
-    padding:14px; border-radius:12px;
-    text-decoration:none; font-weight:bold;
-    margin-top:20px;
-  }
+    .info-table { width:100%; border-collapse: collapse; }
+    .info-table td { padding: 10px 5px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+    .label { color: #64748b; font-weight: 600; width: 40%; }
+
+    .nav-btn { 
+        display: block; background: var(--accent); color: white; text-align: center;
+        padding: 15px; border-radius: 12px; text-decoration: none; font-weight: bold;
+        margin-top: 20px; transition: 0.2s;
+    }
+    .nav-btn:hover { background: #2563eb; }
 </style>
 </head>
 <body>
 
 <h1>Consultor de Sitios</h1>
-<div id="status" class="loading-status">Conectando con base de datos...</div>
+<div id="status" class="status">Cargando datos...</div>
 
-<div class="search-container">
-  <input type="text" id="siteSearch" placeholder="Busca por Nombre o ID..." disabled>
-  <div id="clearSearch" class="clear-btn">✕</div>
-  <div id="suggestions" class="suggestions"></div>
+<div class="search-box">
+    <input type="text" id="siteSearch" placeholder="Escribe Nombre o ID del sitio..." disabled>
+    <div id="clearBtn" class="clear-btn">✕</div>
+    <div id="suggestions" class="suggestions"></div>
 </div>
 
 <div id="result"></div>
 
 <script>
 let sites = [];
-let userPosition = null;
+let userPos = null;
 
 const input = document.getElementById('siteSearch');
 const suggestions = document.getElementById('suggestions');
 const statusDiv = document.getElementById('status');
-const clearBtn = document.getElementById('clearSearch');
+const clearBtn = document.getElementById('clearBtn');
 
-// 1. CARGA DE DATOS
-fetch('https://raw.githubusercontent.com/tu_usuario/tu_repo/main/Mapa_Base.csv')
-  .then(res => res.text())
-  .then(data => {
-    const lines = data.split(/\r?\n/).filter(line => line.trim() !== '');
-    const headers = lines[0].split(';').map(h => h.trim());
-    
-    sites = lines.slice(1).map(line => {
-      const values = line.split(';');
-      let obj = {};
-      headers.forEach((h, i) => {
-        obj[h] = values[i] ? values[i].trim() : '';
-      });
-      return obj;
+// 1. CARGA Y PROCESAMIENTO
+// IMPORTANTE: Asegúrate de que esta URL sea la versión RAW de tu GitHub
+const URL_CSV = 'https://raw.githubusercontent.com/tu_usuario/tu_repo/main/Mapa_Base.csv';
+
+fetch(URL_CSV)
+    .then(res => res.text())
+    .then(csvText => {
+        const rows = csvText.split(/\r?\n/).filter(row => row.trim() !== '');
+        if(rows.length < 2) throw new Error("Archivo vacío");
+
+        const headers = rows[0].split(';').map(h => h.trim());
+        
+        sites = rows.slice(1).map(row => {
+            const cols = row.split(';');
+            let d = {};
+            headers.forEach((h, i) => {
+                // Limpiamos los nombres de columnas de caracteres extraños como la ¢
+                let cleanHeader = h.replace(/[^\x00-\x7F]/g, "o"); 
+                d[cleanHeader] = cols[i] ? cols[i].trim() : '';
+            });
+            return d;
+        });
+
+        statusDiv.innerHTML = `✅ <b>${sites.length} sitios</b> listos para consultar.`;
+        input.disabled = false;
+    })
+    .catch(err => {
+        statusDiv.innerHTML = "❌ Error al cargar el CSV. Revisa la URL.";
+        console.error(err);
     });
-    statusDiv.innerHTML = `✅ <strong>${sites.length}</strong> sitios cargados.`;
-    input.disabled = false;
-  })
-  .catch(() => { statusDiv.innerHTML = "❌ Error de conexión."; });
 
 // 2. GEOLOCALIZACIÓN
 if(navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(pos => {
-    userPosition = {lat: pos.coords.latitude, lon: pos.coords.longitude};
-  });
+    navigator.geolocation.getCurrentPosition(p => {
+        userPos = { lat: p.coords.latitude, lon: p.coords.longitude };
+    });
 }
 
-// 3. LÓGICA DEL BUSCADOR Y BOTÓN LIMPIAR
+// 3. BUSCADOR
 input.addEventListener('input', () => {
-  const query = input.value.toLowerCase().trim();
-  suggestions.innerHTML = '';
-  
-  // Mostrar/Ocultar botón X
-  clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
+    const val = input.value.toLowerCase().trim();
+    suggestions.innerHTML = '';
+    clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
 
-  if (query.length > 1) {
-    const filtered = sites.filter(s => 
-      (s['NOMBRE DE SITIO'] && s['NOMBRE DE SITIO'].toLowerCase().includes(query)) ||
-      (s['SITEID'] && s['SITEID'].toLowerCase().includes(query))
-    ).slice(0, 8);
+    if(val.length > 1) {
+        const matches = sites.filter(s => 
+            (s['NOMBRE DE SITIO'] && s['NOMBRE DE SITIO'].toLowerCase().includes(val)) ||
+            (s['SITEID'] && s['SITEID'].includes(val))
+        ).slice(0, 10);
 
-    filtered.forEach(s => {
-      const div = document.createElement('div');
-      div.className = 'suggestion-item';
-      div.innerHTML = `<strong>${s['SITEID']}</strong> - ${s['NOMBRE DE SITIO']}`;
-      div.onclick = () => selectSite(s);
-      suggestions.appendChild(div);
-    });
-  }
+        matches.forEach(s => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.innerHTML = `<strong>${s['SITEID']}</strong><span>${s['NOMBRE DE SITIO']}</span>`;
+            item.onclick = () => showSite(s);
+            suggestions.appendChild(item);
+        });
+    }
 });
 
-// Función del botón limpiar
 clearBtn.onclick = () => {
-  input.value = '';
-  suggestions.innerHTML = '';
-  document.getElementById('result').innerHTML = '';
-  clearBtn.style.display = 'none';
-  input.focus();
+    input.value = '';
+    suggestions.innerHTML = '';
+    document.getElementById('result').innerHTML = '';
+    clearBtn.style.display = 'none';
+    input.focus();
 };
 
-function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; 
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+function getKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2-lat1) * Math.PI/180;
+    const dLon = (lon2-lon1) * Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
-function selectSite(d) {
-  suggestions.innerHTML = '';
-  input.value = d['NOMBRE DE SITIO'];
-  clearBtn.style.display = 'flex';
-  
-  const lat = parseFloat(String(d.LATITUDE).replace(',', '.'));
-  const lon = parseFloat(String(d.LONGITUDE).replace(',', '.'));
+function showSite(s) {
+    suggestions.innerHTML = '';
+    input.value = s['NOMBRE DE SITIO'];
+    
+    const lat = parseFloat(s.LATITUDE.replace(',', '.'));
+    const lon = parseFloat(s.LONGITUDE.replace(',', '.'));
+    
+    let distHtml = '';
+    if(userPos && !isNaN(lat)) {
+        const km = getKm(userPos.lat, userPos.lon, lat, lon);
+        distHtml = `<div class="dist-badge">📍 A ${km.toFixed(2)} km de tu ubicación</div>`;
+    }
 
-  let distBox = '';
-  if (userPosition && !isNaN(lat)) {
-    const dist = getDistance(userPosition.lat, userPosition.lon, lat, lon);
-    distBox = `<div class="distance">📍 Distancia: ${dist.toFixed(2)} km</div>`;
-  }
+    const embedUrl = `https://www.google.com/maps?q=${lat},${lon}&output=embed`;
+    const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
 
-  const mapEmbedUrl = `https://maps.google.com/maps?q=${lat},${lon}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-  const mapNavUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
+    document.getElementById('result').innerHTML = `
+        <div class="card">
+            <h2 style="margin:0; color:var(--primary)">${s.SITEID}</h2>
+            <p style="margin:5px 0 15px; color:#64748b; font-weight:500;">${s['NOMBRE DE SITIO']}</p>
+            
+            <iframe class="map-preview" src="${embedUrl}"></iframe>
+            
+            ${distHtml}
 
-  document.getElementById('result').innerHTML = `
-    <div class="card">
-      <h2>${d['SITEID']}</h2>
-      <p style="margin-top:-10px; color:#64748b;">${d['NOMBRE DE SITIO']}</p>
-      <div class="map-preview">
-        <iframe src="${mapEmbedUrl}"></iframe>
-      </div>
-      ${distBox}
-      <table class="data-table">
-        <tr><td class="label">NIC/NIS:</td><td>${d['NIC/NIS']}</td></tr>
-        <tr><td class="label">Distribuidora:</td><td>${d['Distribuidora']}</td></tr>
-        <tr><td class="label">Llave Requerida:</td><td>${d['Llave Requerida']}</td></tr>
-        <tr><td class="label">Municipio:</td><td>${d['Municipio']}</td></tr>
-        <tr><td class="label">Dirección:</td><td>${d['Direccion']}</td></tr>
-      </table>
-      <a class="go-button" target="_blank" href="${mapNavUrl}">🚀 ABRIR GPS</a>
-    </div>
-  `;
+            <table class="info-table">
+                <tr><td class="label">NIC/NIS</td><td>${s['NIC/NIS'] || '---'}</td></tr>
+                <tr><td class="label">Distribuidora</td><td>${s['Distribuidora'] || '---'}</td></tr>
+                <tr><td class="label">Municipio</td><td>${s['Municipio'] || '---'}</td></tr>
+                <tr><td class="label">Dirección</td><td>${s['Direccion'] || s['Direcciioo n'] || 'Ver mapa'}</td></tr>
+                <tr><td class="label">Llave Requerida</td><td>${s['Llave Requerida'] || 'No'}</td></tr>
+                <tr><td class="label">Tecnología</td><td>${s['Tech'] || '---'}</td></tr>
+            </table>
+
+            <a href="${navUrl}" target="_blank" class="nav-btn">INICIAR NAVEGACIÓN GPS</a>
+        </div>
+    `;
 }
 </script>
+
 </body>
 </html>
