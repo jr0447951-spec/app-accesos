@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultor de Sitios</title>
+    <title>Consultor de Acceso</title>
     <style>
         :root { --primary: #1e3a8a; --accent: #3b82f6; --bg: #f1f5f9; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin:0; display:flex; flex-direction:column; align-items:center; color: #334155; padding-bottom: 40px; }
@@ -96,38 +96,37 @@ const toast = document.getElementById('toast');
 
 const CSV_URL = 'https://raw.githubusercontent.com/jr0447951-spec/app-accesos/main/Mapa_Base.csv';
 
-// 1. CARGA DE DATOS
 fetch(CSV_URL)
     .then(res => res.text())
     .then(data => {
         const rows = data.split(/\r?\n/).filter(row => row.trim() !== '');
-        const headers = rows[0].split(';').map(h => h.trim());
+        const headers = rows[0].split(';');
         
         sites = rows.slice(1).map(row => {
             const values = row.split(';');
             let obj = {};
             headers.forEach((h, i) => {
-                let key = h.toUpperCase();
-                // Normalización de llaves importantes
-                if(key.includes('DIRECCI')) key = 'DIRECCION';
-                if(key.includes('PROPIETARIO')) key = 'NOMBRE_PROPIETARIO';
+                let key = h.trim();
+                // Normalización de columnas con caracteres especiales o espacios
+                if(key.includes('Direcci')) key = 'DIRECCION';
+                if(key.includes('Nombre para Propietario')) key = 'NOM_PROPIETARIO';
+                if(key === 'Propietario') key = 'TIPO_PROPIETARIO';
+                
                 obj[key] = values[i] ? values[i].trim() : '';
             });
             return obj;
         });
-        statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios cargados.`;
+        statusDiv.innerHTML = `✅ <b>${sites.length}</b> sitios listos.`;
         input.disabled = false;
     })
-    .catch(() => statusDiv.innerHTML = "❌ Error de conexión.");
+    .catch(() => statusDiv.innerHTML = "❌ Error al conectar con GitHub.");
 
-// 2. GPS
 if(navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
         userPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
     });
 }
 
-// 3. BUSCADOR
 input.addEventListener('input', () => {
     const query = input.value.toLowerCase().trim();
     suggestions.innerHTML = '';
@@ -168,17 +167,17 @@ function selectSite(s) {
         const dLon = (lon - userPos.lon) * Math.PI / 180;
         const a = Math.sin(dLat/2)**2 + Math.cos(userPos.lat*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLon/2)**2;
         const km = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-        distHtml = `<div class="dist-info">📍 A ${km.toFixed(2)} km de tu ubicación</div>`;
+        distHtml = `<div class="dist-info">📍 A ${km.toFixed(2)} km de distancia</div>`;
     }
 
-    const llaveVal = s['LLAVE REQUERIDA'] ? s['LLAVE REQUERIDA'].toUpperCase() : '';
+    const llaveVal = s['Llave Requerida'] ? s['Llave Requerida'].toUpperCase() : '';
     const llaveBox = (llaveVal === 'SI') ? `<div class="info-box"><span class="label">Acceso:</span><span class="val">🔑 LLAVE REQUERIDA</span></div>` : '';
 
     document.getElementById('result').innerHTML = `
         <div class="card">
             <div class="header-title" onclick="copyFormat('${s['SITEID']}', '${s['NOMBRE DE SITIO']}')">
                 <h2>${s['SITEID']} - ${s['NOMBRE DE SITIO']}</h2>
-                <span class="copy-tag">📋 TOCAR PARA COPIAR FORMATO</span>
+                <span class="copy-tag">📋 TOCAR PARA COPIAR</span>
             </div>
             
             <div class="map-preview">
@@ -199,22 +198,27 @@ function selectSite(s) {
 
             <div class="info-box">
                 <span class="label">Municipio:</span>
-                <span class="val">${s['MUNICIPIO']}</span>
+                <span class="val">${s['Municipio']}</span>
             </div>
 
             ${llaveBox}
 
             <div class="info-box">
-                <span class="label">Nombre de Propietario:</span>
-                <span class="val"><b>${s['NOMBRE_PROPIETARIO'] || 'No disponible'}</b></span>
+                <span class="label">Nombre para Propietario:</span>
+                <span class="val"><b>${s['NOM_PROPIETARIO'] || 'N/A'}</b></span>
+            </div>
+
+            <div class="info-box">
+                <span class="label">Propietario:</span>
+                <span class="val">${s['TIPO_PROPIETARIO'] || 'N/A'}</span>
             </div>
 
             <div class="info-box">
                 <span class="label">Distribuidora:</span>
-                <span class="val">${s['DISTRIBUIDORA']}</span>
+                <span class="val">${s['Distribuidora']}</span>
             </div>
 
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 ABRIR EN GOOGLE MAPS</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR RUTA GPS</a>
         </div>
     `;
 }
