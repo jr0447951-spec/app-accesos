@@ -14,207 +14,120 @@
 
         body { 
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-            margin:0; 
-            padding-bottom: 40px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            color: white;
-            min-height: 100vh;
+            margin:0; padding-bottom: 40px; 
+            display: flex; flex-direction: column; align-items: center; 
+            color: white; min-height: 100vh;
             background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
             overflow-x: hidden;
         }
 
         /* FONDO TECNOLÓGICO */
         body::after {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: linear-gradient(rgba(0, 161, 255, 0.05) 1px, transparent 1px), 
                               linear-gradient(90deg, rgba(0, 161, 255, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
-            z-index: -2;
+            background-size: 30px 30px; z-index: -2;
         }
 
-        body::before {
-            content: "";
-            position: fixed;
-            top: 50%; left: 50%;
-            width: 150vmax; height: 150vmax;
-            border: 1px solid rgba(0, 161, 255, 0.1);
-            border-radius: 45%;
-            animation: rotate 25s linear infinite;
-            transform: translate(-50%, -50%);
-            z-index: -1;
-        }
-
-        @keyframes rotate {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        
         header { 
-            width: 100%; 
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 15px 0; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
-            text-align: center; 
-            position: sticky; 
-            top: 0; 
-            z-index: 2000; 
+            width: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px);
+            padding: 15px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            text-align: center; position: sticky; top: 0; z-index: 2000; 
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         h1 { margin: 0; color: white; font-size: 1.2rem; letter-spacing: 1px; }
-        .status { font-size: 0.7rem; color: var(--primary); margin-top: 4px; font-weight: bold; }
-        
+
+        /* BUSCADOR CON BOTÓN X */
         .search-container { width: 94%; max-width: 500px; margin: 20px 0; position: relative; }
+        
         #siteSearch { 
-            width: 100%; padding: 18px; font-size: 1rem; border-radius: 16px; 
-            border: 1px solid rgba(255,255,255,0.2); 
-            background: rgba(255,255,255,0.1);
-            color: white;
-            box-sizing: border-box; outline: none;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            width: 100%; padding: 18px 45px 18px 18px; font-size: 1rem; border-radius: 16px; 
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1);
+            color: white; box-sizing: border-box; outline: none;
             backdrop-filter: blur(10px);
+        }
+
+        #clearBtn {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+            display: none; align-items: center; justify-content: center; font-weight: bold;
         }
 
         .suggestions { 
             position: absolute; top: 100%; left: 0; right: 0; 
-            background: #1e293b; 
-            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
-            max-height: 350px; overflow-y: auto; z-index: 1000; display: none;
+            background: #1e293b; border-radius: 12px; max-height: 350px; 
+            overflow-y: auto; z-index: 1000; display: none;
             margin-top: 8px; border: 1px solid var(--primary);
         }
-        .suggestion-item { 
-            padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;
-            display: flex; flex-direction: column;
-        }
-        .suggestion-item strong { color: var(--primary); font-size: 0.95rem; }
-        .suggestion-item span { color: #94a3b8; font-size: 0.8rem; }
+        .suggestion-item { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
 
+        /* TARJETA DE RESULTADO */
         .card { 
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            background: var(--glass); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; 
             width: 94%; max-width: 500px; padding: 20px; box-sizing: border-box;
-            animation: fadeIn 0.5s ease;
-            margin-bottom: 20px;
+            animation: fadeIn 0.5s ease; margin-bottom: 20px;
         }
-        @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-        .header-title { background: rgba(0, 161, 255, 0.1); padding: 15px; border-radius: 16px; text-align: center; margin-bottom: 15px; border: 1px solid var(--primary); }
-        .header-title h2 { margin: 0; color: white; font-size: 1rem; }
+        /* ENCABEZADO CLICKABLE PARA COPIAR */
+        .header-title { 
+            background: rgba(0, 161, 255, 0.15); padding: 18px; border-radius: 16px; 
+            text-align: center; margin-bottom: 15px; border: 1px dashed var(--primary);
+            cursor: pointer; transition: 0.3s; position: relative;
+        }
+        .header-title:active { background: rgba(0, 161, 255, 0.3); transform: scale(0.98); }
+        .header-title h2 { margin: 0; color: white; font-size: 1.1rem; }
+        .copy-hint { font-size: 0.6rem; color: var(--primary); text-transform: uppercase; margin-top: 5px; display: block; }
 
-        .map-preview { width: 100%; height: 200px; border-radius: 16px; overflow: hidden; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        
         .info-grid { display: grid; gap: 12px; }
         .info-box { border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
-        .label { font-size: 0.65rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 2px; display: block; }
+        .label { font-size: 0.65rem; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; }
         .val { font-size: 0.95rem; color: #f8fafc; font-weight: 500; }
-        .highlight { color: #fbbf24; font-weight: 700; }
-        .key-required { color: #fff; font-weight: 800; background: #be123c; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; display: inline-block; margin-top: 4px; }
+        .key-required { color: #fff; font-weight: 800; background: #be123c; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; }
 
         .go-button { 
             display: block; background: var(--primary); color: white; text-align: center;
             padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 700;
-            margin-top: 20px; font-size: 1rem; box-shadow: 0 4px 15px rgba(0, 161, 255, 0.3);
+            margin-top: 20px; font-size: 1rem;
         }
 
-        /* --- BOTONES BURBUJA CON AUTOHIDE --- */
-        .fab-container {
-            position: fixed;
-            bottom: 25px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 9999;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
-        }
-
-        .fab-hidden {
-            transform: translateY(150px);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .fab {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
+        .fab-container { position: fixed; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 9999; }
+        .fab { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.2); }
         .fab-gen { background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); }
         .fab-home { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
-
     </style>
 </head>
 <body>
 
 <header>
     <h1>Consultor de Acceso</h1>
-    <div id="status" class="status">📡 Sincronizando Red...</div>
+    <div id="status" class="status">📡 Sincronizando...</div>
 </header>
 
 <div class="search-container">
-    <input type="text" id="siteSearch" placeholder="🔍 Buscar por ID o Nombre..." autocomplete="off" disabled>
+    <input type="text" id="siteSearch" placeholder="🔍 Buscar ID o Nombre..." autocomplete="off" disabled>
+    <button id="clearBtn">✕</button>
     <div id="suggestions" class="suggestions"></div>
 </div>
 
 <div id="result"></div>
 
 <div class="fab-container" id="fabContainer">
-    <a href="pag1.html" class="fab fab-gen">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3-3.5 3.5z"></path>
-        </svg>
-    </a>
-    <a href="index.html" class="fab fab-home">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>
-    </a>
+    <a href="pag1.html" class="fab fab-gen"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3-3.5 3.5z"></path></svg></a>
+    <a href="index.html" class="fab fab-home"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></a>
 </div>
 
 <script>
-// --- SEGURIDAD ---
-(function verificarAcceso() {
-    const loginTime = localStorage.getItem('acceso_tecnico_eebb');
-    if (!loginTime || (new Date().getTime() - loginTime > 86400000)) {
-        window.location.href = 'index.html';
-    }
-})();
-
-// --- AUTO-HIDE FAB ---
-let lastScrollTop = 0;
-const fabContainer = document.getElementById('fabContainer');
-window.addEventListener('scroll', () => {
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    if (scrollTop > lastScrollTop && scrollTop > 100) {
-        fabContainer.classList.add('fab-hidden');
-    } else {
-        fabContainer.classList.remove('fab-hidden');
-    }
-    lastScrollTop = scrollTop;
-});
-
-// --- CARGA DE DATOS ---
 let sites = [];
+const input = document.getElementById('siteSearch');
+const clearBtn = document.getElementById('clearBtn');
+const sugDiv = document.getElementById('suggestions');
+const resultDiv = document.getElementById('result');
+
 const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
 
+// Carga inicial
 fetch(SHEETS_CSV_URL)
     .then(res => res.text())
     .then(data => {
@@ -232,25 +145,36 @@ fetch(SHEETS_CSV_URL)
             return obj;
         });
         document.getElementById('status').innerHTML = `✅ RED OPERATIVA (${sites.length} SITIOS)`;
-        document.getElementById('siteSearch').disabled = false;
+        input.disabled = false;
     });
 
-const input = document.getElementById('siteSearch');
-const sugDiv = document.getElementById('suggestions');
-
+// Evento Input para mostrar/ocultar X y buscar
 input.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase().trim();
+    clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
+    
     if (query.length < 2) { sugDiv.style.display = 'none'; return; }
+    
     const matches = sites.filter(s => s.SITEID.toLowerCase().includes(query) || s['NOMBRE DE SITIO'].toLowerCase().includes(query)).slice(0, 10);
+    
     if (matches.length > 0) {
         sugDiv.innerHTML = matches.map(s => `
             <div class="suggestion-item" onclick="seleccionarSitio('${s.SITEID}')">
-                <strong>${s.SITEID}</strong>
-                <span>${s['NOMBRE DE SITIO']}</span>
+                <strong style="color:var(--primary)">${s.SITEID}</strong><br>
+                <span style="color:#94a3b8; font-size:0.8rem">${s['NOMBRE DE SITIO']}</span>
             </div>
         `).join('');
         sugDiv.style.display = 'block';
     } else { sugDiv.style.display = 'none'; }
+});
+
+// Función Limpiar (X)
+clearBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.style.display = 'none';
+    sugDiv.style.display = 'none';
+    resultDiv.innerHTML = '';
+    input.focus();
 });
 
 function seleccionarSitio(id) {
@@ -258,36 +182,48 @@ function seleccionarSitio(id) {
     sugDiv.style.display = 'none';
     input.value = s['NOMBRE DE SITIO'];
     
-    const llaveBox = (s['Llave Requerida']?.toUpperCase() === 'SI') ? 
+    const llaveText = (s['Llave Requerida']?.toUpperCase() === 'SI') ? 
         `<div class="info-box"><span class="label">Acceso:</span><span class="val key-required">🔑 REQUIERE LLAVE</span></div>` : '';
     
     const lat = s.LATITUDE || '0';
     const lon = s.LONGITUDE || '0';
 
-    document.getElementById('result').innerHTML = `
+    resultDiv.innerHTML = `
         <div class="card">
-            <div class="header-title"><h2>${s.SITEID}</h2><p style="margin:0; font-size:0.8rem">${s['NOMBRE DE SITIO']}</p></div>
-            <div class="map-preview">
-                <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=${lat},${lon}&hl=es&z=15&output=embed"></iframe>
+            <div class="header-title" onclick="copiarTexto('${s.SITEID} - ${s['NOMBRE DE SITIO']}')">
+                <h2>${s.SITEID} - ${s['NOMBRE DE SITIO']}</h2>
+                <span class="copy-hint" id="copyLabel">Tap para copiar ID - Sitio</span>
             </div>
+            
             <div class="info-grid">
-                <div class="info-box"><span class="label">NIC/NIS:</span><span class="val highlight">${s['NIC/NIS'] || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">NIC/NIS:</span><span class="val" style="color:#fbbf24; font-weight:700">${s['NIC/NIS'] || 'N/A'}</span></div>
                 <div class="info-box"><span class="label">Distribuidora:</span><span class="val">${s.Distribuidora || 'N/A'}</span></div>
-                ${llaveBox}
-                
-                <div class="info-box"><span class="label">Altura:</span><span class="val">${s.Altura || 'N/A'}</span></div>
-                <div class="info-box"><span class="label">Tecnología:</span><span class="val">${s.Tecnologia || 'N/A'}</span></div>
-                
+                ${llaveText}
                 <div class="info-box"><span class="label">Municipio:</span><span class="val">${s.Municipio || 'N/A'}</span></div>
                 <div class="info-box" style="border:none;"><span class="label">Dirección:</span><span class="val">${s.DIRECCION || 'N/A'}</span></div>
             </div>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR GPS</a>
+            
+            <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR GPS</a>
         </div>
     `;
-    window.scrollTo({ top: document.getElementById('result').offsetTop - 20, behavior: 'smooth' });
+}
+
+// Función para copiar al portapapeles
+function copiarTexto(texto) {
+    navigator.clipboard.writeText(texto).then(() => {
+        const label = document.getElementById('copyLabel');
+        const originalText = label.innerText;
+        label.innerText = "¡COPIADO CON ÉXITO!";
+        label.style.color = "#22c55e";
+        
+        setTimeout(() => {
+            label.innerText = originalText;
+            label.style.color = "var(--primary)";
+        }, 2000);
+    });
 }
 
 document.addEventListener('click', (e) => { if (!input.contains(e.target)) sugDiv.style.display = 'none'; });
 </script>
-</body> 
+</body>
 </html>
