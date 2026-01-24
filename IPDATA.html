@@ -3,43 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Net-Ops DB | Gestión por Sitio</title>
+    <title>Net-Ops DB | Sugerencias Inteligentes</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #00a1ff; --bg: #0b0f1a; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding-bottom: 50px; }
-        header { background: #0f172a; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); }
+        
+        header { background: #0f172a; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); position: relative; }
         h1 { font-family: 'Orbitron'; font-size: 1rem; color: var(--primary); margin: 0; letter-spacing: 2px; }
+        
+        .btn-home { 
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+            width: 35px; height: 35px; background: var(--primary); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; text-decoration: none;
+            color: white; font-weight: bold; font-size: 1.2rem;
+        }
+
         .container { width: 92%; max-width: 500px; margin: 20px auto; }
-        .search-box { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #16213e; color: white; outline: none; box-sizing: border-box; font-size: 16px; }
-        .link-group { background: rgba(30, 41, 59, 0.4); border-radius: 15px; padding: 15px; border: 1px solid #334155; margin-top: 20px; border-top: 4px solid var(--primary); }
+        .search-wrapper { position: relative; width: 100%; }
+        .search-box { 
+            width: 100%; padding: 15px; padding-right: 45px; border-radius: 12px; 
+            border: 1px solid #334155; background: #16213e; color: white; outline: none; 
+            box-sizing: border-box; font-size: 16px; 
+        }
+        .btn-clear {
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            background: #334155; color: white; border: none; border-radius: 50%;
+            width: 24px; height: 24px; cursor: pointer; display: none;
+        }
+
+        .link-group { background: rgba(30, 41, 59, 0.4); border-radius: 15px; padding: 15px; border: 1px solid #334155; margin-top: 20px; border-top: 4px solid var(--primary); animation: slideUp 0.3s ease; }
         .card { background: #0f172a; border-radius: 10px; padding: 12px; margin-bottom: 8px; border: 1px solid #1e293b; }
-        .card h2 { margin: 0 0 8px 0; font-size: 0.85rem; color: #fff; border-left: 3px solid var(--primary); padding-left: 10px; line-height: 1.4; }
+        .card h2 { margin: 0 0 8px 0; font-size: 0.85rem; color: #fff; border-left: 3px solid var(--primary); padding-left: 10px; }
         .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .label { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
         .value { font-family: monospace; font-size: 0.8rem; color: #e2e8f0; }
+        
         .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .level-box { background: #1e293b; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #334155; }
+        
         .btn-reveal { width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--primary); background: transparent; color: var(--primary); cursor: pointer; margin: 8px 0; font-size: 0.7rem; }
         .btn-edit { width: 100%; padding: 14px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; }
         .hidden-side { display: none; margin-top: 10px; border-top: 1px solid #334155; padding-top: 12px; }
+
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: #1e293b; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; border: 1px solid var(--primary); }
         .modal-content input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; text-align: center; box-sizing: border-box; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<header><h1>SYSTEM DATABASE</h1></header>
+<header>
+    <a href="index.html" class="btn-home">H</a>
+    <h1>SYSTEM DATABASE</h1>
+</header>
 
 <div class="container">
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Sitio (Columna C)..." oninput="buscar()">
+    <div class="search-wrapper">
+        <input type="text" id="searchInput" class="search-box" list="listaSitios" placeholder="🔍 Buscar o seleccionar sitio..." oninput="controlarBusqueda()">
+        <datalist id="listaSitios"></datalist>
+        <button id="btnClear" class="btn-clear" onclick="limpiarBusqueda()">X</button>
+    </div>
     <div id="results"></div>
 </div>
 
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.75rem;">SINCRONIZAR AMBOS NODOS</h3>
+        <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.75rem;">SINCRONIZAR NIVELES</h3>
         <input type="text" id="formEditor" placeholder="Técnico Responsable">
         <input type="text" id="formTX" placeholder="TX (ej: 1450.000)">
         <input type="text" id="formRX" placeholder="RX (ej: 1450.000)">
@@ -72,7 +104,30 @@
                 tx:   r[6]?.replace(/"/g, '').trim() || "",
                 rx:   r[7]?.replace(/"/g, '').trim() || ""
             }));
+
+            // Llenar el datalist con las sugerencias de la Columna C
+            const datalist = document.getElementById("listaSitios");
+            db.slice(1).forEach(item => {
+                if(item.sitio) {
+                    const option = document.createElement("option");
+                    option.value = item.sitio;
+                    datalist.appendChild(option);
+                }
+            });
+
         } catch (e) { console.error("Error cargando DB"); }
+    }
+
+    function controlarBusqueda() {
+        const query = document.getElementById("searchInput").value;
+        document.getElementById("btnClear").style.display = query.length > 0 ? "block" : "none";
+        buscar();
+    }
+
+    function limpiarBusqueda() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("btnClear").style.display = "none";
+        document.getElementById("results").innerHTML = "";
     }
 
     function buscar() {
@@ -84,19 +139,13 @@
         const bloquesMostrados = new Set();
 
         db.forEach((item, i) => {
-            // Filtro exclusivo por Columna C
             if (i > 0 && item.sitio.toUpperCase().includes(query)) {
-                
-                // Definir el índice base del par (Fila 2-3, 4-5...)
                 const idxBase = (i % 2 !== 0) ? i : i - 1;
-                
                 if (bloquesMostrados.has(idxBase)) return;
                 bloquesMostrados.add(idxBase);
 
                 const nodoA = db[idxBase];
                 const nodoB = db[idxBase + 1];
-
-                // Ajustar cuál es local según la búsqueda exacta
                 const esInverso = item.idx === (idxBase + 1);
                 const local = esInverso ? nodoB : nodoA;
                 const remoto = esInverso ? nodoA : nodoB;
@@ -156,16 +205,10 @@
         const ed = document.getElementById("formEditor").value;
 
         if(!tx || !rx || !ed) { alert("Complete todos los campos"); return; }
-        
         const btn = document.getElementById("btnGuardar");
         btn.innerText = "Guardando..."; btn.disabled = true;
 
-        await fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify({...editContext, tx, rx, editor: ed})
-        });
-        
+        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({...editContext, tx, rx, editor: ed}) });
         alert("Sincronización exitosa.");
         location.reload();
     }
