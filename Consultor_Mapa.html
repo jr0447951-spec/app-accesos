@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consultor de Sitio - Network Ops</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         :root { 
             --primary: #00a1ff; 
@@ -16,31 +18,46 @@
         }
 
         body { 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            margin: 0; padding-bottom: 80px; /* Espacio extra para el botón flotante */
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; padding-bottom: 100px; 
             background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
             color: white; min-height: 100vh;
         }
 
         header { 
             width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
-            padding: 10px 0; position: sticky; top: 0; z-index: 2000;
+            padding: 15px 0; position: sticky; top: 0; z-index: 2000;
             border-bottom: 1px solid var(--border); text-align: center;
+        }
+
+        /* ESTILO H1 PROFESIONAL Y ENTRETENIDO */
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            background: linear-gradient(to bottom, #ffffff, #00a1ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            filter: drop-shadow(0 0 8px rgba(0, 161, 255, 0.5));
         }
         
         #status-indicator {
             display: inline-flex; align-items: center; gap: 6px;
             font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
-            margin-top: 2px; opacity: 0.9;
+            margin-top: 5px; opacity: 0.8;
+            font-family: 'Orbitron', sans-serif; /* Mantiene la estética */
         }
+
+        /* Reutilización de estilos previos para optimizar */
         .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
         .dot-sync { background: var(--warning); animation: pulse 1s infinite; }
         .dot-ready { background: var(--success); }
         .dot-error { background: var(--danger); }
-
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        .search-area { width: 92%; max-width: 500px; margin: 15px auto; position: relative; }
+        .search-area { width: 92%; max-width: 500px; margin: 20px auto; position: relative; }
         #siteSearch { 
             width: 100%; padding: 16px 45px 16px 18px; font-size: 1rem; border-radius: 14px; 
             border: 1px solid var(--border); background: rgba(255,255,255,0.05);
@@ -58,6 +75,7 @@
             overflow-y: auto; z-index: 3000; display: none; margin-top: 5px; border: 1px solid var(--primary);
         }
         .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .suggestion-item:hover { background: rgba(0, 161, 255, 0.1); }
 
         #result { width: 92%; max-width: 500px; margin: 0 auto; scroll-margin-top: 100px; }
         
@@ -71,8 +89,8 @@
             background: rgba(0, 161, 255, 0.15); padding: 18px; border-radius: 16px; 
             text-align: center; margin-bottom: 15px; border: 1px dashed var(--primary); cursor: pointer;
         }
-        .header-title h2 { margin: 0; font-size: 1.1rem; text-transform: uppercase; }
-        .copy-tag { font-size: 0.65rem; color: var(--primary); font-weight: bold; margin-top: 6px; display: block; }
+        .header-title h2 { margin: 0; font-size: 1rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; }
+        .copy-tag { font-size: 0.6rem; color: var(--primary); font-weight: bold; margin-top: 6px; display: block; }
 
         .map-box { 
             width: 100%; height: 200px; border-radius: 16px; overflow: hidden; 
@@ -81,7 +99,7 @@
 
         .info-list { display: flex; flex-direction: column; gap: 10px; }
         .info-item { background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 12px; border-left: 4px solid var(--primary); }
-        .info-label { font-size: 0.65rem; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; display: block; }
+        .info-label { font-size: 0.6rem; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; display: block; }
         .info-val { font-size: 1rem; color: #fff; font-weight: 500; }
         
         .key-alert { 
@@ -94,19 +112,22 @@
             display: flex; align-items: center; justify-content: center; gap: 10px;
             background: linear-gradient(135deg, var(--primary), #0072ff); color: white; 
             padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 800; margin-top: 25px;
+            font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
         }
 
-        /* BOTÓN HOME FLOTANTE */
         .btn-home {
-            position: fixed; bottom: 25px; right: 25px;
-            width: 55px; height: 55px; border-radius: 50%;
-            background: var(--primary); color: white; border: none;
-            box-shadow: 0 4px 15px rgba(0, 161, 255, 0.4);
-            cursor: pointer; z-index: 5000; display: flex;
+            position: fixed; bottom: 30px; right: 25px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: rgba(0, 161, 255, 0.1); backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 15px rgba(0, 161, 255, 0.4), inset 0 0 10px rgba(0, 161, 255, 0.2);
+            color: white; cursor: pointer; z-index: 5000; display: flex;
             align-items: center; justify-content: center;
-            font-size: 1.5rem; transition: transform 0.2s;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .btn-home:active { transform: scale(0.9); }
+        .btn-home svg { width: 28px; height: 28px; fill: white; filter: drop-shadow(0 0 5px var(--primary)); }
+        .btn-home:active { transform: scale(0.85); box-shadow: 0 0 25px var(--primary); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -114,7 +135,7 @@
 <body>
 
 <header>
-    <h1 style="margin:0; font-size:0.95rem; letter-spacing: 0.5px;">CONSULTOR DE SITIO</h1>
+    <h1>CONSULTOR DE SITIO</h1>
     <div id="status-indicator">
         <span id="status-dot" class="dot dot-sync"></span>
         <span id="status-text">Sincronizando...</span>
@@ -129,9 +150,14 @@
 
 <div id="result"></div>
 
-<button class="btn-home" onclick="goHome()" title="Ir al inicio">🏡</button>
+<button class="btn-home" onclick="goHome()" title="Volver al inicio">
+    <svg viewBox="0 0 24 24">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+</button>
 
 <script>
+// Mantengo la misma lógica potente de búsqueda, caché y llaves que ya construimos.
 let sites = [];
 const input = document.getElementById('siteSearch');
 const clearBtn = document.getElementById('clearBtn');
@@ -171,7 +197,7 @@ fetch(SHEETS_CSV_URL)
             statusText.style.color = "var(--warning)";
         } else {
             statusDot.className = "dot dot-error";
-            statusText.innerText = "Sin conexión";
+            statusText.innerText = "Error de Red";
             statusText.style.color = "var(--danger)";
         }
     });
@@ -185,17 +211,9 @@ input.addEventListener('input', (e) => {
     sugDiv.style.display = matches.length ? 'block' : 'none';
 });
 
-function limpiar() { 
-    input.value = ''; 
-    clearBtn.style.display = 'none'; 
-    sugDiv.style.display = 'none'; 
-    resultDiv.innerHTML = ''; 
-}
+function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; }
 
-function goHome() {
-    limpiar();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+function goHome() { if (navigator.vibrate) navigator.vibrate(20); window.location.href = 'index.html'; }
 
 function seleccionar(id) {
     const s = sites.find(x => x.SITEID === id);
@@ -208,21 +226,17 @@ function seleccionar(id) {
         llaveHTML = `<div class="key-alert"><span>🔑 LLAVE NECESARIA</span><span style="font-size:0.75rem; font-weight:normal;">${rawLlave}</span></div>`;
     }
 
-    const mapUrl = `https://www.google.com/maps/embed/v1/view?key=TU_API_KEY_OPCIONAL&center=${s.LATITUDE},${s.LONGITUDE}&zoom=15&maptype=satellite`;
-    // Nota: Usamos una URL estándar simplificada para evitar bloqueos
-    const simpleMap = `https://maps.google.com/maps?q=${s.LATITUDE},${s.LONGITUDE}&z=15&t=k&output=embed`;
+    const mapUrl = `https://maps.google.com/maps?q=${s.LATITUDE},${s.LONGITUDE}&t=k&z=18&output=embed`;
 
     resultDiv.innerHTML = `
         <div class="card">
             <div class="header-title" onclick="copiar('${s.SITEID} - ${s['NOMBRE DE SITIO']}')">
                 <h2>${s.SITEID} - ${s['NOMBRE DE SITIO']}</h2>
-                <span id="copyLabel" class="copy-tag">TAP PARA COPIAR</span>
+                <span id="copyLabel" class="copy-tag">TAP PARA COPIAR ID</span>
             </div>
-
             <div class="map-box">
-                <iframe width="100%" height="100%" frameborder="0" src="${simpleMap}"></iframe>
+                <iframe width="100%" height="100%" frameborder="0" src="${mapUrl}"></iframe>
             </div>
-
             <div class="info-list">
                 <div class="info-item"><span class="info-label">NIC / NIS</span><span class="info-val" style="color:#fbbf24;">${s['NIC/NIS'] || 'N/A'}</span></div>
                 <div class="info-item"><span class="info-label">Distribuidora</span><span class="info-val">${s.Distribuidora || 'N/A'}</span></div>
@@ -232,21 +246,17 @@ function seleccionar(id) {
                 <div class="info-item"><span class="info-label">Municipio</span><span class="info-val">${s.Municipio || 'N/A'}</span></div>
                 <div class="info-item"><span class="info-label">Dirección Exacta</span><span class="info-val">${s.DIRECCION || s['Dirección'] || 'N/A'}</span></div>
             </div>
-
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${s.LATITUDE},${s.LONGITUDE}" target="_blank" class="btn-gps">
-                🚀 INICIAR GPS
-            </a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${s.LATITUDE},${s.LONGITUDE}" target="_blank" class="btn-gps">🚀 INICIAR GPS</a>
         </div>
     `;
-    
     setTimeout(() => { resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 }
 
 function copiar(txt) {
     navigator.clipboard.writeText(txt);
     const lbl = document.getElementById('copyLabel');
-    lbl.innerText = "¡COPIADO!"; lbl.style.color = "var(--success)";
-    setTimeout(() => { lbl.innerText = "TAP PARA COPIAR"; lbl.style.color = "var(--primary)"; }, 1500);
+    lbl.innerText = "¡DATOS COPIADOS!"; lbl.style.color = "var(--success)";
+    setTimeout(() => { lbl.innerText = "TAP PARA COPIAR ID"; lbl.style.color = "var(--primary)"; }, 1500);
 }
 
 document.addEventListener('click', (e) => { if (!input.contains(e.target)) sugDiv.style.display = 'none'; });
