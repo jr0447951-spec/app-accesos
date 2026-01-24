@@ -22,7 +22,6 @@
             color: white; min-height: 100vh;
         }
 
-        /* HEADER COMPACTO */
         header { 
             width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
             padding: 10px 0; position: sticky; top: 0; z-index: 2000;
@@ -88,7 +87,7 @@
         .key-alert { 
             background: #be123c; border-left: 4px solid #ff4d4d; color: white; 
             padding: 12px; border-radius: 12px; font-weight: bold; display: flex; 
-            align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.9rem;
+            flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 10px; font-size: 0.85rem;
         }
 
         .btn-gps { 
@@ -129,25 +128,40 @@ const statusText = document.getElementById('status-text');
 
 const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
 
+// FUNCIÓN PARA PROCESAR CSV
+function procesarCSV(data) {
+    const rows = data.split(/\r?\n/).filter(row => row.trim().length > 0);
+    const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    return rows.slice(1).map(row => {
+        const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        let obj = {};
+        headers.forEach((h, i) => obj[h] = values[i] ? values[i].trim().replace(/"/g, '') : '');
+        return obj;
+    });
+}
+
+// FLUJO DE CARGA CON CACHÉ OFFLINE
 fetch(SHEETS_CSV_URL)
     .then(r => { if (!r.ok) throw new Error(); return r.text(); })
     .then(data => {
-        const rows = data.split(/\r?\n/).filter(row => row.trim().length > 0);
-        const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        sites = rows.slice(1).map(row => {
-            const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            let obj = {};
-            headers.forEach((h, i) => obj[h] = values[i] ? values[i].trim().replace(/"/g, '') : '');
-            return obj;
-        });
+        sites = procesarCSV(data);
+        localStorage.setItem('sites_cache', JSON.stringify(sites)); // GUARDAR EN CACHÉ
         statusDot.className = "dot dot-ready";
         statusText.innerText = `Red Lista: ${sites.length} Sitios`;
         statusText.style.color = "var(--success)";
     })
     .catch(err => {
-        statusDot.className = "dot dot-error";
-        statusText.innerText = "Error de Red";
-        statusText.style.color = "var(--danger)";
+        const cachedData = localStorage.getItem('sites_cache');
+        if (cachedData) {
+            sites = JSON.parse(cachedData);
+            statusDot.className = "dot dot-ready";
+            statusText.innerText = `Modo Offline: ${sites.length} Sitios`;
+            statusText.style.color = "var(--warning)";
+        } else {
+            statusDot.className = "dot dot-error";
+            statusText.innerText = "Sin conexión / Sin caché";
+            statusText.style.color = "var(--danger)";
+        }
     });
 
 input.addEventListener('input', (e) => {
@@ -166,8 +180,11 @@ function seleccionar(id) {
     sugDiv.style.display = 'none';
     input.value = s['NOMBRE DE SITIO'];
     
-    const llaveHTML = (s['Llave Requerida']?.toUpperCase() === 'SI') ? 
-        `<div class="key-alert">🔑 LLAVE NECESARIA PARA ACCESO</div>` : '';
+    const rawLlave = (s['Llave requerida'] || s['LLAVE REQUERIDA'] || s['Llave Requerida'] || "").trim();
+    let llaveHTML = '';
+    if (rawLlave.toUpperCase().startsWith("SI")) {
+        llaveHTML = `<div class="key-alert"><span>🔑 LLAVE NECESARIA</span><span style="font-size:0.75rem; font-weight:normal;">${rawLlave}</span></div>`;
+    }
 
     const mapUrl = `https://maps.google.com/maps?q=${s.LATITUDE},${s.LONGITUDE}&z=15&output=embed`;
 
@@ -198,9 +215,7 @@ function seleccionar(id) {
         </div>
     `;
     
-    setTimeout(() => {
-        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
+    setTimeout(() => { resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 }
 
 function copiar(txt) {
