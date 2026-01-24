@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Net-Ops DB | Sentido de Enlace</title>
+    <title>Net-Ops DB | Gestión por Sitio</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #00a1ff; --bg: #0b0f1a; }
@@ -33,13 +33,13 @@
 <header><h1>SYSTEM DATABASE</h1></header>
 
 <div class="container">
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Nodo (ej: San Martín)..." oninput="buscar()">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Sitio (Columna C)..." oninput="buscar()">
     <div id="results"></div>
 </div>
 
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.75rem;">ACTUALIZAR NIVELES</h3>
+        <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.75rem;">SINCRONIZAR AMBOS NODOS</h3>
         <input type="text" id="formEditor" placeholder="Técnico Responsable">
         <input type="text" id="formTX" placeholder="TX (ej: 1450.000)">
         <input type="text" id="formRX" placeholder="RX (ej: 1450.000)">
@@ -64,7 +64,6 @@
             const rows = text.split(/\r?\n/).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
             db = rows.map((r, i) => ({
                 idx: i,
-                vlan: r[0]?.replace(/"/g, '').trim() || "",
                 id:   r[1]?.replace(/"/g, '').trim() || "",
                 sitio:r[2]?.replace(/"/g, '').trim() || "",
                 uip:  r[3]?.replace(/"/g, '').trim() || "",
@@ -73,7 +72,7 @@
                 tx:   r[6]?.replace(/"/g, '').trim() || "",
                 rx:   r[7]?.replace(/"/g, '').trim() || ""
             }));
-        } catch (e) { console.error("Error al cargar"); }
+        } catch (e) { console.error("Error cargando DB"); }
     }
 
     function buscar() {
@@ -82,25 +81,38 @@
         box.innerHTML = "";
         if (query.length < 2) return;
 
-        db.forEach((item, i) => {
-            if (i > 0 && item.sitio.toUpperCase().includes(query)) {
-                let iPareja = (i % 2 !== 0) ? i + 1 : i - 1;
-                let pareja = db[iPareja];
+        const bloquesMostrados = new Set();
 
-                // Construcción de títulos dinámicos Origen > Destino
-                const tituloLocal = `${item.sitio} > ${pareja?.sitio || '???'}`;
-                const tituloRemoto = `${pareja?.sitio || '???'} > ${item.sitio}`;
+        db.forEach((item, i) => {
+            // Filtro exclusivo por Columna C
+            if (i > 0 && item.sitio.toUpperCase().includes(query)) {
+                
+                // Definir el índice base del par (Fila 2-3, 4-5...)
+                const idxBase = (i % 2 !== 0) ? i : i - 1;
+                
+                if (bloquesMostrados.has(idxBase)) return;
+                bloquesMostrados.add(idxBase);
+
+                const nodoA = db[idxBase];
+                const nodoB = db[idxBase + 1];
+
+                // Ajustar cuál es local según la búsqueda exacta
+                const esInverso = item.idx === (idxBase + 1);
+                const local = esInverso ? nodoB : nodoA;
+                const remoto = esInverso ? nodoA : nodoB;
+
+                const tituloLocal = `${local.sitio} > ${remoto?.sitio || '???'}`;
+                const tituloRemoto = `${remoto?.sitio || '???'} > ${local.sitio}`;
 
                 const div = document.createElement("div");
                 div.className = "link-group";
                 div.innerHTML = `
-                    <div style="text-align:center; font-size:0.6rem; color:var(--primary); margin-bottom:10px; opacity:0.7;">VLAN: ${item.vlan}</div>
-                    ${crearCard(item, "LOCAL", tituloLocal)}
-                    ${pareja ? `
-                        <button class="btn-reveal" onclick="toggleRemote(this)">EXTREMO REMOTO ↓</button>
-                        <div class="hidden-side">${crearCard(pareja, "REMOTO", tituloRemoto)}</div>
+                    ${crearCard(local, "ESTACIÓN LOCAL", tituloLocal)}
+                    ${remoto ? `
+                        <button class="btn-reveal" onclick="toggleRemote(this)">VER EXTREMO REMOTO ↓</button>
+                        <div class="hidden-side">${crearCard(remoto, "EXTREMO REMOTO", tituloRemoto)}</div>
                     ` : ''}
-                    <button class="btn-edit" onclick="abrirModal('${item.vlan}', '${item.sitio}')">SINCRONIZAR NIVELES</button>
+                    <button class="btn-edit" onclick="abrirModal('${local.sitio}')">ACTUALIZAR AMBOS</button>
                 `;
                 box.appendChild(div);
             }
@@ -113,9 +125,9 @@
                 <span class="label" style="color:var(--primary); margin-bottom:5px; display:block;">${tag}</span>
                 <h2>${tituloFull}</h2>
                 <div class="row"><span class="label">ID ENLACE</span><span class="value">${d.id}</span></div>
-                <div class="row"><span class="label">IP PC</span><span class="value">${d.uip}</span></div>
+                <div class="row"><span class="label">IP EQUIPO</span><span class="value">${d.uip}</span></div>
                 <div class="row"><span class="label">P. ENLACE</span><span class="value">${d.ip}</span></div>
-                <div class="row"><span class="label">MASK</span><span class="value">${d.mask}</span></div>
+                <div class="row"><span class="label">MÁSCARA</span><span class="value">${d.mask}</span></div>
                 <div class="levels">
                     <div class="level-box"><span class="label">TX</span><br><span class="value">${d.tx || '---'}</span></div>
                     <div class="level-box"><span class="label">RX</span><br><span class="value">${d.rx || '---'}</span></div>
@@ -127,12 +139,12 @@
         const side = btn.nextElementSibling;
         const hidden = side.style.display === "none" || side.style.display === "";
         side.style.display = hidden ? "block" : "none";
-        btn.innerText = hidden ? "OCULTAR REMOTO ↑" : "EXTREMO REMOTO ↓";
+        btn.innerText = hidden ? "OCULTAR REMOTO ↑" : "VER EXTREMO REMOTO ↓";
     }
 
-    function abrirModal(vlan, sitio) {
-        editContext = { vlan, sitio };
-        document.getElementById("modalTitle").innerText = "EDITAR: " + sitio;
+    function abrirModal(sitio) {
+        editContext = { sitio };
+        document.getElementById("modalTitle").innerText = sitio;
         document.getElementById("editModal").style.display = "flex";
     }
 
@@ -143,10 +155,10 @@
         const rx = document.getElementById("formRX").value;
         const ed = document.getElementById("formEditor").value;
 
-        if(!tx || !rx || !ed) { alert("Campos incompletos"); return; }
+        if(!tx || !rx || !ed) { alert("Complete todos los campos"); return; }
         
         const btn = document.getElementById("btnGuardar");
-        btn.innerText = "Sincronizando..."; btn.disabled = true;
+        btn.innerText = "Guardando..."; btn.disabled = true;
 
         await fetch(SCRIPT_URL, {
             method: "POST",
@@ -154,7 +166,7 @@
             body: JSON.stringify({...editContext, tx, rx, editor: ed})
         });
         
-        alert("Enlace sincronizado exitosamente.");
+        alert("Sincronización exitosa.");
         location.reload();
     }
 
