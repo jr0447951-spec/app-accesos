@@ -10,6 +10,9 @@
             --dark-bg: #0f172a;
             --glass: rgba(255, 255, 255, 0.08);
             --border: rgba(255, 255, 255, 0.15);
+            --success: #22c55e;
+            --warning: #fbbf24;
+            --danger: #ef4444;
         }
 
         body { 
@@ -19,11 +22,24 @@
             color: white; min-height: 100vh;
         }
 
+        /* HEADER COMPACTO */
         header { 
             width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
-            padding: 12px 0; position: sticky; top: 0; z-index: 2000;
+            padding: 10px 0; position: sticky; top: 0; z-index: 2000;
             border-bottom: 1px solid var(--border); text-align: center;
         }
+        
+        #status-indicator {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            margin-top: 2px; opacity: 0.9;
+        }
+        .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .dot-sync { background: var(--warning); animation: pulse 1s infinite; }
+        .dot-ready { background: var(--success); }
+        .dot-error { background: var(--danger); }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         .search-area { width: 92%; max-width: 500px; margin: 15px auto; position: relative; }
         #siteSearch { 
@@ -44,7 +60,6 @@
         }
         .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
 
-        /* FICHA TÉCNICA */
         #result { width: 92%; max-width: 500px; margin: 0 auto; scroll-margin-top: 100px; }
         
         .card { 
@@ -53,7 +68,6 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease-out;
         }
 
-        /* 1. SITEID - NOMBRE */
         .header-title { 
             background: rgba(0, 161, 255, 0.15); padding: 18px; border-radius: 16px; 
             text-align: center; margin-bottom: 15px; border: 1px dashed var(--primary); cursor: pointer;
@@ -61,26 +75,22 @@
         .header-title h2 { margin: 0; font-size: 1.1rem; text-transform: uppercase; }
         .copy-tag { font-size: 0.65rem; color: var(--primary); font-weight: bold; margin-top: 6px; display: block; }
 
-        /* 2. MINI MAPA */
         .map-box { 
             width: 100%; height: 200px; border-radius: 16px; overflow: hidden; 
             margin-bottom: 20px; border: 1px solid var(--border); background: #000;
         }
 
-        /* DATOS EN ORDEN */
         .info-list { display: flex; flex-direction: column; gap: 10px; }
         .info-item { background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 12px; border-left: 4px solid var(--primary); }
         .info-label { font-size: 0.65rem; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; display: block; }
         .info-val { font-size: 1rem; color: #fff; font-weight: 500; }
         
-        /* 5. LLAVE (ALERTA ROJA) */
         .key-alert { 
             background: #be123c; border-left: 4px solid #ff4d4d; color: white; 
             padding: 12px; border-radius: 12px; font-weight: bold; display: flex; 
-            align-items: center; gap: 10px; margin-bottom: 10px;
+            align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.9rem;
         }
 
-        /* BOTÓN GPS */
         .btn-gps { 
             display: flex; align-items: center; justify-content: center; gap: 10px;
             background: linear-gradient(135deg, var(--primary), #0072ff); color: white; 
@@ -93,7 +103,11 @@
 <body>
 
 <header>
-    <h1 style="margin:0; font-size:1.1rem;">Network Ops Access</h1>
+    <h1 style="margin:0; font-size:0.95rem; letter-spacing: 0.5px;">NETWORK OPS ACCESS</h1>
+    <div id="status-indicator">
+        <span id="status-dot" class="dot dot-sync"></span>
+        <span id="status-text">Sincronizando...</span>
+    </div>
 </header>
 
 <div class="search-area">
@@ -110,19 +124,31 @@ const input = document.getElementById('siteSearch');
 const clearBtn = document.getElementById('clearBtn');
 const sugDiv = document.getElementById('suggestions');
 const resultDiv = document.getElementById('result');
+const statusDot = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
 
 const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
 
-fetch(SHEETS_CSV_URL).then(r => r.text()).then(data => {
-    const rows = data.split(/\r?\n/).filter(row => row.trim().length > 0);
-    const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    sites = rows.slice(1).map(row => {
-        const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        let obj = {};
-        headers.forEach((h, i) => obj[h] = values[i] ? values[i].trim().replace(/"/g, '') : '');
-        return obj;
+fetch(SHEETS_CSV_URL)
+    .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+    .then(data => {
+        const rows = data.split(/\r?\n/).filter(row => row.trim().length > 0);
+        const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        sites = rows.slice(1).map(row => {
+            const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            let obj = {};
+            headers.forEach((h, i) => obj[h] = values[i] ? values[i].trim().replace(/"/g, '') : '');
+            return obj;
+        });
+        statusDot.className = "dot dot-ready";
+        statusText.innerText = `Red Lista: ${sites.length} Sitios`;
+        statusText.style.color = "var(--success)";
+    })
+    .catch(err => {
+        statusDot.className = "dot dot-error";
+        statusText.innerText = "Error de Red";
+        statusText.style.color = "var(--danger)";
     });
-});
 
 input.addEventListener('input', (e) => {
     const val = e.target.value.toLowerCase().trim();
@@ -140,7 +166,6 @@ function seleccionar(id) {
     sugDiv.style.display = 'none';
     input.value = s['NOMBRE DE SITIO'];
     
-    // Lógica condicional de Llave
     const llaveHTML = (s['Llave Requerida']?.toUpperCase() === 'SI') ? 
         `<div class="key-alert">🔑 LLAVE NECESARIA PARA ACCESO</div>` : '';
 
@@ -159,20 +184,15 @@ function seleccionar(id) {
 
             <div class="info-list">
                 <div class="info-item"><span class="info-label">NIC / NIS</span><span class="info-val" style="color:#fbbf24;">${s['NIC/NIS'] || 'N/A'}</span></div>
-                
                 <div class="info-item"><span class="info-label">Distribuidora</span><span class="info-val">${s.Distribuidora || 'N/A'}</span></div>
-                
                 ${llaveHTML}
-
                 <div class="info-item"><span class="info-label">Porte</span><span class="info-val">${s.Porte || 'N/A'}</span></div>
                 <div class="info-item"><span class="info-label">Altura</span><span class="info-val">${s.Altura || 'N/A'}</span></div>
-
                 <div class="info-item"><span class="info-label">Municipio</span><span class="info-val">${s.Municipio || 'N/A'}</span></div>
-
                 <div class="info-item"><span class="info-label">Dirección Exacta</span><span class="info-val">${s.DIRECCION || s['Dirección'] || 'N/A'}</span></div>
             </div>
 
-            <a href="https://www.google.com/maps/search/?api=1&query=${s.LATITUDE},${s.LONGITUDE}" target="_blank" class="btn-gps">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${s.LATITUDE},${s.LONGITUDE}" target="_blank" class="btn-gps">
                 🚀 INICIAR GPS
             </a>
         </div>
@@ -186,7 +206,7 @@ function seleccionar(id) {
 function copiar(txt) {
     navigator.clipboard.writeText(txt);
     const lbl = document.getElementById('copyLabel');
-    lbl.innerText = "¡COPIADO!"; lbl.style.color = "#22c55e";
+    lbl.innerText = "¡COPIADO!"; lbl.style.color = "var(--success)";
     setTimeout(() => { lbl.innerText = "TAP PARA COPIAR"; lbl.style.color = "var(--primary)"; }, 1500);
 }
 
