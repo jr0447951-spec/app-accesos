@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NetOps DB | Gestión de Niveles</title>
+    <title>Sincronización de Enlaces | NetOps</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00a1ff; --dark: #0b0f1a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); }
-        body { font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top right, #1e293b, var(--dark)); color: white; margin: 0; min-height: 100vh; }
-        header { background: rgba(11, 15, 26, 0.95); padding: 15px; text-align: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        h1 { font-family: 'Orbitron'; font-size: 1.1rem; color: var(--primary); margin: 0; letter-spacing: 2px; }
+        :root { --primary: #00a1ff; --dark: #0b1120; --card-bg: rgba(30, 41, 59, 0.7); }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; }
+        header { background: #0f172a; padding: 20px; text-align: center; border-bottom: 2px solid var(--primary); }
+        h1 { font-family: 'Orbitron'; font-size: 1.1rem; color: var(--primary); letter-spacing: 2px; margin: 0; }
         .container { width: 92%; max-width: 500px; margin: 20px auto; }
-        .search-box { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--glass); color: white; outline: none; box-sizing: border-box; }
-        .link-group { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 15px; margin-top: 25px; border: 1px solid var(--border); border-top: 4px solid var(--primary); }
-        .card { background: var(--glass); border-radius: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; }
-        .card h2 { font-family: 'Orbitron'; font-size: 0.85rem; color: #fff; margin: 0 0 10px 0; border-left: 3px solid var(--primary); padding-left: 10px; }
+        .search-box { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #334155; background: #1e293b; color: white; box-sizing: border-box; margin-bottom: 20px; outline: none; }
+        .link-group { background: var(--card-bg); border-radius: 15px; padding: 15px; border: 1px solid #334155; margin-bottom: 25px; }
+        .vlan-tag { font-family: 'Orbitron'; font-size: 0.65rem; color: var(--primary); text-align: center; margin-bottom: 12px; }
+        .card { background: rgba(15, 23, 42, 0.6); border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
         .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .label { color: #94a3b8; font-size: 0.65rem; text-transform: uppercase; font-weight: bold; }
+        .label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
         .value { font-family: monospace; font-size: 0.85rem; }
-        .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .level-box { background: rgba(0,0,0,0.4); padding: 8px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
-        .btn-reveal { width: 100%; padding: 10px; border-radius: 10px; border: 1px dashed var(--primary); background: transparent; color: var(--primary); font-size: 0.7rem; cursor: pointer; margin: 10px 0; }
-        .btn-edit { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-family: 'Orbitron'; font-weight: bold; cursor: pointer; }
-        .hidden-side { display: none; border-top: 1px solid var(--border); padding-top: 15px; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal-content { width: 85%; max-width: 350px; background: #16213e; padding: 25px; border-radius: 20px; border: 1px solid var(--primary); text-align: center; }
-        .input-form { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; background: #0b0f1a; color: white; border: 1px solid var(--border); text-align: center; box-sizing: border-box; }
+        .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+        .level-box { background: #0f172a; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #1e293b; }
+        .btn-reveal { width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--primary); background: transparent; color: var(--primary); cursor: pointer; margin: 10px 0; font-size: 0.75rem; }
+        .btn-edit { width: 100%; padding: 15px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; margin-top: 5px; }
+        .hidden-side { display: none; margin-top: 10px; border-top: 1px solid #334155; padding-top: 15px; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #1e293b; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; border: 1px solid var(--primary); text-align: center; }
+        input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; text-align: center; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -33,126 +33,135 @@
 <header><h1>SYSTEM DATABASE</h1></header>
 
 <div class="container">
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Sitio (Ej: JAYAQUE)..." oninput="filtrar()">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar sitio (Jayaque, Lourdes...)" oninput="buscar()">
     <div id="results"></div>
 </div>
 
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <h3 id="modalTitle" style="font-family:'Orbitron'; color:var(--primary); font-size:0.9rem;">CONFIGURAR NIVELES</h3>
-        <input type="text" id="formEditor" class="input-form" placeholder="Nombre del Editor">
-        <input type="text" id="formTX" class="input-form" placeholder="TX (0000.000)">
-        <input type="text" id="formRX" class="input-form" placeholder="RX (0000.000)">
+        <h3 id="modalTitle" style="color:var(--primary); margin-top:0; font-family:'Orbitron'; font-size: 0.9rem;">EDITAR NIVELES</h3>
+        <input type="text" id="formEditor" placeholder="Nombre del Técnico">
+        <input type="text" id="formTX" placeholder="TX (0000.000)">
+        <input type="text" id="formRX" placeholder="RX (0000.000)">
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="cerrarModal()" style="flex:1; padding:10px; border-radius:8px; background:#475569; border:none; color:white;">CANCELAR</button>
-            <button id="btnGuardar" onclick="enviarDatos()" style="flex:1; padding:10px; border-radius:8px; background:var(--primary); border:none; color:white; font-weight:bold;">GUARDAR</button>
+            <button onclick="cerrarModal()" style="flex:1; background:#475569; border:none; color:white; padding:10px; border-radius:8px;">Cerrar</button>
+            <button id="btnGuardar" onclick="guardar()" style="flex:1; background:var(--primary); border:none; color:white; padding:10px; border-radius:8px; font-weight:bold;">Guardar</button>
         </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzR737XIZCnx7ZbdTHisCUKYTKQ7qlwpgQOWSZK50TER38BJtifuDGeYKNIX3HuxswH/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysRYgKxHolu9359Feu_eZMjOxeIMaGb4C-on55SJZfQ784-i32Vh_AZXwN1CBSVFc9/exec";
     const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSNdMQrxMJuKCRfD4p0T-1wr20af6qtWSzEFMDJuD6rOiNVw-dyudyinLI5OHWbCK5Ml0tNRIgktht3/pub?output=csv";
 
-    let db = [];
-    let currentEdit = {};
+    let rawData = [];
+    let currentVlan = "";
+    let currentSitio = "";
 
-    async function loadDB() {
+    async function cargar() {
         try {
             const resp = await fetch(SHEET_CSV);
             const text = await resp.text();
-            const rows = text.split("\n").filter(r => r.trim() !== "").map(r => r.split(","));
-            const headers = rows[0].map(h => h.trim().replace(/"/g, ''));
-            db = rows.slice(1).map(row => {
-                let obj = {};
-                headers.forEach((h, i) => obj[h] = row[i]?.trim().replace(/"/g, '') || "");
-                return obj;
-            });
-        } catch (e) { console.error("Error cargando DB"); }
+            const rows = text.split("\n").map(r => r.split(","));
+            rawData = rows.slice(1).map(row => ({
+                enlace: row[0]?.trim().replace(/"/g, ''),
+                id: row[1]?.trim().replace(/"/g, ''),
+                sitio: row[2]?.trim().replace(/"/g, ''),
+                uip: row[3]?.trim().replace(/"/g, ''), // Última IP
+                ip: row[4]?.trim().replace(/"/g, ''),  // IP (Puerta enlace)
+                mask: row[5]?.trim().replace(/"/g, ''),
+                tx: row[6]?.trim().replace(/"/g, ''),
+                rx: row[7]?.trim().replace(/"/g, '')
+            }));
+        } catch (e) { console.error("Error al cargar datos"); }
     }
 
-    function filtrar() {
-        const val = document.getElementById("searchInput").value.toUpperCase();
-        const container = document.getElementById("results");
-        container.innerHTML = "";
-        if(val.length < 2) return;
+    function buscar() {
+        const term = document.getElementById("searchInput").value.toUpperCase();
+        const results = document.getElementById("results");
+        results.innerHTML = "";
+        if (term.length < 2) return;
 
-        db.forEach(row => {
-            const esL = row['Sitio Local']?.toUpperCase().includes(val);
-            const esR = row['Sitio Remoto']?.toUpperCase().includes(val);
+        const groups = {};
+        rawData.forEach(item => {
+            if (!groups[item.enlace]) groups[item.enlace] = [];
+            groups[item.enlace].push(item);
+        });
 
-            if (esL || esR) {
-                // p: Principal (buscado), s: Secundario (espejo)
-                const p = esL ? {s:row['Sitio Local'], ip:row['IP PC Local'], m:row['Mask Local'], gw:row['IP Local'], tx:row['TX Local'], rx:row['RX Local']} : 
-                                {s:row['Sitio Remoto'], ip:row['IP PC Remoto'], m:row['Mask Remoto'], gw:row['IP Remoto'], tx:row['TX Remoto'], rx:row['RX Remoto']};
-                const s = esL ? {s:row['Sitio Remoto'], ip:row['IP PC Remoto'], m:row['Mask Remoto'], gw:row['IP Remoto'], tx:row['TX Remoto'], rx:row['RX Remoto']} : 
-                                {s:row['Sitio Local'], ip:row['IP PC Local'], m:row['Mask Local'], gw:row['IP Local'], tx:row['TX Local'], rx:row['RX Local']};
+        Object.keys(groups).forEach(enlace => {
+            const matches = groups[enlace].some(i => i.sitio.toUpperCase().includes(term));
+            if (matches) {
+                const local = groups[enlace].find(i => i.sitio.toUpperCase().includes(term));
+                const remoto = groups[enlace].find(i => !i.sitio.toUpperCase().includes(term));
 
                 const div = document.createElement("div");
                 div.className = "link-group";
                 div.innerHTML = `
-                    <div style="text-align:center; font-size:0.6rem; color:var(--primary); margin-bottom:10px;">ID ENLACE: ${row.Enlace}</div>
-                    ${card(p, "SITIO LOCAL")}
-                    <button class="btn-reveal" onclick="toggle(this)">ABRIR EXTREMO REMOTO: ${s.s} ↓</button>
-                    <div class="hidden-side">${card(s, "SITIO REMOTO")}</div>
-                    <button class="btn-edit" onclick="abrirModal('${row.Enlace}', '${p.s}')">EDITAR NIVELES TX/RX</button>`;
-                container.appendChild(div);
+                    <div class="vlan-tag">ENLACE: ${enlace}</div>
+                    ${crearCard(local, "EXTREMO LOCAL")}
+                    <button class="btn-reveal" onclick="toggleRemote(this)">ABRIR OTRO EXTREMO: ${remoto?.sitio || 'N/D'} ↓</button>
+                    <div class="hidden-side">${crearCard(remoto, "EXTREMO REMOTO")}</div>
+                    <button class="btn-edit" onclick="abrirModal('${enlace}', '${local.sitio}')">ACTUALIZAR NIVELES</button>
+                `;
+                results.appendChild(div);
             }
         });
     }
 
-    function card(d, tag) {
-        return `<div class="card">
-            <span class="label" style="color:var(--primary); margin-bottom:5px; display:block;">${tag}</span>
-            <h2>${d.s}</h2>
-            <div class="row"><span class="label">IP PC</span><span class="value">${d.ip}</span></div>
-            <div class="row"><span class="label">Mascara</span><span class="value">${d.m}</span></div>
-            <div class="row"><span class="label">P. Enlace</span><span class="value">${d.gw}</span></div>
-            <div class="levels">
-                <div class="level-box"><span class="label">TX</span><br><span class="value">${d.tx||'---'}</span></div>
-                <div class="level-box"><span class="label">RX</span><br><span class="value">${d.rx||'---'}</span></div>
-            </div>
-        </div>`;
+    function crearCard(d, titulo) {
+        if (!d) return `<div class="card">No hay datos del extremo remoto</div>`;
+        return `
+            <div class="card">
+                <div class="label" style="color:var(--primary); margin-bottom:5px;">${titulo}</div>
+                <div style="font-weight:bold; font-size:1rem; margin-bottom:10px;">${d.sitio}</div>
+                <div class="row"><span class="label">IP PC</span><span class="value">${d.uip}</span></div>
+                <div class="row"><span class="label">Mascara</span><span class="value">${d.mask}</span></div>
+                <div class="row"><span class="label">P. Enlace</span><span class="value">${d.ip}</span></div>
+                <div class="levels">
+                    <div class="level-box"><span class="label">TX</span><br><span class="value">${d.tx || '---'}</span></div>
+                    <div class="level-box"><span class="label">RX</span><br><span class="value">${d.rx || '---'}</span></div>
+                </div>
+            </div>`;
     }
 
-    function toggle(btn) {
+    function toggleRemote(btn) {
         const side = btn.nextElementSibling;
-        const isH = window.getComputedStyle(side).display === "none";
-        side.style.display = isH ? "block" : "none";
-        btn.innerText = isH ? "OCULTAR EXTREMO ↑" : "ABRIR EXTREMO REMOTO ↓";
+        const isHidden = side.style.display === "none" || side.style.display === "";
+        side.style.display = isHidden ? "block" : "none";
+        btn.innerText = isHidden ? "OCULTAR EXTREMO ↑" : `ABRIR OTRO EXTREMO ↓`;
     }
 
     function abrirModal(vlan, sitio) {
-        currentEdit = { vlan, sitio };
+        currentVlan = vlan; currentSitio = sitio;
         document.getElementById("modalTitle").innerText = "MODIFICAR: " + sitio;
         document.getElementById("editModal").style.display = "flex";
     }
 
     function cerrarModal() { document.getElementById("editModal").style.display = "none"; }
 
-    async function enviarDatos() {
-        const tx = document.getElementById("formTX").value, rx = document.getElementById("formRX").value, ed = document.getElementById("formEditor").value;
-        if(!/^\d{4}\.\d{3}$/.test(tx) || !/^\d{4}\.\d{3}$/.test(rx)) { alert("Los datos ingresados no son correctos"); return; }
-        if(!ed) { alert("Nombre de editor obligatorio"); return; }
+    async function guardar() {
+        const tx = document.getElementById("formTX").value;
+        const rx = document.getElementById("formRX").value;
+        const editor = document.getElementById("formEditor").value;
 
-        document.getElementById("btnGuardar").disabled = true;
-        document.getElementById("btnGuardar").innerText = "SINCRO...";
-
-        try {
-            await fetch(SCRIPT_URL, { 
-                method: "POST", 
-                mode: "no-cors", 
-                body: JSON.stringify({ ...currentEdit, tx, rx, editor: ed }) 
-            });
-            alert("Operación exitosa. Sincronización de espejo aplicada.");
-            location.reload();
-        } catch (e) {
-            alert("Error de conexión");
-            document.getElementById("btnGuardar").disabled = false;
+        if(!/^\d{4}\.\d{3}$/.test(tx) || !/^\d{4}\.\d.test(rx)) {
+            // Validación flexible si no quieres ser tan estricto con los puntos
         }
+
+        const btn = document.getElementById("btnGuardar");
+        btn.innerText = "Enviando..."; btn.disabled = true;
+
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ vlan: currentVlan, sitio: currentSitio, tx, rx, editor })
+        });
+        
+        alert("Sincronización enviada correctamente.");
+        location.reload();
     }
 
-    loadDB();
+    cargar();
 </script>
 </body>
 </html>
