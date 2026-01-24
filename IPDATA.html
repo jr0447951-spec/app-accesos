@@ -3,100 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Ops | Gestión de Enlaces</title>
+    <title>NetOps DB | Gestión de Niveles</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --primary: #00a1ff; 
-            --dark-bg: #0b0f1a;
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --danger: #ef4444;
-            --success: #22c55e;
-        }
-
-        body { 
-            font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
-            color: white; margin: 0; min-height: 100vh; user-select: none; -webkit-user-select: none;
-        }
-
-        header { 
-            width: 100%; background: rgba(11, 15, 26, 0.95); backdrop-filter: blur(12px);
-            padding: 15px 0; position: sticky; top: 0; z-index: 2000; border-bottom: 1px solid var(--border); text-align: center;
-        }
-
-        h1 { font-family: 'Orbitron', sans-serif; margin: 0; font-size: 1.1rem; letter-spacing: 2px; color: var(--primary); }
-
+        :root { --primary: #00a1ff; --dark: #0b0f1a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); }
+        body { font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top right, #1e293b, var(--dark)); color: white; margin: 0; min-height: 100vh; }
+        header { background: rgba(11, 15, 26, 0.95); padding: 15px; text-align: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        h1 { font-family: 'Orbitron'; font-size: 1.1rem; color: var(--primary); margin: 0; letter-spacing: 2px; }
         .container { width: 92%; max-width: 500px; margin: 20px auto; }
-
-        /* Buscador */
-        .search-box { 
-            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border);
-            background: var(--glass); color: white; outline: none; font-size: 1rem; box-sizing: border-box;
-        }
-
-        /* Tarjeta de Enlace */
-        .card { 
-            background: var(--glass); border-radius: 20px; padding: 20px; margin-top: 20px;
-            border: 1px solid var(--border); animation: fadeIn 0.4s ease;
-        }
-
-        .card h2 { font-family: 'Orbitron'; font-size: 1rem; margin: 0 0 15px 0; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px; }
-        
-        .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .label { color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
-        .value { font-family: monospace; font-size: 0.9rem; }
-
-        .levels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .level-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.03); }
-
-        /* Botones */
-        .btn-edit { 
-            width: 100%; margin-top: 20px; padding: 12px; border-radius: 10px; border: none;
-            background: var(--primary); color: white; font-family: 'Orbitron'; font-weight: bold; cursor: pointer;
-        }
-
-        /* Modal */
-        .modal { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; 
-            justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(5px);
-        }
-        .modal-content { 
-            width: 85%; max-width: 350px; background: #16213e; padding: 25px; border-radius: 20px; 
-            border: 1px solid var(--primary); text-align: center;
-        }
-        .input-form { 
-            width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--border);
-            background: #0b0f1a; color: white; text-align: center; font-family: monospace; box-sizing: border-box;
-        }
-
-        .btn-home {
-            position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px;
-            border-radius: 50%; background: var(--primary); border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(0,161,255,0.4);
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .search-box { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: var(--glass); color: white; outline: none; box-sizing: border-box; }
+        .link-group { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 15px; margin-top: 25px; border: 1px solid var(--border); border-top: 4px solid var(--primary); }
+        .card { background: var(--glass); border-radius: 15px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; }
+        .card h2 { font-family: 'Orbitron'; font-size: 0.85rem; color: #fff; margin: 0 0 10px 0; border-left: 3px solid var(--primary); padding-left: 10px; }
+        .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .label { color: #94a3b8; font-size: 0.65rem; text-transform: uppercase; font-weight: bold; }
+        .value { font-family: monospace; font-size: 0.85rem; }
+        .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .level-box { background: rgba(0,0,0,0.4); padding: 8px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+        .btn-reveal { width: 100%; padding: 10px; border-radius: 10px; border: 1px dashed var(--primary); background: transparent; color: var(--primary); font-size: 0.7rem; cursor: pointer; margin: 10px 0; }
+        .btn-edit { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-family: 'Orbitron'; font-weight: bold; cursor: pointer; }
+        .hidden-side { display: none; border-top: 1px solid var(--border); padding-top: 15px; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal-content { width: 85%; max-width: 350px; background: #16213e; padding: 25px; border-radius: 20px; border: 1px solid var(--primary); text-align: center; }
+        .input-form { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; background: #0b0f1a; color: white; border: 1px solid var(--border); text-align: center; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>SYSTEM DATABASE</h1>
-</header>
+<header><h1>SYSTEM DATABASE</h1></header>
 
 <div class="container">
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar por Sitio o Enlace..." oninput="filtrar()">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Sitio (Ej: JAYAQUE)..." oninput="filtrar()">
     <div id="results"></div>
 </div>
 
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <h3 style="font-family:'Orbitron'; font-size: 0.9rem; margin-bottom: 20px;">ACTUALIZAR NIVELES</h3>
+        <h3 id="modalTitle" style="font-family:'Orbitron'; color:var(--primary); font-size:0.9rem;">CONFIGURAR NIVELES</h3>
         <input type="text" id="formEditor" class="input-form" placeholder="Nombre del Editor">
-        <input type="text" id="formTX" class="input-form" placeholder="Nivel TX (0000.000)">
-        <input type="text" id="formRX" class="input-form" placeholder="Nivel RX (0000.000)">
-        
+        <input type="text" id="formTX" class="input-form" placeholder="TX (0000.000)">
+        <input type="text" id="formRX" class="input-form" placeholder="RX (0000.000)">
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button onclick="cerrarModal()" style="flex:1; padding:10px; border-radius:8px; background:#475569; border:none; color:white;">CANCELAR</button>
             <button id="btnGuardar" onclick="enviarDatos()" style="flex:1; padding:10px; border-radius:8px; background:var(--primary); border:none; color:white; font-weight:bold;">GUARDAR</button>
@@ -104,99 +50,109 @@
     </div>
 </div>
 
-<button class="btn-home" onclick="location.href='index.html'">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-</button>
-
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzmh9ubOuVEnauFElu9sIVUDkD1KJBW1iy7dalVuq_jr_u5cIoAU-HS0y_gUb3sC3gV/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzR737XIZCnx7ZbdTHisCUKYTKQ7qlwpgQOWSZK50TER38BJtifuDGeYKNIX3HuxswH/exec";
     const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSNdMQrxMJuKCRfD4p0T-1wr20af6qtWSzEFMDJuD6rOiNVw-dyudyinLI5OHWbCK5Ml0tNRIgktht3/pub?output=csv";
 
     let db = [];
     let currentEdit = {};
 
-    // Cargar datos
     async function loadDB() {
-        const resp = await fetch(SHEET_CSV);
-        const text = await resp.text();
-        const rows = text.split("\n").map(r => r.split(","));
-        const headers = rows[0].map(h => h.trim().replace(/"/g, ''));
-        
-        db = rows.slice(1).map(row => {
-            let obj = {};
-            headers.forEach((h, i) => obj[h] = row[i]?.trim().replace(/"/g, '') || "");
-            return obj;
-        });
+        try {
+            const resp = await fetch(SHEET_CSV);
+            const text = await resp.text();
+            const rows = text.split("\n").filter(r => r.trim() !== "").map(r => r.split(","));
+            const headers = rows[0].map(h => h.trim().replace(/"/g, ''));
+            db = rows.slice(1).map(row => {
+                let obj = {};
+                headers.forEach((h, i) => obj[h] = row[i]?.trim().replace(/"/g, '') || "");
+                return obj;
+            });
+        } catch (e) { console.error("Error cargando DB"); }
     }
 
     function filtrar() {
         const val = document.getElementById("searchInput").value.toUpperCase();
         const container = document.getElementById("results");
         container.innerHTML = "";
-        
         if(val.length < 2) return;
 
-        const matches = db.filter(d => d.Sitio.toUpperCase().includes(val) || d.Enlace.toUpperCase().includes(val)).slice(0, 5);
+        db.forEach(row => {
+            const esL = row['Sitio Local']?.toUpperCase().includes(val);
+            const esR = row['Sitio Remoto']?.toUpperCase().includes(val);
 
-        matches.forEach(d => {
-            container.innerHTML += `
-                <div class="card">
-                    <h2>${d.Sitio}</h2>
-                    <div class="row"><span class="label">Enlace ID</span><span class="value">${d.Enlace}</span></div>
-                    <div class="row"><span class="label">Última IP</span><span class="value">${d['Última IP']}</span></div>
-                    <div class="row"><span class="label">Máscara</span><span class="value">${d.Mask}</span></div>
-                    <div class="levels-grid">
-                        <div class="level-box"><span class="label">TX</span><br><span class="value">${d.TX || '---'}</span></div>
-                        <div class="level-box"><span class="label">RX</span><br><span class="value">${d.RX || '---'}</span></div>
-                    </div>
-                    <button class="btn-edit" onclick="abrirModal('${d.Enlace}', '${d.Sitio}')">EDITAR DATOS</button>
-                </div>
-            `;
+            if (esL || esR) {
+                // p: Principal (buscado), s: Secundario (espejo)
+                const p = esL ? {s:row['Sitio Local'], ip:row['IP PC Local'], m:row['Mask Local'], gw:row['IP Local'], tx:row['TX Local'], rx:row['RX Local']} : 
+                                {s:row['Sitio Remoto'], ip:row['IP PC Remoto'], m:row['Mask Remoto'], gw:row['IP Remoto'], tx:row['TX Remoto'], rx:row['RX Remoto']};
+                const s = esL ? {s:row['Sitio Remoto'], ip:row['IP PC Remoto'], m:row['Mask Remoto'], gw:row['IP Remoto'], tx:row['TX Remoto'], rx:row['RX Remoto']} : 
+                                {s:row['Sitio Local'], ip:row['IP PC Local'], m:row['Mask Local'], gw:row['IP Local'], tx:row['TX Local'], rx:row['RX Local']};
+
+                const div = document.createElement("div");
+                div.className = "link-group";
+                div.innerHTML = `
+                    <div style="text-align:center; font-size:0.6rem; color:var(--primary); margin-bottom:10px;">ID ENLACE: ${row.Enlace}</div>
+                    ${card(p, "SITIO LOCAL")}
+                    <button class="btn-reveal" onclick="toggle(this)">ABRIR EXTREMO REMOTO: ${s.s} ↓</button>
+                    <div class="hidden-side">${card(s, "SITIO REMOTO")}</div>
+                    <button class="btn-edit" onclick="abrirModal('${row.Enlace}', '${p.s}')">EDITAR NIVELES TX/RX</button>`;
+                container.appendChild(div);
+            }
         });
+    }
+
+    function card(d, tag) {
+        return `<div class="card">
+            <span class="label" style="color:var(--primary); margin-bottom:5px; display:block;">${tag}</span>
+            <h2>${d.s}</h2>
+            <div class="row"><span class="label">IP PC</span><span class="value">${d.ip}</span></div>
+            <div class="row"><span class="label">Mascara</span><span class="value">${d.m}</span></div>
+            <div class="row"><span class="label">P. Enlace</span><span class="value">${d.gw}</span></div>
+            <div class="levels">
+                <div class="level-box"><span class="label">TX</span><br><span class="value">${d.tx||'---'}</span></div>
+                <div class="level-box"><span class="label">RX</span><br><span class="value">${d.rx||'---'}</span></div>
+            </div>
+        </div>`;
+    }
+
+    function toggle(btn) {
+        const side = btn.nextElementSibling;
+        const isH = window.getComputedStyle(side).display === "none";
+        side.style.display = isH ? "block" : "none";
+        btn.innerText = isH ? "OCULTAR EXTREMO ↑" : "ABRIR EXTREMO REMOTO ↓";
     }
 
     function abrirModal(vlan, sitio) {
         currentEdit = { vlan, sitio };
+        document.getElementById("modalTitle").innerText = "MODIFICAR: " + sitio;
         document.getElementById("editModal").style.display = "flex";
     }
 
-    function cerrarModal() {
-        document.getElementById("editModal").style.display = "none";
-    }
+    function cerrarModal() { document.getElementById("editModal").style.display = "none"; }
 
     async function enviarDatos() {
-        const tx = document.getElementById("formTX").value;
-        const rx = document.getElementById("formRX").value;
-        const editor = document.getElementById("formEditor").value;
-        const regex = /^\d{4}\.\d{3}$/;
+        const tx = document.getElementById("formTX").value, rx = document.getElementById("formRX").value, ed = document.getElementById("formEditor").value;
+        if(!/^\d{4}\.\d{3}$/.test(tx) || !/^\d{4}\.\d{3}$/.test(rx)) { alert("Los datos ingresados no son correctos"); return; }
+        if(!ed) { alert("Nombre de editor obligatorio"); return; }
 
-        if(!editor) { alert("Debe ingresar nombre de editor"); return; }
-        if(!regex.test(tx) || !regex.test(rx)) {
-            alert("Los datos ingresados no son correctos");
-            return;
-        }
-
-        const btn = document.getElementById("btnGuardar");
-        btn.innerText = "PROCESANDO...";
-        btn.disabled = true;
+        document.getElementById("btnGuardar").disabled = true;
+        document.getElementById("btnGuardar").innerText = "SINCRO...";
 
         try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ ...currentEdit, tx, rx, editor })
+            await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                body: JSON.stringify({ ...currentEdit, tx, rx, editor: ed }) 
             });
-            alert("Solicitud procesada. Si el campo ya tenía datos, se notificó al administrador.");
+            alert("Operación exitosa. Sincronización de espejo aplicada.");
             location.reload();
         } catch (e) {
             alert("Error de conexión");
-            btn.innerText = "GUARDAR";
-            btn.disabled = false;
+            document.getElementById("btnGuardar").disabled = false;
         }
     }
 
     loadDB();
 </script>
-
 </body>
 </html>
