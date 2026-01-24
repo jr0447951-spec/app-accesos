@@ -17,7 +17,7 @@
 
         body { 
             font-family: 'Segoe UI', system-ui, sans-serif; 
-            margin: 0; padding-bottom: 50px; 
+            margin: 0; padding-bottom: 80px; /* Espacio extra para el botón flotante */
             background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
             color: white; min-height: 100vh;
         }
@@ -96,6 +96,18 @@
             padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 800; margin-top: 25px;
         }
 
+        /* BOTÓN HOME FLOTANTE */
+        .btn-home {
+            position: fixed; bottom: 25px; right: 25px;
+            width: 55px; height: 55px; border-radius: 50%;
+            background: var(--primary); color: white; border: none;
+            box-shadow: 0 4px 15px rgba(0, 161, 255, 0.4);
+            cursor: pointer; z-index: 5000; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 1.5rem; transition: transform 0.2s;
+        }
+        .btn-home:active { transform: scale(0.9); }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -117,6 +129,8 @@
 
 <div id="result"></div>
 
+<button class="btn-home" onclick="goHome()" title="Ir al inicio">🏠</button>
+
 <script>
 let sites = [];
 const input = document.getElementById('siteSearch');
@@ -128,7 +142,6 @@ const statusText = document.getElementById('status-text');
 
 const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
 
-// FUNCIÓN PARA PROCESAR CSV
 function procesarCSV(data) {
     const rows = data.split(/\r?\n/).filter(row => row.trim().length > 0);
     const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
@@ -140,12 +153,11 @@ function procesarCSV(data) {
     });
 }
 
-// FLUJO DE CARGA CON CACHÉ OFFLINE
 fetch(SHEETS_CSV_URL)
     .then(r => { if (!r.ok) throw new Error(); return r.text(); })
     .then(data => {
         sites = procesarCSV(data);
-        localStorage.setItem('sites_cache', JSON.stringify(sites)); // GUARDAR EN CACHÉ
+        localStorage.setItem('sites_cache', JSON.stringify(sites));
         statusDot.className = "dot dot-ready";
         statusText.innerText = `Red Lista: ${sites.length} Sitios`;
         statusText.style.color = "var(--success)";
@@ -159,7 +171,7 @@ fetch(SHEETS_CSV_URL)
             statusText.style.color = "var(--warning)";
         } else {
             statusDot.className = "dot dot-error";
-            statusText.innerText = "Sin conexión / Sin caché";
+            statusText.innerText = "Sin conexión";
             statusText.style.color = "var(--danger)";
         }
     });
@@ -173,7 +185,17 @@ input.addEventListener('input', (e) => {
     sugDiv.style.display = matches.length ? 'block' : 'none';
 });
 
-function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; }
+function limpiar() { 
+    input.value = ''; 
+    clearBtn.style.display = 'none'; 
+    sugDiv.style.display = 'none'; 
+    resultDiv.innerHTML = ''; 
+}
+
+function goHome() {
+    limpiar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 function seleccionar(id) {
     const s = sites.find(x => x.SITEID === id);
@@ -186,7 +208,9 @@ function seleccionar(id) {
         llaveHTML = `<div class="key-alert"><span>🔑 LLAVE NECESARIA</span><span style="font-size:0.75rem; font-weight:normal;">${rawLlave}</span></div>`;
     }
 
-    const mapUrl = `https://maps.google.com/maps?q=${s.LATITUDE},${s.LONGITUDE}&z=15&output=embed`;
+    const mapUrl = `https://www.google.com/maps/embed/v1/view?key=TU_API_KEY_OPCIONAL&center=${s.LATITUDE},${s.LONGITUDE}&zoom=15&maptype=satellite`;
+    // Nota: Usamos una URL estándar simplificada para evitar bloqueos
+    const simpleMap = `https://maps.google.com/maps?q=${s.LATITUDE},${s.LONGITUDE}&z=15&t=k&output=embed`;
 
     resultDiv.innerHTML = `
         <div class="card">
@@ -196,7 +220,7 @@ function seleccionar(id) {
             </div>
 
             <div class="map-box">
-                <iframe width="100%" height="100%" frameborder="0" src="${mapUrl}"></iframe>
+                <iframe width="100%" height="100%" frameborder="0" src="${simpleMap}"></iframe>
             </div>
 
             <div class="info-list">
