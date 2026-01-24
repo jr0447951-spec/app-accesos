@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Net-Ops Database | Sincronización</title>
+    <title>Net-Ops DB | Sentido de Enlace</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00a1ff; --bg: #0b0f1a; --card: #1e293b; }
+        :root { --primary: #00a1ff; --bg: #0b0f1a; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding-bottom: 50px; }
         header { background: #0f172a; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); }
         h1 { font-family: 'Orbitron'; font-size: 1rem; color: var(--primary); margin: 0; letter-spacing: 2px; }
         .container { width: 92%; max-width: 500px; margin: 20px auto; }
         .search-box { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #16213e; color: white; outline: none; box-sizing: border-box; font-size: 16px; }
-        .stats { font-size: 0.6rem; color: #94a3b8; text-align: center; margin-bottom: 15px; }
         .link-group { background: rgba(30, 41, 59, 0.4); border-radius: 15px; padding: 15px; border: 1px solid #334155; margin-top: 20px; border-top: 4px solid var(--primary); }
-        .vlan-header { font-family: 'Orbitron'; font-size: 0.65rem; color: var(--primary); text-align: center; margin-bottom: 10px; }
         .card { background: #0f172a; border-radius: 10px; padding: 12px; margin-bottom: 8px; border: 1px solid #1e293b; }
-        .card h2 { margin: 0 0 8px 0; font-size: 0.9rem; color: #fff; border-left: 3px solid var(--primary); padding-left: 10px; }
+        .card h2 { margin: 0 0 8px 0; font-size: 0.85rem; color: #fff; border-left: 3px solid var(--primary); padding-left: 10px; line-height: 1.4; }
         .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .label { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
         .value { font-family: monospace; font-size: 0.8rem; color: #e2e8f0; }
@@ -35,15 +33,14 @@
 <header><h1>SYSTEM DATABASE</h1></header>
 
 <div class="container">
-    <div id="loadingInfo" class="stats">Sincronizando base de datos...</div>
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Sitio o ID..." oninput="buscar()">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Nodo (ej: San Martín)..." oninput="buscar()">
     <div id="results"></div>
 </div>
 
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.8rem;">ACTUALIZAR NIVELES</h3>
-        <input type="text" id="formEditor" placeholder="Nombre del Técnico">
+        <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.75rem;">ACTUALIZAR NIVELES</h3>
+        <input type="text" id="formEditor" placeholder="Técnico Responsable">
         <input type="text" id="formTX" placeholder="TX (ej: 1450.000)">
         <input type="text" id="formRX" placeholder="RX (ej: 1450.000)">
         <div style="display:flex; gap:10px; margin-top:10px;">
@@ -64,7 +61,6 @@
         try {
             const resp = await fetch(SHEET_CSV);
             const text = await resp.text();
-            // Parseo para 853 filas respetando comas y comillas
             const rows = text.split(/\r?\n/).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
             db = rows.map((r, i) => ({
                 idx: i,
@@ -77,8 +73,7 @@
                 tx:   r[6]?.replace(/"/g, '').trim() || "",
                 rx:   r[7]?.replace(/"/g, '').trim() || ""
             }));
-            document.getElementById("loadingInfo").innerText = `✅ ${db.length - 1} NODOS CARGADOS`;
-        } catch (e) { document.getElementById("loadingInfo").innerText = "❌ ERROR AL CARGAR"; }
+        } catch (e) { console.error("Error al cargar"); }
     }
 
     function buscar() {
@@ -88,38 +83,38 @@
         if (query.length < 2) return;
 
         db.forEach((item, i) => {
-            if (i > 0 && (item.sitio.toUpperCase().includes(query) || item.id.toUpperCase().includes(query))) {
-                // Lógica de pareja: Fila 2-3 (i=1,2), 4-5 (i=3,4)...
-                // Como el array empieza en 0 y la fila 1 es cabecera:
-                // i=1 (Fila 2) -> Pareja i+1
-                // i=2 (Fila 3) -> Pareja i-1
+            if (i > 0 && item.sitio.toUpperCase().includes(query)) {
                 let iPareja = (i % 2 !== 0) ? i + 1 : i - 1;
                 let pareja = db[iPareja];
+
+                // Construcción de títulos dinámicos Origen > Destino
+                const tituloLocal = `${item.sitio} > ${pareja?.sitio || '???'}`;
+                const tituloRemoto = `${pareja?.sitio || '???'} > ${item.sitio}`;
 
                 const div = document.createElement("div");
                 div.className = "link-group";
                 div.innerHTML = `
-                    <div class="vlan-header">${item.vlan}</div>
-                    ${crearCard(item, "LOCAL")}
-                    ${pareja && pareja.sitio ? `
-                        <button class="btn-reveal" onclick="toggleRemote(this)">MOSTRAR PAREJA: ${pareja.sitio} ↓</button>
-                        <div class="hidden-side">${crearCard(pareja, "REMOTO")}</div>
+                    <div style="text-align:center; font-size:0.6rem; color:var(--primary); margin-bottom:10px; opacity:0.7;">VLAN: ${item.vlan}</div>
+                    ${crearCard(item, "LOCAL", tituloLocal)}
+                    ${pareja ? `
+                        <button class="btn-reveal" onclick="toggleRemote(this)">EXTREMO REMOTO ↓</button>
+                        <div class="hidden-side">${crearCard(pareja, "REMOTO", tituloRemoto)}</div>
                     ` : ''}
-                    <button class="btn-edit" onclick="abrirModal('${item.vlan}', '${item.sitio}')">SINCRONIZAR</button>
+                    <button class="btn-edit" onclick="abrirModal('${item.vlan}', '${item.sitio}')">SINCRONIZAR NIVELES</button>
                 `;
                 box.appendChild(div);
             }
         });
     }
 
-    function crearCard(d, tag) {
+    function crearCard(d, tag, tituloFull) {
         return `
             <div class="card">
-                <span class="label" style="color:var(--primary);">${tag}</span>
-                <h2>${d.sitio}</h2>
-                <div class="row"><span class="label">ID</span><span class="value">${d.id}</span></div>
+                <span class="label" style="color:var(--primary); margin-bottom:5px; display:block;">${tag}</span>
+                <h2>${tituloFull}</h2>
+                <div class="row"><span class="label">ID ENLACE</span><span class="value">${d.id}</span></div>
                 <div class="row"><span class="label">IP PC</span><span class="value">${d.uip}</span></div>
-                <div class="row"><span class="label">GW</span><span class="value">${d.ip}</span></div>
+                <div class="row"><span class="label">P. ENLACE</span><span class="value">${d.ip}</span></div>
                 <div class="row"><span class="label">MASK</span><span class="value">${d.mask}</span></div>
                 <div class="levels">
                     <div class="level-box"><span class="label">TX</span><br><span class="value">${d.tx || '---'}</span></div>
@@ -132,12 +127,12 @@
         const side = btn.nextElementSibling;
         const hidden = side.style.display === "none" || side.style.display === "";
         side.style.display = hidden ? "block" : "none";
-        btn.innerText = hidden ? "OCULTAR PAREJA ↑" : "MOSTRAR PAREJA ↓";
+        btn.innerText = hidden ? "OCULTAR REMOTO ↑" : "EXTREMO REMOTO ↓";
     }
 
     function abrirModal(vlan, sitio) {
         editContext = { vlan, sitio };
-        document.getElementById("modalTitle").innerText = sitio;
+        document.getElementById("modalTitle").innerText = "EDITAR: " + sitio;
         document.getElementById("editModal").style.display = "flex";
     }
 
@@ -148,10 +143,10 @@
         const rx = document.getElementById("formRX").value;
         const ed = document.getElementById("formEditor").value;
 
-        if(!tx || !rx || !ed) { alert("Complete todos los campos"); return; }
+        if(!tx || !rx || !ed) { alert("Campos incompletos"); return; }
         
         const btn = document.getElementById("btnGuardar");
-        btn.innerText = "Guardando..."; btn.disabled = true;
+        btn.innerText = "Sincronizando..."; btn.disabled = true;
 
         await fetch(SCRIPT_URL, {
             method: "POST",
@@ -159,7 +154,7 @@
             body: JSON.stringify({...editContext, tx, rx, editor: ed})
         });
         
-        alert("¡Datos sincronizados!");
+        alert("Enlace sincronizado exitosamente.");
         location.reload();
     }
 
