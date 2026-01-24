@@ -103,6 +103,7 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.4);
             width: 94%; max-width: 500px; padding: 20px; box-sizing: border-box;
             animation: fadeIn 0.5s ease;
+            margin-bottom: 20px;
         }
         @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
@@ -116,7 +117,7 @@
         .label { font-size: 0.65rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 2px; display: block; }
         .val { font-size: 0.95rem; color: #f8fafc; font-weight: 500; }
         .highlight { color: #fbbf24; font-weight: 700; }
-        .key-required { color: #fff; font-weight: 800; background: #be123c; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; }
+        .key-required { color: #fff; font-weight: 800; background: #be123c; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; display: inline-block; margin-top: 4px; }
 
         .go-button { 
             display: block; background: var(--primary); color: white; text-align: center;
@@ -124,14 +125,40 @@
             margin-top: 20px; font-size: 1rem; box-shadow: 0 4px 15px rgba(0, 161, 255, 0.3);
         }
 
-        .btn-access, .btn-home {
-            position: fixed; right: 25px; display: flex; align-items: center; gap: 10px;
-            padding: 8px 20px 8px 8px; color: white; text-decoration: none; border-radius: 50px;
-            font-weight: 700; font-size: 0.9rem; z-index: 9999; border: 2px solid rgba(255, 255, 255, 0.1);
+        /* --- BOTONES BURBUJA CON AUTOHIDE --- */
+        .fab-container {
+            position: fixed;
+            bottom: 25px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
         }
-        .btn-access { bottom: 90px; background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); }
-        .btn-home { bottom: 25px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
-        .icon-circle, .icon-circle-access { background: rgba(255, 255, 255, 0.2); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        .fab-hidden {
+            transform: translateY(150px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .fab {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .fab-gen { background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); }
+        .fab-home { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+
     </style>
 </head>
 <body>
@@ -148,35 +175,43 @@
 
 <div id="result"></div>
 
-<a href="pag1.html" class="btn-access">
-    <div class="icon-circle-access">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3-3.5 3.5z"></path></svg>
-    </div>
-    <span>Generador</span>
-</a>
-
-<a href="index.html" class="btn-home">
-    <div class="icon-circle">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-    </div>
-    <span>Inicio</span>
-</a>
+<div class="fab-container" id="fabContainer">
+    <a href="pag1.html" class="fab fab-gen">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3-3.5 3.5z"></path>
+        </svg>
+    </a>
+    <a href="index.html" class="fab fab-home">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+    </a>
+</div>
 
 <script>
-// --- SEGURIDAD 24 HORAS ---
+// --- SEGURIDAD ---
 (function verificarAcceso() {
     const loginTime = localStorage.getItem('acceso_tecnico_eebb');
-    const ahora = new Date().getTime();
-    const DURACION_24H = 86400000;
-
-    if (!loginTime || (ahora - loginTime > DURACION_24H)) {
-        localStorage.removeItem('acceso_tecnico_eebb');
-        alert("Acceso denegado. Por favor ingrese el PIN.");
+    if (!loginTime || (new Date().getTime() - loginTime > 86400000)) {
         window.location.href = 'index.html';
     }
 })();
 
-// --- LÓGICA DEL CONSULTOR ---
+// --- AUTO-HIDE FAB ---
+let lastScrollTop = 0;
+const fabContainer = document.getElementById('fabContainer');
+window.addEventListener('scroll', () => {
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    if (scrollTop > lastScrollTop && scrollTop > 100) {
+        fabContainer.classList.add('fab-hidden');
+    } else {
+        fabContainer.classList.remove('fab-hidden');
+    }
+    lastScrollTop = scrollTop;
+});
+
+// --- CARGA DE DATOS ---
 let sites = [];
 const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
 
@@ -192,9 +227,6 @@ fetch(SHEETS_CSV_URL)
                 let key = h;
                 let val = values[i] ? values[i].trim().replace(/"/g, '') : '';
                 if(key.includes('Direcci')) key = 'DIRECCION';
-                if(key.includes('Nombre para Propietario')) key = 'NOM_PROPIETARIO';
-                if(key === 'Propietario') key = 'TIPO_PROPIETARIO';
-                if(key === 'Tipo de Transmision') key = 'TRANS';
                 obj[key] = val;
             });
             return obj;
@@ -209,8 +241,7 @@ const sugDiv = document.getElementById('suggestions');
 input.addEventListener('input', (e) => {
     const query = e.target.value.toLowerCase().trim();
     if (query.length < 2) { sugDiv.style.display = 'none'; return; }
-    const matches = sites.filter(s => s.SITEID.toLowerCase().includes(query) || s['NOMBRE DE SITIO'].toLowerCase().includes(query)).slice(0, 15);
-    
+    const matches = sites.filter(s => s.SITEID.toLowerCase().includes(query) || s['NOMBRE DE SITIO'].toLowerCase().includes(query)).slice(0, 10);
     if (matches.length > 0) {
         sugDiv.innerHTML = matches.map(s => `
             <div class="suggestion-item" onclick="seleccionarSitio('${s.SITEID}')">
@@ -226,14 +257,16 @@ function seleccionarSitio(id) {
     const s = sites.find(item => item.SITEID === id);
     sugDiv.style.display = 'none';
     input.value = s['NOMBRE DE SITIO'];
+    
     const llaveBox = (s['Llave Requerida']?.toUpperCase() === 'SI') ? 
         `<div class="info-box"><span class="label">Acceso:</span><span class="val key-required">🔑 REQUIERE LLAVE</span></div>` : '';
+    
     const lat = s.LATITUDE || '0';
     const lon = s.LONGITUDE || '0';
 
     document.getElementById('result').innerHTML = `
         <div class="card">
-            <div class="header-title"><h2>${s.SITEID} - ${s['NOMBRE DE SITIO']}</h2></div>
+            <div class="header-title"><h2>${s.SITEID}</h2><p style="margin:0; font-size:0.8rem">${s['NOMBRE DE SITIO']}</p></div>
             <div class="map-preview">
                 <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=${lat},${lon}&hl=es&z=15&output=embed"></iframe>
             </div>
@@ -241,12 +274,17 @@ function seleccionarSitio(id) {
                 <div class="info-box"><span class="label">NIC/NIS:</span><span class="val highlight">${s['NIC/NIS'] || 'N/A'}</span></div>
                 <div class="info-box"><span class="label">Distribuidora:</span><span class="val">${s.Distribuidora || 'N/A'}</span></div>
                 ${llaveBox}
+                
+                <div class="info-box"><span class="label">Altura:</span><span class="val">${s.Altura || 'N/A'}</span></div>
+                <div class="info-box"><span class="label">Tecnología:</span><span class="val">${s.Tecnologia || 'N/A'}</span></div>
+                
                 <div class="info-box"><span class="label">Municipio:</span><span class="val">${s.Municipio || 'N/A'}</span></div>
                 <div class="info-box" style="border:none;"><span class="label">Dirección:</span><span class="val">${s.DIRECCION || 'N/A'}</span></div>
             </div>
-            <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR GPS</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" class="go-button">🚀 INICIAR GPS</a>
         </div>
     `;
+    window.scrollTo({ top: document.getElementById('result').offsetTop - 20, behavior: 'smooth' });
 }
 
 document.addEventListener('click', (e) => { if (!input.contains(e.target)) sugDiv.style.display = 'none'; });
