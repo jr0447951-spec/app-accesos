@@ -3,197 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Enlaces | Network Ops</title>
+    <title>Network Ops | Gestión de Enlaces</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { 
             --primary: #00a1ff; 
-            --dark-bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.07);
+            --dark-bg: #0b0f1a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --danger: #ef4444;
+            --success: #22c55e;
         }
 
         body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
-            color: white; margin: 0; display: flex; justify-content: center; min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
+            color: white; margin: 0; min-height: 100vh; user-select: none; -webkit-user-select: none;
         }
 
-        .app { width: 94%; max-width: 550px; margin: 40px 16px; display: none; }
-
-        /* BUSCADOR */
-        .search-container { position: relative; margin-bottom: 25px; }
-        #search { 
-            width: 100%; padding: 18px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.2);
-            background: var(--glass); color: white; outline: none; box-sizing: border-box;
+        header { 
+            width: 100%; background: rgba(11, 15, 26, 0.95); backdrop-filter: blur(12px);
+            padding: 15px 0; position: sticky; top: 0; z-index: 2000; border-bottom: 1px solid var(--border); text-align: center;
         }
 
-        /* TARJETAS */
-        .link-group { margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 10px; background: rgba(0,0,0,0.2); }
-        .vlan-tag { text-align: center; font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
-        
+        h1 { font-family: 'Orbitron', sans-serif; margin: 0; font-size: 1.1rem; letter-spacing: 2px; color: var(--primary); }
+
+        .container { width: 92%; max-width: 500px; margin: 20px auto; }
+
+        /* Buscador */
+        .search-box { 
+            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border);
+            background: var(--glass); color: white; outline: none; font-size: 1rem; box-sizing: border-box;
+        }
+
+        /* Tarjeta de Enlace */
         .card { 
-            background: var(--glass); border-radius: 15px; padding: 15px; 
-            margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); position: relative;
+            background: var(--glass); border-radius: 20px; padding: 20px; margin-top: 20px;
+            border: 1px solid var(--border); animation: fadeIn 0.4s ease;
         }
 
-        .card h2 { margin: 0 0 10px; font-size: 0.95rem; color: #fff; border-left: 4px solid var(--primary); padding-left: 10px; }
-        .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
-        .label { color: #94a3b8; }
-        .value { font-weight: 600; font-family: monospace; }
+        .card h2 { font-family: 'Orbitron'; font-size: 1rem; margin: 0 0 15px 0; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 10px; }
+        
+        .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .label { color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
+        .value { font-family: monospace; font-size: 0.9rem; }
 
-        /* BOTÓN REVELAR OTRO EXTREMO */
-        .btn-reveal {
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.3);
-            color: #94a3b8; padding: 10px; border-radius: 10px; cursor: pointer;
-            font-size: 0.8rem; transition: 0.3s; margin-top: 5px;
+        .levels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .level-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.03); }
+
+        /* Botones */
+        .btn-edit { 
+            width: 100%; margin-top: 20px; padding: 12px; border-radius: 10px; border: none;
+            background: var(--primary); color: white; font-family: 'Orbitron'; font-weight: bold; cursor: pointer;
         }
-        .btn-reveal:hover { background: rgba(0, 161, 255, 0.1); color: var(--primary); }
 
-        .hidden-side { display: none; margin-top: 10px; animation: slideDown 0.3s ease-out; }
+        /* Modal */
+        .modal { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; 
+            justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(5px);
+        }
+        .modal-content { 
+            width: 85%; max-width: 350px; background: #16213e; padding: 25px; border-radius: 20px; 
+            border: 1px solid var(--primary); text-align: center;
+        }
+        .input-form { 
+            width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--border);
+            background: #0b0f1a; color: white; text-align: center; font-family: monospace; box-sizing: border-box;
+        }
 
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-home {
+            position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px;
+            border-radius: 50%; background: var(--primary); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(0,161,255,0.4);
+        }
 
-        .copy-btn { background: none; border: 1px solid var(--primary); color: var(--primary); font-size: 0.6rem; padding: 2px 5px; border-radius: 4px; cursor: pointer; margin-left: 8px; }
-
-        /* MODAL Y FAB (Igual al anterior) */
-        #pinModal { position: fixed; inset: 0; background: #0f172a; display: flex; justify-content: center; align-items: center; z-index: 10000; }
-        .btn-primary { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div id="pinModal">
-    <div style="text-align:center; width: 300px;">
-        <h2>SEGURIDAD</h2>
-        <input id="pinInput" type="password" maxlength="4" style="width:100%; padding:15px; text-align:center; font-size:1.5rem; margin-bottom:20px; border-radius:10px; border:none;" placeholder="****" />
-        <button onclick="checkPin()" class="btn-primary">ENTRAR</button>
+<header>
+    <h1>SYSTEM DATABASE</h1>
+</header>
+
+<div class="container">
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar por Sitio o Enlace..." oninput="filtrar()">
+    <div id="results"></div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3 style="font-family:'Orbitron'; font-size: 0.9rem; margin-bottom: 20px;">ACTUALIZAR NIVELES</h3>
+        <input type="text" id="formEditor" class="input-form" placeholder="Nombre del Editor">
+        <input type="text" id="formTX" class="input-form" placeholder="Nivel TX (0000.000)">
+        <input type="text" id="formRX" class="input-form" placeholder="Nivel RX (0000.000)">
+        
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button onclick="cerrarModal()" style="flex:1; padding:10px; border-radius:8px; background:#475569; border:none; color:white;">CANCELAR</button>
+            <button id="btnGuardar" onclick="enviarDatos()" style="flex:1; padding:10px; border-radius:8px; background:var(--primary); border:none; color:white; font-weight:bold;">GUARDAR</button>
+        </div>
     </div>
 </div>
 
-<div class="app" id="app">
-    <div class="search-container">
-        <input id="search" placeholder="🔍 Buscar sitio (ej: JAYAQUE)..." autocomplete="off" />
-        <div id="suggestions" style="position:absolute; width:100%; background:#1e293b; z-index:100; border-radius:10px; display:none;"></div>
-    </div>
-    <div id="result"></div>
-</div>
+<button class="btn-home" onclick="location.href='index.html'">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+</button>
 
 <script>
-    const CORRECT_PIN = "0614";
-    let parsedLinks = [];
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzmh9ubOuVEnauFElu9sIVUDkD1KJBW1iy7dalVuq_jr_u5cIoAU-HS0y_gUb3sC3gV/exec";
+    const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSNdMQrxMJuKCRfD4p0T-1wr20af6qtWSzEFMDJuD6rOiNVw-dyudyinLI5OHWbCK5Ml0tNRIgktht3/pub?output=csv";
 
-    function checkPin() {
-        if(document.getElementById("pinInput").value === CORRECT_PIN) {
-            document.getElementById("pinModal").style.display = "none";
-            document.getElementById("app").style.display = "block";
-            loadData();
+    let db = [];
+    let currentEdit = {};
+
+    // Cargar datos
+    async function loadDB() {
+        const resp = await fetch(SHEET_CSV);
+        const text = await resp.text();
+        const rows = text.split("\n").map(r => r.split(","));
+        const headers = rows[0].map(h => h.trim().replace(/"/g, ''));
+        
+        db = rows.slice(1).map(row => {
+            let obj = {};
+            headers.forEach((h, i) => obj[h] = row[i]?.trim().replace(/"/g, '') || "");
+            return obj;
+        });
+    }
+
+    function filtrar() {
+        const val = document.getElementById("searchInput").value.toUpperCase();
+        const container = document.getElementById("results");
+        container.innerHTML = "";
+        
+        if(val.length < 2) return;
+
+        const matches = db.filter(d => d.Sitio.toUpperCase().includes(val) || d.Enlace.toUpperCase().includes(val)).slice(0, 5);
+
+        matches.forEach(d => {
+            container.innerHTML += `
+                <div class="card">
+                    <h2>${d.Sitio}</h2>
+                    <div class="row"><span class="label">Enlace ID</span><span class="value">${d.Enlace}</span></div>
+                    <div class="row"><span class="label">Última IP</span><span class="value">${d['Última IP']}</span></div>
+                    <div class="row"><span class="label">Máscara</span><span class="value">${d.Mask}</span></div>
+                    <div class="levels-grid">
+                        <div class="level-box"><span class="label">TX</span><br><span class="value">${d.TX || '---'}</span></div>
+                        <div class="level-box"><span class="label">RX</span><br><span class="value">${d.RX || '---'}</span></div>
+                    </div>
+                    <button class="btn-edit" onclick="abrirModal('${d.Enlace}', '${d.Sitio}')">EDITAR DATOS</button>
+                </div>
+            `;
+        });
+    }
+
+    function abrirModal(vlan, sitio) {
+        currentEdit = { vlan, sitio };
+        document.getElementById("editModal").style.display = "flex";
+    }
+
+    function cerrarModal() {
+        document.getElementById("editModal").style.display = "none";
+    }
+
+    async function enviarDatos() {
+        const tx = document.getElementById("formTX").value;
+        const rx = document.getElementById("formRX").value;
+        const editor = document.getElementById("formEditor").value;
+        const regex = /^\d{4}\.\d{3}$/;
+
+        if(!editor) { alert("Debe ingresar nombre de editor"); return; }
+        if(!regex.test(tx) || !regex.test(rx)) {
+            alert("Los datos ingresados no son correctos");
+            return;
+        }
+
+        const btn = document.getElementById("btnGuardar");
+        btn.innerText = "PROCESANDO...";
+        btn.disabled = true;
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ ...currentEdit, tx, rx, editor })
+            });
+            alert("Solicitud procesada. Si el campo ya tenía datos, se notificó al administrador.");
+            location.reload();
+        } catch (e) {
+            alert("Error de conexión");
+            btn.innerText = "GUARDAR";
+            btn.disabled = false;
         }
     }
 
-    function loadData() {
-        fetch("IPdata.csv").then(r => r.text()).then(text => {
-            const lines = text.trim().split("\n");
-            const headers = lines.shift().split(";").map(h => h.trim());
-            let currentLink = "", rawData = [];
-
-            lines.forEach(l => {
-                const v = l.split(";").map(x => x.trim());
-                if(v.length < headers.length) return;
-                let obj = {};
-                headers.forEach((h, i) => obj[h] = v[i] || "");
-                if(obj["Enlace"]) currentLink = obj["Enlace"];
-                obj._link = currentLink;
-                rawData.push(obj);
-            });
-
-            const grouped = {};
-            rawData.forEach(d => { if(!grouped[d._link]) grouped[d._link] = []; grouped[d._link].push(d); });
-            
-            parsedLinks = Object.entries(grouped).map(([link, items]) => {
-                if(items.length < 2) return null;
-                return {
-                    vlan: link,
-                    extremos: [
-                        { sitio: items[0]["Sitio"], ip: items[0]["ultima IP"], mask: items[0]["Mask"], gw: items[0]["IP"], destino: items[1]["Sitio"] },
-                        { sitio: items[1]["Sitio"], ip: items[1]["ultima IP"], mask: items[1]["Mask"], gw: items[1]["IP"], destino: items[0]["Sitio"] }
-                    ]
-                };
-            }).filter(Boolean);
-        });
-    }
-
-    const searchInput = document.getElementById("search");
-    searchInput.oninput = () => {
-        const val = searchInput.value.toUpperCase();
-        const sug = document.getElementById("suggestions");
-        sug.innerHTML = "";
-        if(!val) { sug.style.display = "none"; return; }
-
-        const filtered = [...new Set(parsedLinks.flatMap(l => l.extremos.map(e => e.sitio)))]
-                        .filter(s => s.toUpperCase().includes(val)).slice(0,6);
-
-        filtered.forEach(s => {
-            const d = document.createElement("div");
-            d.style.padding = "12px"; d.style.cursor = "pointer"; d.textContent = s;
-            d.onclick = () => { searchInput.value = s; sug.style.display = "none"; renderResult(s); };
-            sug.appendChild(d);
-        });
-        sug.style.display = filtered.length ? "block" : "none";
-    };
-
-    function renderResult(selectedSite) {
-        const container = document.getElementById("result");
-        container.innerHTML = "";
-        
-        const matches = parsedLinks.filter(l => l.extremos.some(e => e.sitio.toUpperCase() === selectedSite.toUpperCase()));
-
-        matches.forEach(m => {
-            const group = document.createElement("div");
-            group.className = "link-group";
-            
-            // Encontrar cuál extremo es el que se buscó
-            const indexPrincipal = m.extremos.findIndex(e => e.sitio.toUpperCase() === selectedSite.toUpperCase());
-            const principal = m.extremos[indexPrincipal];
-            const secundario = m.extremos[indexPrincipal === 0 ? 1 : 0];
-
-            group.innerHTML = `
-                <div class="vlan-tag">VLAN / ENLACE: ${m.vlan}</div>
-                ${makeCardHTML(principal, "SITIO LOCAL")}
-                <button class="btn-reveal" onclick="toggleNext(this)"> Mostrar extremo: ${secundario.sitio} ↓</button>
-                <div class="hidden-side">
-                    ${makeCardHTML(secundario, "EXTREMO REMOTO")}
-                </div>
-            `;
-            container.appendChild(group);
-        });
-    }
-
-    function makeCardHTML(d, label) {
-        return `
-            <div class="card">
-                <span style="font-size:0.6rem; color:var(--primary); font-weight:bold;">${label}</span>
-                <h2>${d.sitio} ➔ ${d.destino}</h2>
-                <div class="row">
-                    <span class="label">IP PC</span>
-                    <span class="value">${d.ip} <button class="copy-btn" onclick="copyText('${d.ip}')">COPIAR</button></span>
-                </div>
-                <div class="row"><span class="label">MÁSCARA</span><span class="value">${d.mask}</span></div>
-                <div class="row" style="border:none"><span class="label">GATEWAY</span><span class="value">${d.gw}</span></div>
-            </div>
-        `;
-    }
-
-    function toggleNext(btn) {
-        const target = btn.nextElementSibling;
-        const isHidden = window.getComputedStyle(target).display === "none";
-        target.style.display = isHidden ? "block" : "none";
-        btn.innerText = isHidden ? "Ocultar extremo remoto ↑" : `Mostrar extremo: ${btn.innerText.split(': ')[1]}`;
-    }
-
-    function copyText(t) {
-        navigator.clipboard.writeText(t);
-        event.target.innerText = "¡OK!";
-        setTimeout(() => event.target.innerText = "COPIAR", 1000);
-    }
+    loadDB();
 </script>
+
 </body>
 </html>
