@@ -3,33 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Net-Ops DB | Sincronización</title>
+    <title>Net-Ops Database | Sincronización</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #00a1ff; --bg: #0b0f1a; --card: #1e293b; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding-bottom: 50px; }
-        header { background: #0f172a; padding: 20px; text-align: center; border-bottom: 2px solid var(--primary); margin-bottom: 20px; }
-        h1 { font-family: 'Orbitron'; font-size: 1.1rem; color: var(--primary); margin: 0; letter-spacing: 2px; }
-        .container { width: 92%; max-width: 500px; margin: 0 auto; }
-        .search-box { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #334155; background: #16213e; color: white; font-size: 1rem; box-sizing: border-box; outline: none; }
-        .search-box:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0,161,255,0.3); }
-        .link-group { background: rgba(30, 41, 59, 0.5); border-radius: 15px; padding: 15px; border: 1px solid #334155; margin-top: 20px; border-top: 4px solid var(--primary); }
-        .vlan-header { font-family: 'Orbitron'; font-size: 0.7rem; color: var(--primary); text-align: center; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px; }
-        .card { background: #0f172a; border-radius: 10px; padding: 15px; margin-bottom: 10px; border: 1px solid #1e293b; }
-        .card h2 { margin: 0 0 10px 0; font-size: 1rem; color: #fff; border-left: 3px solid var(--primary); padding-left: 10px; }
-        .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
-        .value { font-family: monospace; font-size: 0.85rem; color: #e2e8f0; }
-        .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .level-box { background: #1e293b; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #334155; }
-        .btn-reveal { width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--primary); background: transparent; color: var(--primary); cursor: pointer; margin: 10px 0; font-size: 0.75rem; }
-        .btn-edit { width: 100%; padding: 15px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
-        .btn-edit:hover { background: #0081cc; transform: scale(1.02); }
-        .hidden-side { display: none; margin-top: 10px; border-top: 1px solid #334155; padding-top: 15px; }
-        /* Modal */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        header { background: #0f172a; padding: 15px; text-align: center; border-bottom: 2px solid var(--primary); }
+        h1 { font-family: 'Orbitron'; font-size: 1rem; color: var(--primary); margin: 0; letter-spacing: 2px; }
+        .container { width: 92%; max-width: 500px; margin: 20px auto; }
+        .search-box { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #16213e; color: white; outline: none; box-sizing: border-box; font-size: 16px; }
+        .stats { font-size: 0.6rem; color: #94a3b8; text-align: center; margin-bottom: 15px; }
+        .link-group { background: rgba(30, 41, 59, 0.4); border-radius: 15px; padding: 15px; border: 1px solid #334155; margin-top: 20px; border-top: 4px solid var(--primary); }
+        .vlan-header { font-family: 'Orbitron'; font-size: 0.65rem; color: var(--primary); text-align: center; margin-bottom: 10px; }
+        .card { background: #0f172a; border-radius: 10px; padding: 12px; margin-bottom: 8px; border: 1px solid #1e293b; }
+        .card h2 { margin: 0 0 8px 0; font-size: 0.9rem; color: #fff; border-left: 3px solid var(--primary); padding-left: 10px; }
+        .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .label { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
+        .value { font-family: monospace; font-size: 0.8rem; color: #e2e8f0; }
+        .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .level-box { background: #1e293b; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #334155; }
+        .btn-reveal { width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--primary); background: transparent; color: var(--primary); cursor: pointer; margin: 8px 0; font-size: 0.7rem; }
+        .btn-edit { width: 100%; padding: 14px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; }
+        .hidden-side { display: none; margin-top: 10px; border-top: 1px solid #334155; padding-top: 12px; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: #1e293b; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; border: 1px solid var(--primary); }
-        .modal-content input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; text-align: center; box-sizing: border-box; }
+        .modal-content input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; text-align: center; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -37,19 +35,20 @@
 <header><h1>SYSTEM DATABASE</h1></header>
 
 <div class="container">
-    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Jayaque, Lourdes..." oninput="ejecutarBusqueda()">
+    <div id="loadingInfo" class="stats">Sincronizando base de datos...</div>
+    <input type="text" id="searchInput" class="search-box" placeholder="🔍 Buscar Sitio o ID..." oninput="buscar()">
     <div id="results"></div>
 </div>
 
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.9rem;">ACTUALIZAR NIVELES</h3>
-        <input type="text" id="formEditor" placeholder="Tu Nombre">
-        <input type="text" id="formTX" placeholder="TX (ej: 1450.200)">
-        <input type="text" id="formRX" placeholder="RX (ej: 1450.200)">
+        <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.8rem;">ACTUALIZAR NIVELES</h3>
+        <input type="text" id="formEditor" placeholder="Nombre del Técnico">
+        <input type="text" id="formTX" placeholder="TX (ej: 1450.000)">
+        <input type="text" id="formRX" placeholder="RX (ej: 1450.000)">
         <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="cerrarModal()" style="flex:1; background:#475569; border:none; color:white; padding:12px; border-radius:8px; cursor:pointer;">Cerrar</button>
-            <button id="btnGuardar" onclick="guardarCambios()" style="flex:1; background:var(--primary); border:none; color:white; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">Guardar</button>
+            <button onclick="cerrarModal()" style="flex:1; background:#475569; border:none; color:white; padding:12px; border-radius:8px;">Cerrar</button>
+            <button id="btnGuardar" onclick="guardarCambios()" style="flex:1; background:var(--primary); border:none; color:white; padding:12px; border-radius:8px; font-weight:bold;">Guardar</button>
         </div>
     </div>
 </div>
@@ -58,74 +57,70 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbysRYgKxHolu9359Feu_eZMjOxeIMaGb4C-on55SJZfQ784-i32Vh_AZXwN1CBSVFc9/exec";
     const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSNdMQrxMJuKCRfD4p0T-1wr20af6qtWSzEFMDJuD6rOiNVw-dyudyinLI5OHWbCK5Ml0tNRIgktht3/pub?output=csv";
 
-    let database = [];
+    let db = [];
     let editContext = {};
 
-    async function cargarDatos() {
+    async function cargar() {
         try {
             const resp = await fetch(SHEET_CSV);
             const text = await resp.text();
-            const rows = text.split("\n").map(r => r.split(","));
-            
-            // Procesar ignorando filas vacías y limpiando datos
-            database = rows.slice(1)
-                .map(r => ({
-                    enlace: r[0]?.trim() || "",
-                    id:     r[1]?.trim() || "",
-                    sitio:  r[2]?.trim() || "",
-                    uip:    r[3]?.trim() || "",
-                    ip:     r[4]?.trim() || "",
-                    mask:   r[5]?.trim() || "",
-                    tx:     r[6]?.trim() || "",
-                    rx:     r[7]?.trim() || ""
-                }))
-                .filter(item => item.sitio !== ""); // Solo filas con nombre de sitio
-            
-            console.log("DB Cargada: ", database);
-        } catch (e) { console.error("Error cargando DB"); }
+            // Parseo para 853 filas respetando comas y comillas
+            const rows = text.split(/\r?\n/).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+            db = rows.map((r, i) => ({
+                idx: i,
+                vlan: r[0]?.replace(/"/g, '').trim() || "",
+                id:   r[1]?.replace(/"/g, '').trim() || "",
+                sitio:r[2]?.replace(/"/g, '').trim() || "",
+                uip:  r[3]?.replace(/"/g, '').trim() || "",
+                ip:   r[4]?.replace(/"/g, '').trim() || "",
+                mask: r[5]?.replace(/"/g, '').trim() || "",
+                tx:   r[6]?.replace(/"/g, '').trim() || "",
+                rx:   r[7]?.replace(/"/g, '').trim() || ""
+            }));
+            document.getElementById("loadingInfo").innerText = `✅ ${db.length - 1} NODOS CARGADOS`;
+        } catch (e) { document.getElementById("loadingInfo").innerText = "❌ ERROR AL CARGAR"; }
     }
 
-    function ejecutarBusqueda() {
+    function buscar() {
         const query = document.getElementById("searchInput").value.toUpperCase();
         const box = document.getElementById("results");
         box.innerHTML = "";
-        
         if (query.length < 2) return;
 
-        // Filtrar enlaces donde participe el sitio buscado
-        const enlacesValidos = [...new Set(database
-            .filter(d => d.sitio.toUpperCase().includes(query))
-            .map(d => d.enlace))];
+        db.forEach((item, i) => {
+            if (i > 0 && (item.sitio.toUpperCase().includes(query) || item.id.toUpperCase().includes(query))) {
+                // Lógica de pareja: Fila 2-3 (i=1,2), 4-5 (i=3,4)...
+                // Como el array empieza en 0 y la fila 1 es cabecera:
+                // i=1 (Fila 2) -> Pareja i+1
+                // i=2 (Fila 3) -> Pareja i-1
+                let iPareja = (i % 2 !== 0) ? i + 1 : i - 1;
+                let pareja = db[iPareja];
 
-        enlacesValidos.forEach(vlan => {
-            const par = database.filter(d => d.enlace === vlan);
-            const local = par.find(p => p.sitio.toUpperCase().includes(query)) || par[0];
-            const remoto = par.find(p => p.sitio !== local.sitio);
-
-            const div = document.createElement("div");
-            div.className = "link-group";
-            div.innerHTML = `
-                <div class="vlan-header">${vlan}</div>
-                ${crearCard(local, "VISTA LOCAL")}
-                ${remoto ? `
-                    <button class="btn-reveal" onclick="toggleRemote(this)">MOSTRAR REMOTO: ${remoto.sitio} ↓</button>
-                    <div class="hidden-side">${crearCard(remoto, "VISTA REMOTA")}</div>
-                ` : ''}
-                <button class="btn-edit" onclick="abrirModal('${vlan}', '${local.sitio}')">EDITAR NIVELES</button>
-            `;
-            box.appendChild(div);
+                const div = document.createElement("div");
+                div.className = "link-group";
+                div.innerHTML = `
+                    <div class="vlan-header">${item.vlan}</div>
+                    ${crearCard(item, "LOCAL")}
+                    ${pareja && pareja.sitio ? `
+                        <button class="btn-reveal" onclick="toggleRemote(this)">MOSTRAR PAREJA: ${pareja.sitio} ↓</button>
+                        <div class="hidden-side">${crearCard(pareja, "REMOTO")}</div>
+                    ` : ''}
+                    <button class="btn-edit" onclick="abrirModal('${item.vlan}', '${item.sitio}')">SINCRONIZAR</button>
+                `;
+                box.appendChild(div);
+            }
         });
     }
 
     function crearCard(d, tag) {
         return `
             <div class="card">
-                <span class="label" style="color:var(--primary); margin-bottom:5px; display:block;">${tag}</span>
+                <span class="label" style="color:var(--primary);">${tag}</span>
                 <h2>${d.sitio}</h2>
-                <div class="row"><span class="label">ID Enlace</span><span class="value">${d.id}</span></div>
+                <div class="row"><span class="label">ID</span><span class="value">${d.id}</span></div>
                 <div class="row"><span class="label">IP PC</span><span class="value">${d.uip}</span></div>
-                <div class="row"><span class="label">P. Enlace</span><span class="value">${d.ip}</span></div>
-                <div class="row"><span class="label">Mascara</span><span class="value">${d.mask}</span></div>
+                <div class="row"><span class="label">GW</span><span class="value">${d.ip}</span></div>
+                <div class="row"><span class="label">MASK</span><span class="value">${d.mask}</span></div>
                 <div class="levels">
                     <div class="level-box"><span class="label">TX</span><br><span class="value">${d.tx || '---'}</span></div>
                     <div class="level-box"><span class="label">RX</span><br><span class="value">${d.rx || '---'}</span></div>
@@ -137,12 +132,12 @@
         const side = btn.nextElementSibling;
         const hidden = side.style.display === "none" || side.style.display === "";
         side.style.display = hidden ? "block" : "none";
-        btn.innerText = hidden ? "OCULTAR REMOTO ↑" : "MOSTRAR REMOTO ↓";
+        btn.innerText = hidden ? "OCULTAR PAREJA ↑" : "MOSTRAR PAREJA ↓";
     }
 
     function abrirModal(vlan, sitio) {
         editContext = { vlan, sitio };
-        document.getElementById("modalTitle").innerText = "ACTUALIZAR: " + sitio;
+        document.getElementById("modalTitle").innerText = sitio;
         document.getElementById("editModal").style.display = "flex";
     }
 
@@ -154,25 +149,21 @@
         const ed = document.getElementById("formEditor").value;
 
         if(!tx || !rx || !ed) { alert("Complete todos los campos"); return; }
-
+        
         const btn = document.getElementById("btnGuardar");
-        btn.innerText = "Sincronizando..."; btn.disabled = true;
+        btn.innerText = "Guardando..."; btn.disabled = true;
 
-        try {
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({...editContext, tx, rx, editor: ed})
-            });
-            alert("¡Éxito! Niveles sincronizados en ambos extremos.");
-            location.reload();
-        } catch (e) {
-            alert("Error al conectar");
-            btn.disabled = false; btn.innerText = "Guardar";
-        }
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({...editContext, tx, rx, editor: ed})
+        });
+        
+        alert("¡Datos sincronizados!");
+        location.reload();
     }
 
-    cargarDatos();
+    cargar();
 </script>
 </body>
 </html>
