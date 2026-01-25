@@ -87,8 +87,16 @@
             overflow-y: auto;
             border: 1px solid var(--primary);
             margin-top: 5px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        #listaSitios div { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 13px; }
+        #listaSitios div { 
+            padding: 12px; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+            cursor: pointer; 
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        #listaSitios div:hover { background: rgba(0, 161, 255, 0.15); }
 
         #tecnicosAdicionales { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; }
         .chip { padding: 8px 14px; background: rgba(255,255,255,0.08); border-radius: 50px; font-size: 11px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
@@ -104,6 +112,8 @@
         .btn-nav { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: white; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); }
         .nav-report { background: linear-gradient(135deg, #FF9800, #ed6c02); }
         .nav-home { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+
+        textarea { height: 80px; resize: none; font-family: monospace; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -136,7 +146,7 @@
 
     <label>👥 Técnicos de Apoyo</label>
     <div id="tecnicosAdicionales"></div>
-    <div id="contadorSeleccionados">Seleccionados: 0</div>
+    <div id="contadorSeleccionados" style="font-size: 0.65rem; margin-top: 5px; color: #94a3b8;">Seleccionados: 0</div>
 
     <hr style="opacity: 0.1; margin: 20px 0;">
 
@@ -246,25 +256,52 @@ function actualizarContador(){
     document.getElementById('contadorSeleccionados').textContent=`Seleccionados: ${count}`;
 }
 
+// --- MODIFICACIÓN DEL BUSCADOR CON RESALTADO ---
 const inputSitio=document.getElementById('sitio');
 const lista=document.getElementById('listaSitios');
+
 inputSitio.oninput=()=>{
-    const val=inputSitio.value.toLowerCase();
+    const textoBusqueda = inputSitio.value.toLowerCase().trim();
+    const palabrasBusqueda = textoBusqueda.split(/\s+/);
     lista.innerHTML='';
-    if(!val) return;
-    sitios.filter(s=>s['Nombre de Sitio']?.toLowerCase().includes(val) || s.SiteID?.toLowerCase().includes(val))
-        .slice(0,6).forEach(s=>{
-            const div=document.createElement('div');
-            div.textContent=`${s.SiteID} - ${s['Nombre de Sitio']}`;
-            div.onclick=()=>{
-                inputSitio.value = s['Nombre de Sitio'];
-                inputSitio.dataset.siteid = s.SiteID;
-                inputSitio.dataset.torrero = s.Torrero;
-                inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
-                lista.innerHTML=''; actualizarPreview();
-            };
-            lista.appendChild(div);
+    
+    if (palabrasBusqueda[0] === "") return;
+
+    const resultados = sitios.filter(s => {
+        const idSitio = (s.SiteID || "").toLowerCase();
+        const nombreSitio = (s['Nombre de Sitio'] || "").toLowerCase();
+        
+        return palabrasBusqueda.every(palabra => 
+            idSitio.includes(palabra) || nombreSitio.includes(palabra)
+        );
+    });
+
+    resultados.slice(0, 10).forEach(s => {
+        const div = document.createElement('div');
+        div.style.borderLeft = "4px solid var(--primary)";
+        
+        let textoOriginal = `${s.SiteID} - ${s['Nombre de Sitio']}`;
+        let textoResaltado = textoOriginal;
+
+        palabrasBusqueda.forEach(palabra => {
+            if (palabra.length >= 2) { 
+                const regex = new RegExp(`(${palabra})`, 'gi');
+                textoResaltado = textoResaltado.replace(regex, '<span style="color:var(--primary); font-weight:bold;">$1</span>');
+            }
         });
+
+        div.innerHTML = textoResaltado;
+        
+        div.onclick = () => {
+            inputSitio.value = s['Nombre de Sitio'];
+            inputSitio.dataset.siteid = s.SiteID;
+            inputSitio.dataset.torrero = s.Torrero;
+            inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
+            lista.innerHTML = ''; 
+            actualizarPreview();
+        };
+        lista.appendChild(div);
+    });
 };
 
 document.addEventListener('click', e => { if(!inputSitio.contains(e.target)) lista.innerHTML=''; });
