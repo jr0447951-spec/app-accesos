@@ -87,16 +87,10 @@
             overflow-y: auto;
             border: 1px solid var(--primary);
             margin-top: 5px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: none;
         }
-        #listaSitios div { 
-            padding: 12px; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            cursor: pointer; 
-            font-size: 13px;
-            transition: background 0.2s;
-        }
-        #listaSitios div:hover { background: rgba(0, 161, 255, 0.15); }
+        #listaSitios div { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 13px; }
+        #listaSitios div:hover { background: rgba(0, 161, 255, 0.2); }
 
         #tecnicosAdicionales { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; }
         .chip { padding: 8px 14px; background: rgba(255,255,255,0.08); border-radius: 50px; font-size: 11px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
@@ -113,7 +107,7 @@
         .nav-report { background: linear-gradient(135deg, #FF9800, #ed6c02); }
         .nav-home { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
 
-        textarea { height: 80px; resize: none; font-family: monospace; font-size: 11px; }
+        textarea { height: 100px; resize: none; margin-top: 10px; font-family: monospace; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -146,7 +140,7 @@
 
     <label>👥 Técnicos de Apoyo</label>
     <div id="tecnicosAdicionales"></div>
-    <div id="contadorSeleccionados" style="font-size: 0.65rem; margin-top: 5px; color: #94a3b8;">Seleccionados: 0</div>
+    <div id="contadorSeleccionados" style="font-size: 10px; margin-top: 5px; color: #94a3b8;">Seleccionados: 0</div>
 
     <hr style="opacity: 0.1; margin: 20px 0;">
 
@@ -165,7 +159,7 @@
 </div>
 
 <script>
-// --- 1. SEGURIDAD 24 HORAS (BLOQUE PRIORITARIO) ---
+// --- 1. SEGURIDAD 24 HORAS ---
 (function verificarAcceso() {
     const loginTime = localStorage.getItem('acceso_tecnico_eebb');
     const ahora = new Date().getTime();
@@ -178,7 +172,7 @@
     }
 })();
 
-// --- 2. LÓGICA DE LA APLICACIÓN ---
+// --- 2. VARIABLES Y CARGA DE DATOS ---
 let sitios=[], actividades=[], tecnicos=[], vehiculos=[];
 
 async function cargarCSV(url){
@@ -203,6 +197,7 @@ async function inicializar(){
         cargarCSV('vehiculos.csv')
     ]);
 
+    // Llenar Actividades
     const selAct = document.getElementById('actividad');
     actividades.forEach(a=>{
         if(a['ACTIVIDAD']) {
@@ -212,6 +207,7 @@ async function inicializar(){
         }
     });
 
+    // Llenar Vehículos
     const selVeh = document.getElementById('vehiculo');
     vehiculos.forEach(v=>{
         const opt = document.createElement('option');
@@ -219,6 +215,7 @@ async function inicializar(){
         selVeh.appendChild(opt);
     });
 
+    // Llenar Técnicos
     const selTecPrin = document.getElementById('tecnicoPrincipal');
     const divTecAdd = document.getElementById('tecnicosAdicionales');
 
@@ -251,60 +248,89 @@ async function inicializar(){
     actualizarPreview();
 }
 
+// --- 3. LÓGICA DEL BUSCADOR INTELIGENTE ---
+const inputSitio=document.getElementById('sitio');
+const lista=document.getElementById('listaSitios');
+
+inputSitio.oninput = () => {
+    const normalizar = (texto) => 
+        texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+    const textoOriginalBusqueda = inputSitio.value.trim();
+    const textoBusquedaNorm = normalizar(textoOriginalBusqueda);
+    const palabrasBusqueda = textoBusquedaNorm.split(/\s+/).filter(p => p.length > 0);
+    
+    lista.innerHTML = '';
+    if (palabrasBusqueda.length === 0) {
+        lista.style.display = 'none';
+        return;
+    }
+
+    const resultados = sitios
+        .map(s => {
+            const idNorm = normalizar(s.SiteID || "");
+            const nombreNorm = normalizar(s['Nombre de Sitio'] || "");
+            let score = 0;
+
+            const cumple = palabrasBusqueda.every(palabra => {
+                const enId = idNorm.includes(palabra);
+                const enNombre = nombreNorm.includes(palabra);
+                
+                if (enId || enNombre) {
+                    if (idNorm === textoBusquedaNorm || nombreNorm === textoBusquedaNorm) score += 100;
+                    if (idNorm.startsWith(palabra) || nombreNorm.startsWith(palabra)) score += 50;
+                    score += 10;
+                    return true;
+                }
+                return false;
+            });
+
+            return cumple ? { data: s, score: score } : null;
+        })
+        .filter(item => item !== null)
+        .sort((a, b) => b.score - a.score);
+
+    if (resultados.length > 0) {
+        lista.style.display = 'block';
+        resultados.slice(0, 10).forEach(item => {
+            const s = item.data;
+            const div = document.createElement('div');
+            div.style.borderLeft = "4px solid var(--primary)";
+            
+            const textoOriginal = `${s.SiteID} - ${s['Nombre de Sitio']}`;
+            let textoHTML = textoOriginal;
+
+            palabrasBusqueda.forEach(palabra => {
+                if (palabra.length >= 2) {
+                    const regex = new RegExp(`(${palabra})`, 'gi');
+                    textoHTML = textoHTML.replace(regex, '<span style="color:var(--primary); font-weight:bold;">$1</span>');
+                }
+            });
+
+            div.innerHTML = textoHTML;
+            div.onclick = () => {
+                inputSitio.value = s['Nombre de Sitio'];
+                inputSitio.dataset.siteid = s.SiteID;
+                inputSitio.dataset.torrero = s.Torrero;
+                inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
+                lista.innerHTML = ''; 
+                lista.style.display = 'none';
+                actualizarPreview();
+            };
+            lista.appendChild(div);
+        });
+    } else {
+        lista.style.display = 'none';
+    }
+};
+
+document.addEventListener('click', e => { if(!inputSitio.contains(e.target)) { lista.innerHTML=''; lista.style.display='none'; } });
+
+// --- 4. GENERACIÓN DE MENSAJE Y ACCIONES ---
 function actualizarContador(){
     const count=document.querySelectorAll('#tecnicosAdicionales .chip.selected').length;
     document.getElementById('contadorSeleccionados').textContent=`Seleccionados: ${count}`;
 }
-
-// --- MODIFICACIÓN DEL BUSCADOR CON RESALTADO ---
-const inputSitio=document.getElementById('sitio');
-const lista=document.getElementById('listaSitios');
-
-inputSitio.oninput=()=>{
-    const textoBusqueda = inputSitio.value.toLowerCase().trim();
-    const palabrasBusqueda = textoBusqueda.split(/\s+/);
-    lista.innerHTML='';
-    
-    if (palabrasBusqueda[0] === "") return;
-
-    const resultados = sitios.filter(s => {
-        const idSitio = (s.SiteID || "").toLowerCase();
-        const nombreSitio = (s['Nombre de Sitio'] || "").toLowerCase();
-        
-        return palabrasBusqueda.every(palabra => 
-            idSitio.includes(palabra) || nombreSitio.includes(palabra)
-        );
-    });
-
-    resultados.slice(0, 10).forEach(s => {
-        const div = document.createElement('div');
-        div.style.borderLeft = "4px solid var(--primary)";
-        
-        let textoOriginal = `${s.SiteID} - ${s['Nombre de Sitio']}`;
-        let textoResaltado = textoOriginal;
-
-        palabrasBusqueda.forEach(palabra => {
-            if (palabra.length >= 2) { 
-                const regex = new RegExp(`(${palabra})`, 'gi');
-                textoResaltado = textoResaltado.replace(regex, '<span style="color:var(--primary); font-weight:bold;">$1</span>');
-            }
-        });
-
-        div.innerHTML = textoResaltado;
-        
-        div.onclick = () => {
-            inputSitio.value = s['Nombre de Sitio'];
-            inputSitio.dataset.siteid = s.SiteID;
-            inputSitio.dataset.torrero = s.Torrero;
-            inputSitio.dataset.nombretorrero = s['Nombre Torrero'];
-            lista.innerHTML = ''; 
-            actualizarPreview();
-        };
-        lista.appendChild(div);
-    });
-};
-
-document.addEventListener('click', e => { if(!inputSitio.contains(e.target)) lista.innerHTML=''; });
 
 function generarMensaje(){
     const sid = inputSitio.dataset.siteid;
@@ -332,7 +358,7 @@ document.getElementById('generar').onclick=()=>{
     const msg = document.getElementById('vistaPrevia').value;
     if(msg.includes("Complete")) return alert("Faltan datos");
     navigator.clipboard.writeText(msg);
-    alert('✅ Mensaje copiado');
+    alert('✅ Mensaje copiado al portapapeles');
 };
 
 document.getElementById('whatsapp').onclick=()=>{
