@@ -114,6 +114,7 @@
         .bg-map { background: linear-gradient(135deg, #1e40af, #3b82f6); }
         .bg-access { background: linear-gradient(135deg, #065f46, #10b981); }
         .bg-report { background: linear-gradient(135deg, #5b21b6, #8b5cf6); }
+        .bg-ipdata { background: linear-gradient(135deg, #f59e0b, #d97706); }
 
         footer { margin-top: auto; padding: 40px; font-size: 0.75rem; color: #475569; text-align: center; }
     </style>
@@ -150,6 +151,11 @@
                 <div class="icon-box bg-report">📝</div>
                 <div><h3>Reporte de Bitácora NOC</h3><p>Registro de ingresos/Salida.</p></div>
             </a>
+            
+            <a href="IPDATA.html" class="nav-card">
+                <div class="icon-box bg-ipdata">🌐</div>
+                <div><h3>CONSULTOR IPDATA</h3><p>Gestión y consulta de parámetros IP</p></div>
+            </a>
         </div>
 
         <footer>
@@ -161,7 +167,7 @@
 
     <script>
         const PIN_CORRECTO = "0614";
-        const DURACION_24H = 86400000; // 24h en milisegundos
+        const DURACION_24H = 86400000;
 
         function checkPin() {
             const pin = document.getElementById('pinInput').value;
