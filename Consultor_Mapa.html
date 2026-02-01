@@ -161,6 +161,10 @@
 </button>
 
 <script>
+// Forzar el scroll al inicio al cargar la página
+window.onbeforeunload = function () { window.scrollTo(0, 0); };
+if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
+
 let sites = [];
 const input = document.getElementById('siteSearch');
 const clearBtn = document.getElementById('clearBtn');
@@ -214,16 +218,15 @@ input.addEventListener('input', (e) => {
     sugDiv.style.display = matches.length ? 'block' : 'none';
 });
 
-function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; }
+function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; window.scrollTo({top: 0, behavior: 'smooth'});}
 
-function goHome() { if (navigator.vibrate) navigator.vibrate(20); window.location.href = 'index.html'; }
+function goHome() { if (navigator.vibrate) navigator.vibrate(20); window.scrollTo({top: 0, behavior: 'smooth'}); setTimeout(()=> {location.reload();}, 300); }
 
 function seleccionar(id) {
     const s = sites.find(x => x.SITEID === id);
     sugDiv.style.display = 'none';
     input.value = s['NOMBRE DE SITIO'];
     
-    // Lógica de Llave e Información de Llave
     const rawLlave = (s['Llave requerida'] || s['LLAVE REQUERIDA'] || "").trim();
     const infoLlave = (s['Información de llave'] || s['INFORMACION DE LLAVE'] || "").trim();
     let llaveHTML = '';
@@ -292,6 +295,9 @@ function copiar(txt, tipo, el) {
 }
 
 document.addEventListener('click', (e) => { if (!input.contains(e.target)) sugDiv.style.display = 'none'; });
+
+// Asegurar inicio al cargar
+window.scrollTo(0, 0);
 </script>
 </body>
 </html>
