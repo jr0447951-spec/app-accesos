@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consultor de Sitio - Network Ops</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/7532/7532164.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -161,7 +162,6 @@
 </button>
 
 <script>
-// Forzar el scroll al inicio al cargar la página
 window.onbeforeunload = function () { window.scrollTo(0, 0); };
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
 
@@ -220,7 +220,11 @@ input.addEventListener('input', (e) => {
 
 function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; window.scrollTo({top: 0, behavior: 'smooth'});}
 
-function goHome() { if (navigator.vibrate) navigator.vibrate(20); window.scrollTo({top: 0, behavior: 'smooth'}); setTimeout(()=> {location.reload();}, 300); }
+function goHome() { 
+    if (navigator.vibrate) navigator.vibrate(20); 
+    window.scrollTo({top: 0, behavior: 'smooth'}); 
+    setTimeout(() => { window.location.href = 'index.html'; }, 200); 
+}
 
 function seleccionar(id) {
     const s = sites.find(x => x.SITEID === id);
@@ -295,8 +299,6 @@ function copiar(txt, tipo, el) {
 }
 
 document.addEventListener('click', (e) => { if (!input.contains(e.target)) sugDiv.style.display = 'none'; });
-
-// Asegurar inicio al cargar
 window.scrollTo(0, 0);
 </script>
 </body>
