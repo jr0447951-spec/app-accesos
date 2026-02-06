@@ -12,7 +12,6 @@
             --glass: rgba(255, 255, 255, 0.07);
         }
 
-        /* FONDO TECNOLÓGICO UNIFICADO */
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
@@ -39,7 +38,6 @@
         h2 { margin: 0; font-size: 1.4rem; letter-spacing: 1px; color: white; text-transform: uppercase; }
         .subtitle { color: var(--primary); font-size: 0.8rem; font-weight: bold; }
 
-        /* CONTENEDOR TIPO CARD GLASS */
         .form-card {
             background: var(--glass);
             backdrop-filter: blur(15px);
@@ -73,9 +71,6 @@
             outline: none;
         }
 
-        input:focus, select:focus { border-color: var(--primary); }
-
-        /* BUSCADOR DE SITIOS */
         #listaSitios {
             position: absolute;
             width: 100%;
@@ -86,10 +81,10 @@
             overflow-y: auto;
             border: 1px solid var(--primary);
             margin-top: 5px;
+            display: none;
         }
         #listaSitios div { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 13px; }
 
-        /* CHIPS DE PERSONAL */
         #contenedorPersonal {
             display: flex;
             flex-wrap: wrap;
@@ -103,7 +98,7 @@
             padding: 8px 14px;
             background: rgba(255,255,255,0.1);
             border-radius: 50px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             transition: 0.3s;
             border: 1px solid rgba(255,255,255,0.1);
@@ -112,7 +107,6 @@
             background: var(--movistar);
             color: white;
             border-color: #fff;
-            box-shadow: 0 0 10px rgba(91, 197, 0, 0.4);
         }
 
         textarea {
@@ -120,11 +114,10 @@
             background: rgba(0,0,0,0.5);
             color: #00ff41; 
             font-family: 'Courier New', monospace;
-            font-size: 12px;
+            font-size: 11px;
             border: 1px solid rgba(0, 161, 255, 0.3);
         }
 
-        /* BOTONES DE ACCIÓN */
         .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
         .btn {
             flex: 1; padding: 15px; border: none; border-radius: 12px;
@@ -132,22 +125,17 @@
         }
         .btn-copy { background: #3b82f6; }
         .btn-wa { background: #25d366; }
-        .btn:active { transform: scale(0.95); }
 
-        /* BOTONES FLOTANTES */
         .btn-access, .btn-home {
             position: fixed; right: 25px; display: flex; align-items: center; gap: 10px;
             padding: 8px 20px 8px 8px; color: white; text-decoration: none; border-radius: 50px;
             font-weight: 700; font-size: 0.9rem; z-index: 9999; border: 2px solid rgba(255, 255, 255, 0.1);
-            transition: 0.4s;
         }
         .btn-access { bottom: 90px; background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); }
         .btn-home { bottom: 25px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
         .icon-circle { background: rgba(255,255,255,0.2); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-
     </style>
 </head>
-
 <body>
 
 <header>
@@ -178,7 +166,7 @@
         </div>
     </div>
 
-    <label>4. Personal Técnico</label>
+    <label>4. Personal Técnico (Seleccione)</label>
     <div id="contenedorPersonal">
         <span style="font-size: 10px; opacity: 0.5;">Cargando base de datos...</span>
     </div>
@@ -192,73 +180,66 @@
     </div>
 </div>
 
-<a href="pag1.html" class="btn-access">
-    <div class="icon-circle">🔑</div>
-    <span>Accesos</span>
-</a>
-
-<a href="index.html" class="btn-home">
-    <div class="icon-circle">🏠</div>
-    <span>Inicio</span>
-</a>
+<a href="pag1.html" class="btn-access"><div class="icon-circle">🔑</div><span>Accesos</span></a>
+<a href="index.html" class="btn-home"><div class="icon-circle">🏠</div><span>Inicio</span></a>
 
 <script>
-// --- SEGURIDAD 24 HORAS (SIEMPRE AL PRINCIPIO) ---
-(function verificarAcceso() {
-    const loginTime = localStorage.getItem('acceso_tecnico_eebb');
-    const ahora = new Date().getTime();
-    const DURACION_24H = 86400000;
-
-    if (!loginTime || (ahora - loginTime > DURACION_24H)) {
-        localStorage.removeItem('acceso_tecnico_eebb');
-        alert("Sesión expirada. Ingrese el PIN de seguridad.");
-        window.location.href = 'index.html';
-    }
-})();
-
-// --- Lógica de Datos ---
 let sitiosData = [];
+let tecnicosData = [];
 
-async function cargarCSV(url) {
+async function cargarCSV(url, esSitios = false) {
     try {
         const res = await fetch(url);
         const text = await res.text();
         const lineas = text.trim().split('\n');
-        const headers = lineas[0].split(';');
+        const sep = lineas[0].includes(';') ? ';' : ',';
+        const headers = lineas[0].split(sep).map(h => h.trim().replace(/"/g, ''));
+        
         return lineas.slice(1).map(l => {
-            const cols = l.split(';');
+            const cols = l.split(sep);
             let obj = {};
-            headers.forEach((h,i) => obj[h.trim()] = cols[i]?.trim());
+            headers.forEach((h,i) => obj[h] = cols[i]?.trim().replace(/"/g, ''));
+            
+            if (esSitios) {
+                return { ID: obj['SITEID'], Nombre: obj['NOMBRE DE SITIO'] };
+            }
             return obj;
         });
     } catch (e) { return []; }
 }
 
 async function inicializar() {
+    const URL_SITIOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?output=csv';
+    
     const [sitios, actividades, tecnicos] = await Promise.all([
-        cargarCSV('sitios.csv'),
+        cargarCSV(URL_SITIOS, true),
         cargarCSV('actividad.csv'),
         cargarCSV('tecnicos.csv')
     ]);
 
     sitiosData = sitios;
+    tecnicosData = tecnicos;
 
     actividadSelect.innerHTML = '<option value="">-- Seleccione --</option>';
     actividades.forEach(a => {
-        if(a['ACTIVIDAD']) {
+        if(a.ACTIVIDAD) {
             const opt = document.createElement('option');
-            opt.value = a['ACTIVIDAD'];
-            opt.textContent = a['ACTIVIDAD'];
+            opt.value = a.ACTIVIDAD; opt.textContent = a.ACTIVIDAD;
             actividadSelect.appendChild(opt);
         }
     });
 
     contenedorPersonal.innerHTML = '';
-    tecnicos.forEach(t => {
-        if(t['TECNICO']) {
+    tecnicos.forEach((t, i) => {
+        if(t.TECNICO) {
             const chip = document.createElement('div');
             chip.className = 'chip';
-            chip.textContent = `${t['TECNICO']} (${t['DUI'] || 'S/D'})`;
+            
+            // Lógica de Nombre Corto: Primer Nombre + Primer Apellido
+            const partes = t.TECNICO.split(' ');
+            chip.textContent = partes.length >= 3 ? `${partes[0]} ${partes[2]}` : t.TECNICO;
+            
+            chip.dataset.index = i;
             chip.onclick = () => {
                 chip.classList.toggle('selected');
                 actualizarVistaPrevia();
@@ -268,7 +249,6 @@ async function inicializar() {
     });
 }
 
-// --- Buscador y Mensaje ---
 const inputSitio = document.getElementById('sitioBuscador');
 const listaSitiosDiv = document.getElementById('listaSitios');
 const textarea = document.getElementById('mensaje');
@@ -279,29 +259,37 @@ const contenedorPersonal = document.getElementById('contenedorPersonal');
 inputSitio.addEventListener('input', () => {
     const val = inputSitio.value.toLowerCase();
     listaSitiosDiv.innerHTML = '';
-    if (!val) return;
-    sitiosData.filter(s => s['Nombre de Sitio']?.toLowerCase().includes(val) || s.SiteID?.toLowerCase().includes(val))
-        .slice(0, 5).forEach(s => {
+    if (!val) { listaSitiosDiv.style.display='none'; return; }
+    
+    const filtrados = sitiosData.filter(s => s.Nombre?.toLowerCase().includes(val) || s.ID?.toLowerCase().includes(val)).slice(0, 5);
+    
+    if(filtrados.length > 0) {
+        listaSitiosDiv.style.display='block';
+        filtrados.forEach(s => {
             const div = document.createElement('div');
-            div.textContent = `${s.SiteID} - ${s['Nombre de Sitio']}`;
+            div.textContent = `${s.ID} - ${s.Nombre}`;
             div.onclick = () => {
-                inputSitio.value = s['Nombre de Sitio'];
-                inputSitio.dataset.siteid = s.SiteID;
-                listaSitiosDiv.innerHTML = '';
+                inputSitio.value = s.Nombre;
+                inputSitio.dataset.siteid = s.ID;
+                listaSitiosDiv.style.display = 'none';
                 actualizarVistaPrevia();
             };
             listaSitiosDiv.appendChild(div);
         });
+    } else { listaSitiosDiv.style.display='none'; }
 });
 
 function generarMensaje() {
     const idSitio = inputSitio.dataset.siteid;
     const actividad = actividadSelect.value;
-    const personal = Array.from(contenedorPersonal.querySelectorAll('.chip.selected')).map(c => c.textContent);
+    const seleccionados = Array.from(contenedorPersonal.querySelectorAll('.chip.selected'))
+                               .map(c => tecnicosData[c.dataset.index]);
 
-    if (!idSitio || !actividad || personal.length === 0) return "Esperando datos completos...";
+    if (!idSitio || !actividad || seleccionados.length === 0) return "Esperando datos completos...";
 
-    return `Buen día\nReportamos ${tipoSelect.value} al sitio\n\n${idSitio} - ${inputSitio.value}\n\nPersonal:\n${personal.join('\n')}\n\nEmpresa:\nCELECT SA DE CV\n\nÁrea: EEBB\nActividad: ${actividad}`;
+    const listaPersonal = seleccionados.map(t => `${t.TECNICO} (${t.DUI || 'S/D'})`).join('\n');
+
+    return `Buen día\nReportamos ${tipoSelect.value} al sitio\n\n${idSitio} - ${inputSitio.value}\n\nPersonal:\n${listaPersonal}\n\nEmpresa:\nCELECT SA DE CV\n\nÁrea: EEBB\nActividad: ${actividad}`;
 }
 
 function actualizarVistaPrevia() { textarea.value = generarMensaje(); }
@@ -310,7 +298,7 @@ actividadSelect.onchange = actualizarVistaPrevia;
 
 document.getElementById('copiar').onclick = () => {
     navigator.clipboard.writeText(textarea.value);
-    alert("¡Copiado!");
+    alert("¡Reporte copiado!");
 };
 
 document.getElementById('whatsapp').onclick = () => {
@@ -321,4 +309,3 @@ inicializar();
 </script>
 </body>
 </html>
-
