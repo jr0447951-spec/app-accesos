@@ -13,7 +13,6 @@
             --danger: #f43f5e;
         }
 
-        /* FONDO TECNOLÓGICO UNIFICADO */
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
@@ -93,7 +92,7 @@
         #listaSitios div:hover { background: rgba(0, 161, 255, 0.2); }
 
         #tecnicosAdicionales { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; }
-        .chip { padding: 8px 14px; background: rgba(255,255,255,0.08); border-radius: 50px; font-size: 11px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+        .chip { padding: 8px 14px; background: rgba(255,255,255,0.08); border-radius: 50px; font-size: 11px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
         .chip.selected { background: var(--movistar); color: white; border-color: #fff; }
         .chip.disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; }
 
@@ -107,7 +106,7 @@
         .nav-report { background: linear-gradient(135deg, #FF9800, #ed6c02); }
         .nav-home { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
 
-        textarea { height: 100px; resize: none; margin-top: 10px; font-family: monospace; font-size: 12px; }
+        textarea { height: 100px; resize: none; margin-top: 10px; font-family: monospace; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -120,7 +119,7 @@
 <div class="form-card">
     <label>📍 Sitio / Ubicación</label>
     <div style="position: relative;">
-        <input type="text" id="sitio" placeholder="Escriba ID o Nombre..." autocomplete="off">
+        <input type="text" id="sitio" placeholder="Buscar por ID o Nombre..." autocomplete="off">
         <div id="listaSitios"></div>
     </div>
 
@@ -136,7 +135,13 @@
     </div>
 
     <label>👤 Técnico Responsable (Líder)</label>
-    <select id="tecnicoPrincipal"><option value="">Seleccione líder de equipo...</option></select>
+    <select id="tecnicoPrincipal"><option value="">Seleccione líder...</option></select>
+
+    <label>👔 Supervisor a Cargo</label>
+    <select id="supervisor">
+        <option value="José Rivas|6161 4465">José Rivas (6161 4465)</option>
+        <option value="Victor Salas|6170 0973">Victor Salas (6170 0973)</option>
+    </select>
 
     <label>👥 Técnicos de Apoyo</label>
     <div id="tecnicosAdicionales"></div>
@@ -159,255 +164,185 @@
 </div>
 
 <script>
-// --- 1. SEGURIDAD 24 HORAS ---
-(function verificarAcceso() {
+// --- SEGURIDAD ---
+(function() {
     const loginTime = localStorage.getItem('acceso_tecnico_eebb');
-    const ahora = new Date().getTime();
-    const DURACION_24H = 86400000;
-
-    if (!loginTime || (ahora - loginTime > DURACION_24H)) {
-        localStorage.removeItem('acceso_tecnico_eebb');
-        alert("Acceso expirado. Por favor ingrese el PIN en el inicio.");
+    if (!loginTime || (new Date().getTime() - loginTime > 86400000)) {
         window.location.href = 'index.html';
     }
 })();
 
-// --- 2. VARIABLES Y CARGA DE DATOS ---
+// --- VARIABLES ---
 let sitios=[], actividades=[], tecnicos=[], vehiculos=[];
+const URL_SITIOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?output=csv';
 
-// URL de Google Sheets proporcionada
-const URL_GOOGLE_SHEETS_SITIOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?output=csv';
-
-async function cargarCSV(url, esMapaBase = false){
+async function cargarCSV(url, esSitios = false){
     try {
         const res = await fetch(url);
         const text = await res.text();
         const lineas = text.trim().split('\n');
-        
-        // Detectar automáticamente el separador (Google usa coma por defecto)
-        const separador = lineas[0].includes(';') ? ';' : ',';
-        const headers = lineas[0].split(separador).map(h => h.trim().replace(/"/g, ''));
+        const sep = lineas[0].includes(';') ? ';' : ',';
+        const headers = lineas[0].split(sep).map(h => h.trim().replace(/"/g, ''));
         
         return lineas.slice(1).map(l => {
-            const cols = l.split(separador);
+            const cols = l.split(sep);
             let obj = {};
-            headers.forEach((h, i) => {
-                let val = cols[i]?.trim().replace(/"/g, '') || "";
-                obj[h] = val;
-            });
-
-            // Si es la hoja de MapaBase, filtramos solo los 4 campos requeridos
-            if (esMapaBase) {
+            headers.forEach((h, i) => obj[h] = cols[i]?.trim().replace(/"/g, '') || "");
+            
+            if (esSitios) {
                 return {
-                    SiteID: obj['SITEID'],
-                    NombreSitio: obj['NOMBRE DE SITIO'],
-                    NombreTorrero: obj['Nombre para Propietario'],
-                    Propietario: obj['Propietario']
+                    ID: obj['SITEID'],
+                    Nombre: obj['NOMBRE DE SITIO'],
+                    Prop: obj['Propietario'],
+                    Torrero: obj['Nombre para Propietario']
                 };
             }
             return obj;
         });
-    } catch(e) { 
-        console.error("Error cargando fuente:", url, e); 
-        return []; 
-    }
+    } catch(e) { return []; }
 }
 
 async function inicializar(){
-    // Cargamos sitios desde Google Sheets y el resto desde CSV locales (puedes cambiarlos luego)
     [sitios, actividades, tecnicos, vehiculos] = await Promise.all([
-        cargarCSV(URL_GOOGLE_SHEETS_SITIOS, true),
+        cargarCSV(URL_SITIOS, true),
         cargarCSV('actividad.csv'),
         cargarCSV('tecnicos.csv'),
         cargarCSV('vehiculos.csv')
     ]);
 
-    // Llenar Actividades
-    const selAct = document.getElementById('actividad');
-    actividades.forEach(a=>{
-        if(a['ACTIVIDAD']) {
-            const opt = document.createElement('option');
-            opt.value = a['ACTIVIDAD']; opt.textContent = a['ACTIVIDAD'];
-            selAct.appendChild(opt);
+    // Actividades
+    const sAct = document.getElementById('actividad');
+    actividades.forEach(a => {
+        if(a.ACTIVIDAD){
+            const o = document.createElement('option');
+            o.value = a.ACTIVIDAD; o.textContent = a.ACTIVIDAD;
+            sAct.appendChild(o);
         }
     });
 
-    // Llenar Vehículos
-    const selVeh = document.getElementById('vehiculo');
-    vehiculos.forEach(v=>{
-        if(v.Placa) {
-            const opt = document.createElement('option');
-            opt.value = v.Placa; opt.textContent = `${v.Placa} (${v.Marca})`;
-            selVeh.appendChild(opt);
+    // Vehículos
+    const sVeh = document.getElementById('vehiculo');
+    vehiculos.forEach(v => {
+        if(v.Placa){
+            const o = document.createElement('option');
+            o.value = v.Placa; o.textContent = `${v.Placa} (${v.Marca})`;
+            sVeh.appendChild(o);
         }
     });
 
-    // Llenar Técnicos
-    const selTecPrin = document.getElementById('tecnicoPrincipal');
-    const divTecAdd = document.getElementById('tecnicosAdicionales');
+    // Técnicos con Lógica de Nombre Corto para Chips
+    const sTec = document.getElementById('tecnicoPrincipal');
+    const dAdd = document.getElementById('tecnicosAdicionales');
 
-    tecnicos.forEach((t,i)=>{
-        const opt = document.createElement('option'); opt.value=i; opt.textContent=`${t.TECNICO} (${t.DUI})`;
-        selTecPrin.appendChild(opt);
+    tecnicos.forEach((t, i) => {
+        const o = document.createElement('option');
+        o.value = i; o.textContent = `${t.TECNICO} (${t.DUI})`;
+        sTec.appendChild(o);
 
         const chip = document.createElement('div');
-        chip.className='chip'; chip.textContent=t.TECNICO;
-        chip.dataset.index=i;
-        chip.onclick=()=>{
-            if(parseInt(selTecPrin.value)===i) return;
-            chip.classList.toggle('selected'); 
-            actualizarPreview(); 
-            actualizarContador();
+        chip.className = 'chip';
+        
+        // Lógica: Primer Nombre + Primer Apellido
+        const p = t.TECNICO.split(' ');
+        chip.textContent = p.length >= 3 ? `${p[0]} ${p[2]}` : t.TECNICO;
+        chip.dataset.index = i;
+        chip.onclick = () => {
+            if(parseInt(sTec.value) === i) return;
+            chip.classList.toggle('selected');
+            actualizarPreview(); actualizarContador();
         };
-        divTecAdd.appendChild(chip);
+        dAdd.appendChild(chip);
     });
 
-    selTecPrin.onchange=()=>{
-        document.querySelectorAll('#tecnicosAdicionales .chip').forEach(chip=>{
-            const idx=parseInt(chip.dataset.index);
-            if(idx===parseInt(selTecPrin.value)){
-                chip.classList.remove('selected');
-                chip.classList.add('disabled');
-            } else { chip.classList.remove('disabled'); }
+    sTec.onchange = () => {
+        document.querySelectorAll('.chip').forEach(c => {
+            const idx = parseInt(c.dataset.index);
+            if(idx === parseInt(sTec.value)){
+                c.classList.remove('selected'); c.classList.add('disabled');
+            } else { c.classList.remove('disabled'); }
         });
         actualizarPreview(); actualizarContador();
     };
+    
+    document.getElementById('supervisor').onchange = actualizarPreview;
     actualizarPreview();
 }
 
-// --- 3. LÓGICA DEL BUSCADOR INTELIGENTE ---
-const inputSitio=document.getElementById('sitio');
-const lista=document.getElementById('listaSitios');
+// --- BUSCADOR ---
+const inSitio = document.getElementById('sitio');
+const lSitios = document.getElementById('listaSitios');
 
-inputSitio.oninput = () => {
-    const normalizar = (texto) => 
-        texto.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-    const textoOriginalBusqueda = inputSitio.value.trim();
-    const textoBusquedaNorm = normalizar(textoOriginalBusqueda);
-    const palabrasBusqueda = textoBusquedaNorm.split(/\s+/).filter(p => p.length > 0);
+inSitio.oninput = () => {
+    const norm = (t) => t.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const val = norm(inSitio.value);
+    const words = val.split(/\s+/).filter(w => w.length > 0);
     
-    lista.innerHTML = '';
-    if (palabrasBusqueda.length === 0) {
-        lista.style.display = 'none';
-        return;
-    }
+    lSitios.innerHTML = '';
+    if(words.length === 0) { lSitios.style.display = 'none'; return; }
 
-    const resultados = sitios
-        .map(s => {
-            const idNorm = normalizar(s.SiteID || "");
-            const nombreNorm = normalizar(s.NombreSitio || "");
-            let score = 0;
+    const res = sitios.filter(s => {
+        const idN = norm(s.ID || ""), nmN = norm(s.Nombre || "");
+        return words.every(w => idN.includes(w) || nmN.includes(w));
+    }).slice(0, 10);
 
-            const cumple = palabrasBusqueda.every(palabra => {
-                const enId = idNorm.includes(palabra);
-                const enNombre = nombreNorm.includes(palabra);
-                
-                if (enId || enNombre) {
-                    if (idNorm === textoBusquedaNorm || nombreNorm === textoBusquedaNorm) score += 100;
-                    if (idNorm.startsWith(palabra) || nombreNorm.startsWith(palabra)) score += 50;
-                    score += 10;
-                    return true;
-                }
-                return false;
-            });
-
-            return cumple ? { data: s, score: score } : null;
-        })
-        .filter(item => item !== null)
-        .sort((a, b) => b.score - a.score);
-
-    if (resultados.length > 0) {
-        lista.style.display = 'block';
-        resultados.slice(0, 10).forEach(item => {
-            const s = item.data;
-            const div = document.createElement('div');
-            div.style.borderLeft = "4px solid var(--primary)";
-            
-            const textoOriginal = `${s.SiteID} - ${s.NombreSitio}`;
-            let textoHTML = textoOriginal;
-
-            palabrasBusqueda.forEach(palabra => {
-                if (palabra.length >= 2) {
-                    const regex = new RegExp(`(${palabra})`, 'gi');
-                    textoHTML = textoHTML.replace(regex, '<span style="color:var(--primary); font-weight:bold;">$1</span>');
-                }
-            });
-
-            div.innerHTML = textoHTML;
-            div.onclick = () => {
-                inputSitio.value = s.NombreSitio;
-                inputSitio.dataset.siteid = s.SiteID;
-                inputSitio.dataset.propietario = s.Propietario;
-                inputSitio.dataset.nombretorrero = s.NombreTorrero;
-                lista.innerHTML = ''; 
-                lista.style.display = 'none';
+    if(res.length > 0){
+        lSitios.style.display = 'block';
+        res.forEach(s => {
+            const d = document.createElement('div');
+            d.innerHTML = `<strong>${s.ID}</strong> - ${s.Nombre}`;
+            d.onclick = () => {
+                inSitio.value = s.Nombre;
+                inSitio.dataset.id = s.ID;
+                inSitio.dataset.p = s.Prop;
+                inSitio.dataset.t = s.Torrero;
+                lSitios.style.display = 'none';
                 actualizarPreview();
             };
-            lista.appendChild(div);
+            lSitios.appendChild(d);
         });
-    } else {
-        lista.style.display = 'none';
-    }
+    } else { lSitios.style.display = 'none'; }
 };
 
-document.addEventListener('click', e => { if(!inputSitio.contains(e.target)) { lista.innerHTML=''; lista.style.display='none'; } });
-
-// --- 4. GENERACIÓN DE MENSAJE Y ACCIONES ---
+// --- MENSAJE ---
 function actualizarContador(){
-    const count=document.querySelectorAll('#tecnicosAdicionales .chip.selected').length;
-    document.getElementById('contadorSeleccionados').textContent=`Seleccionados: ${count}`;
+    const n = document.querySelectorAll('.chip.selected').length;
+    document.getElementById('contadorSeleccionados').textContent = `Seleccionados: ${n}`;
 }
 
 function generarMensaje(){
-    const sid = inputSitio.dataset.siteid;
-    const act = document.getElementById('actividad').value;
-    const tecIdx = document.getElementById('tecnicoPrincipal').value;
-    
-    if(!sid || !act || tecIdx==="") return "Complete los datos requeridos...";
+    const id = inSitio.dataset.id, act = document.getElementById('actividad').value, tIdx = document.getElementById('tecnicoPrincipal').value;
+    if(!id || !act || tIdx === "") return "Complete los datos requeridos...";
 
-    const veh = vehiculos[document.getElementById('vehiculo').selectedIndex-1]||{};
-    const tPrin = tecnicos[tecIdx];
-    const tAdd = Array.from(document.querySelectorAll('.chip.selected')).map(c=>tecnicos[c.dataset.index]);
-    const todos = [tPrin, ...tAdd];
+    const v = vehiculos[document.getElementById('vehiculo').selectedIndex-1] || {};
+    const supData = document.getElementById('supervisor').value.split('|');
+    const tP = tecnicos[tIdx];
+    const tA = Array.from(document.querySelectorAll('.chip.selected')).map(c => tecnicos[c.dataset.index]);
+    const todos = [tP, ...tA];
 
-    const tecBlock = todos.map(t=>`${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
+    const tecs = todos.map(t => `${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
 
-    return `BUEN DIA\nSU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :\n▬▬▬▬▬▬▬▬▬▬\nID: ${sid}\nNOMBRE: ${inputSitio.value}\nPROPIETARIO: ${inputSitio.dataset.propietario || 'N/A'}\nNombre Torrero: ${inputSitio.dataset.nombretorrero || 'N/A'}\n▬▬▬▬▬▬▬▬▬▬\nACTIVIDAD: ${act}\n▬▬▬▬▬▬▬▬▬▬\nTECNICOS/DUI\n${tecBlock}\n▬▬▬▬▬▬▬▬▬▬\nPlaca: ${veh.Placa||''}\nMarca: ${veh.Marca||''}\nModelo: ${veh.Modelo||''}\nColor: ${veh.Color||''}\n▬▬▬▬▬▬▬▬▬▬\nEmpresa: CELECT SA DE CV\nSupervisor: José Rivas\nTel: 6161 4465\n▬▬▬▬▬▬▬▬▬▬\nTEL: ${tPrin.TELEFONO||''}\nCORREO: ${tPrin.CORREO||''} tecnicossv@celectcac.com`;
+    return `BUEN DIA\nSU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :\n▬▬▬▬▬▬▬▬▬▬\nID: ${id}\nNOMBRE: ${inSitio.value}\nPROPIETARIO: ${inSitio.dataset.p || 'N/A'}\nNombre Torrero: ${inSitio.dataset.t || 'N/A'}\n▬▬▬▬▬▬▬▬▬▬\nACTIVIDAD: ${act}\n▬▬▬▬▬▬▬▬▬▬\nTECNICOS/DUI\n${tecs}\n▬▬▬▬▬▬▬▬▬▬\nPlaca: ${v.Placa||''}\nMarca: ${v.Marca||''}\nModelo: ${v.Modelo||''}\nColor: ${v.Color||''}\n▬▬▬▬▬▬▬▬▬▬\nEmpresa: CELECT SA DE CV\nSupervisor: ${supData[0]}\nTel: ${supData[1]}\n▬▬▬▬▬▬▬▬▬▬\nTEL: ${tP.TELEFONO||''}\nCORREO: ${tP.CORREO||''} tecnicossv@celectcac.com`;
 }
 
-function actualizarPreview(){ document.getElementById('vistaPrevia').value=generarMensaje(); }
+function actualizarPreview() { document.getElementById('vistaPrevia').value = generarMensaje(); }
 
 document.getElementById('actividad').onchange = actualizarPreview;
 document.getElementById('vehiculo').onchange = actualizarPreview;
 
-document.getElementById('generar').onclick=()=>{
-    const msg = document.getElementById('vistaPrevia').value;
-    if(msg.includes("Complete")) return alert("Faltan datos");
-    navigator.clipboard.writeText(msg);
-    alert('✅ Mensaje copiado al portapapeles');
+document.getElementById('generar').onclick = () => {
+    const m = document.getElementById('vistaPrevia').value;
+    if(m.includes("Complete")) return alert("Faltan datos");
+    navigator.clipboard.writeText(m); alert('✅ Mensaje copiado');
 };
 
-document.getElementById('whatsapp').onclick=()=>{
-    const msg = document.getElementById('vistaPrevia').value;
-    if(msg.includes("Complete")) return alert("Faltan datos");
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+document.getElementById('whatsapp').onclick = () => {
+    const m = document.getElementById('vistaPrevia').value;
+    if(m.includes("Complete")) return alert("Faltan datos");
+    window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
 };
 
 document.getElementById('btnLimpiar').onclick = () => {
-    if(confirm("¿Limpiar todo el formulario?")){
-        inputSitio.value = "";
-        delete inputSitio.dataset.siteid;
-        document.getElementById('actividad').value = "";
-        document.getElementById('vehiculo').value = "";
-        document.getElementById('tecnicoPrincipal').value = "";
-        document.querySelectorAll('.chip').forEach(c => {
-            c.classList.remove('selected');
-            c.classList.remove('disabled');
-        });
-        actualizarContador();
-        actualizarPreview();
-    }
+    if(confirm("¿Limpiar todo?")){ location.reload(); }
 };
 
 inicializar();
