@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Turnos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; }
+        .search-box { background: white; padding: 10px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; position: sticky; top: 10px; z-index: 10; }
+        input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; }
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #cbd5e1; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card.active { border-left-color: var(--primary); background: #eff6ff; }
+        .fecha { font-weight: 800; color: #475569; font-size: 0.9rem; }
+        .personal { font-size: 1.1rem; font-weight: 600; color: #1e293b; margin-top: 5px; }
+        #loading { text-align: center; color: #64748b; padding: 50px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="search-box">
+        <input type="text" id="buscador" placeholder="Busca tu nombre..." oninput="filtrar()">
+    </div>
+    <div id="loading"><i class="fas fa-sync fa-spin"></i> Cargando información...</div>
+    <div id="lista-turnos"></div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycby2z6FHW7GIj5WCEIltflNUvYWfPKJlrsPxeIT5RbVTS5plaYfffIyc0hiPC_vp9tyH/exec";
+    let turnos = [];
+
+    async function cargar() {
+        try {
+            const res = await fetch(API_URL);
+            turnos = await res.json();
+            turnos.sort((a, b) => new Date(a.Fecha.split('/').reverse().join('-')) - new Date(b.Fecha.split('/').reverse().join('-')));
+            document.getElementById('loading').style.display = 'none';
+            render(turnos);
+        } catch (e) { document.getElementById('loading').innerText = "Error al conectar."; }
+    }
+
+    function render(lista, filtro = "") {
+        const cont = document.getElementById('lista-turnos');
+        cont.innerHTML = "";
+        lista.forEach(t => {
+            const match = filtro && `${t.Tecnico_1} ${t.Tecnico_2}`.toUpperCase().includes(filtro.toUpperCase());
+            cont.innerHTML += `
+                <div class="card ${match ? 'active' : ''}">
+                    <div class="fecha">${t.Dia_Semana} - ${t.Fecha}</div>
+                    <div class="personal">${t.Tecnico_1} ${t.Tecnico_2 ? '/ '+t.Tecnico_2 : ''}</div>
+                </div>`;
+        });
+    }
+    function filtrar() { render(turnos, document.getElementById('buscador').value); }
+    cargar();
+</script>
+</body>
+</html>
