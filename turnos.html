@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendario de Turnos Personal</title>
+    <title>Calendario de Turnos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #6366f1;
-            --accent: #facc15;
             --bg: #0f172a;
             --glass: rgba(30, 41, 59, 0.7);
             --glass-border: rgba(255, 255, 255, 0.1);
@@ -20,50 +19,31 @@
             background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
             color: #f8fafc;
             margin: 0;
-            padding: 10px;
+            padding: 15px;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* Título del Mes */
+        /* Título Dinámico del Mes */
         .month-title {
             text-align: center;
-            padding: 25px 0;
-            font-size: 2.2rem;
+            padding: 40px 0 30px 0;
+            font-size: 2.5rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 4px;
+            letter-spacing: 6px;
             background: linear-gradient(to right, #818cf8, #c084fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
         }
 
-        .search-container {
-            max-width: 600px;
-            margin: 0 auto 20px;
-            position: sticky;
-            top: 10px;
-            z-index: 100;
-        }
-
-        .search-box {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--glass-border);
-            padding: 14px 20px;
-            border-radius: 15px;
-            color: white;
-            font-size: 1rem;
-            outline: none;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            box-sizing: border-box;
-        }
-
-        /* Cuadrícula del Calendario */
+        /* Contenedor del Calendario */
         .calendar-wrapper {
-            max-width: 900px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 1000px;
             background: var(--glass);
             backdrop-filter: blur(12px);
             border-radius: 24px;
@@ -79,72 +59,74 @@
             background: var(--glass-border);
         }
 
+        /* Celdas de días */
         .day-cell {
             background: rgba(15, 23, 42, 0.4);
-            min-height: 100px;
-            padding: 8px;
+            min-height: 110px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            transition: 0.3s;
+            box-sizing: border-box;
         }
 
-        /* Día y Número */
         .day-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 4px;
         }
+
         .day-name {
-            font-size: 0.6rem;
+            font-size: 0.65rem;
             font-weight: 800;
             color: var(--primary);
             text-transform: uppercase;
         }
+
         .day-number {
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 800;
             color: #94a3b8;
         }
 
-        /* Estilo de los nombres de técnicos */
+        /* Etiquetas de los Técnicos */
         .staff-tag {
-            font-size: 0.65rem;
-            padding: 4px 6px;
-            border-radius: 8px;
-            margin-bottom: 3px;
+            font-size: 0.7rem;
+            padding: 5px 8px;
+            border-radius: 6px;
+            margin-bottom: 4px;
             font-weight: 600;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #e0e7ff;
             display: flex;
             align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 5px;
         }
 
-        .staff-tag i { font-size: 0.6rem; opacity: 0.7; }
-
-        /* Resaltado cuando el técnico busca su nombre */
-        .highlight-turn {
-            background: var(--accent) !important;
-            color: #422006 !important;
-            box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
-            border: none;
-            transform: scale(1.03);
+        .staff-tag i {
+            font-size: 0.6rem;
+            color: var(--primary);
         }
 
+        /* Indicador de carga */
         #loader {
+            margin-top: 100px;
             text-align: center;
-            padding: 40px;
-            color: #6366f1;
-            font-weight: bold;
+            color: var(--primary);
         }
 
-        /* Adaptación para móviles */
-        @media (max-width: 600px) {
-            .month-title { font-size: 1.5rem; letter-spacing: 2px; }
-            .day-cell { min-height: 80px; padding: 4px; }
-            .day-name { font-size: 0.5rem; }
-            .staff-tag { font-size: 0.55rem; }
+        /* Estilo para fin de semana */
+        .weekend {
+            background: rgba(30, 41, 59, 0.6);
+        }
+
+        @media (max-width: 700px) {
+            .month-title { font-size: 1.8rem; letter-spacing: 3px; }
+            .day-cell { min-height: 90px; padding: 6px; }
+            .staff-tag { font-size: 0.6rem; padding: 3px 5px; }
         }
     </style>
 </head>
@@ -152,11 +134,10 @@
 
     <h1 id="mesActual" class="month-title">CARGANDO...</h1>
 
-    <div class="search-container">
-        <input type="text" id="userInput" class="search-box" placeholder="🔍 Escribe tu nombre para buscarte..." oninput="updateCalendar()">
+    <div id="loader">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p>Sincronizando turnos...</p>
     </div>
-
-    <div id="loader"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
 
     <div class="calendar-wrapper" id="calendarBody" style="display:none;">
         <div class="grid" id="mainGrid"></div>
@@ -164,8 +145,8 @@
 
 <script>
     const SHEETS_URL = "https://script.google.com/macros/s/AKfycby2z6FHW7GIj5WCEIltflNUvYWfPKJlrsPxeIT5RbVTS5plaYfffIyc0hiPC_vp9tyH/exec";
-    let apiData = [];
     const daysNames = ["DOMINGO", "LUNES", "MARTES", "MIÉRCOLES", "JUEVES", "VIERNES", "SÁBADO"];
+    let apiData = [];
 
     async function init() {
         try {
@@ -173,40 +154,41 @@
             apiData = await response.json();
             document.getElementById('loader').style.display = 'none';
             document.getElementById('calendarBody').style.display = 'block';
-            updateCalendar();
+            renderCalendar();
         } catch (e) {
-            document.getElementById('loader').innerHTML = "⚠️ Error al cargar los datos.";
+            document.getElementById('loader').innerHTML = "<p>⚠️ No se pudo cargar el calendario.</p>";
         }
     }
 
-    function updateCalendar() {
+    function renderCalendar() {
         const grid = document.getElementById('mainGrid');
-        const query = document.getElementById('userInput').value.toUpperCase();
         grid.innerHTML = "";
         
-        const now = new Date(); // Puedes cambiar esto a la fecha de la data si prefieres
+        const now = new Date(); 
         const year = now.getFullYear();
         const month = now.getMonth();
         
+        // Título del Mes
         document.getElementById('mesActual').innerText = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(now);
 
         const firstDay = new Date(year, month, 1).getDay();
         const startOffset = (firstDay === 0) ? 6 : firstDay - 1;
         const totalDays = new Date(year, month + 1, 0).getDate();
 
-        // Espacios vacíos mes anterior
+        // Celdas vacías
         for(let i=0; i<startOffset; i++) {
-            grid.innerHTML += `<div class="day-cell" style="opacity:0.2"></div>`;
+            grid.innerHTML += `<div class="day-cell" style="opacity:0.1"></div>`;
         }
 
-        // Días del mes
+        // Generar días
         for(let d=1; d<=totalDays; d++) {
             const currentObjDate = new Date(year, month, d);
-            const dayName = daysNames[currentObjDate.getDay()];
-            const dateStr = `${d}/${month+1}/${year}`;
+            const dayIdx = currentObjDate.getDay();
+            const dayName = daysNames[dayIdx];
+            const isWeekend = (dayIdx === 0 || dayIdx === 6);
 
             const cell = document.createElement('div');
-            cell.className = 'day-cell';
+            cell.className = `day-cell ${isWeekend ? 'weekend' : ''}`;
             
             cell.innerHTML = `
                 <div class="day-info">
@@ -215,23 +197,20 @@
                 </div>
                 <div id="staff-cont-${d}"></div>
             `;
-
             grid.appendChild(cell);
-            const staffCont = document.getElementById(`staff-cont-${d}`);
 
-            // Buscar turnos en la data de Sheets
+            // Filtrar técnicos de la base de datos
             const matchTurnos = apiData.filter(t => {
                 const parts = t.Fecha.split('/');
                 return parseInt(parts[0]) === d && parseInt(parts[1]) === (month + 1);
             });
 
+            const staffCont = document.getElementById(`staff-cont-${d}`);
             matchTurnos.forEach(t => {
-                const isMatch = query !== "" && (t.Tecnico_1.toUpperCase().includes(query) || (t.Tecnico_2 && t.Tecnico_2.toUpperCase().includes(query)));
-                
                 const names = [t.Tecnico_1, t.Tecnico_2].filter(n => n && n.trim() !== "");
                 names.forEach(name => {
                     staffCont.innerHTML += `
-                        <div class="staff-tag ${isMatch ? 'highlight-turn' : ''}">
+                        <div class="staff-tag">
                             <i class="fas fa-user-check"></i> ${name}
                         </div>
                     `;
