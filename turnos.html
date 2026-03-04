@@ -160,14 +160,70 @@
         }
     }
 
-    function renderCalendar() {
-        const grid = document.getElementById('mainGrid');
-        grid.innerHTML = "";
+   function renderCalendar() {
+    const grid = document.getElementById('mainGrid');
+    grid.innerHTML = "";
+    
+    const now = new Date(); 
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    document.getElementById('mesActual').innerText = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(now);
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const startOffset = (firstDay === 0) ? 6 : firstDay - 1;
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    for(let i=0; i<startOffset; i++) {
+        grid.innerHTML += `<div class="day-cell" style="opacity:0.1"></div>`;
+    }
+
+    for(let d=1; d<=totalDays; d++) {
+        const currentObjDate = new Date(year, month, d);
+        const dayIdx = currentObjDate.getDay();
+        const dayName = daysNames[dayIdx];
+
+        const cell = document.createElement('div');
+        cell.className = `day-cell ${(dayIdx === 0 || dayIdx === 6) ? 'weekend' : ''}`;
         
-        const now = new Date(); 
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        
+        cell.innerHTML = `
+            <div class="day-info">
+                <span class="day-name">${dayName.substring(0, 3)}</span>
+                <span class="day-number">${d}</span>
+            </div>
+            <div id="staff-cont-${d}"></div>
+        `;
+        grid.appendChild(cell);
+
+        const staffCont = document.getElementById(`staff-cont-${d}`);
+
+        // --- LÓGICA DE BÚSQUEDA CORREGIDA ---
+        const matchTurnos = apiData.filter(t => {
+            // 1. Intentar por columna "Fecha" (6/3/2026)
+            if (t.Fecha) {
+                const p = t.Fecha.split('/');
+                if (parseInt(p[0]) === d && parseInt(p[1]) === (month + 1)) return true;
+            }
+            // 2. Intentar por columna "ID" (2026-3-6_0)
+            if (t.ID) {
+                const pID = t.ID.split('_')[0].split('-'); // saca [2026, 3, 6]
+                if (parseInt(pID[2]) === d && parseInt(pID[1]) === (month + 1)) return true;
+            }
+            return false;
+        });
+
+        matchTurnos.forEach(t => {
+            const names = [t.Tecnico_1, t.Tecnico_2].filter(n => n && n.trim() !== "");
+            names.forEach(name => {
+                staffCont.innerHTML += `
+                    <div class="staff-tag">
+                        <i class="fas fa-user-check"></i> ${name}
+                    </div>
+                `;
+            });
+        });
+    }
+}
         // Título del Mes
         document.getElementById('mesActual').innerText = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(now);
 
@@ -223,4 +279,5 @@
 </script>
 </body>
 </html>
+
 
