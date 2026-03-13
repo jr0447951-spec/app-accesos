@@ -171,7 +171,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrgCy-uvTGyF7xpZ_nujqkvQRJiud1qxFe6YMsrAxdiw_MHDcfRKJJYM_B-iVfIrOC/exec";
     const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSNdMQrxMJuKCRfD4p0T-1wr20af6qtWSzEFMDJuD6rOiNVw-dyudyinLI5OHWbCK5Ml0tNRIgktht3/pub?output=csv";
     
-    // REEMPLAZA ESTO CON TU CLAVE DE API (De Google Cloud)
+    // API KEY CORRECTA
     const GOOGLE_API_KEY = "AIzaSyCbP-R0f4jfTnlVjwNMCD-Wb7JGfapc9J4"; 
 
     let db = [];
@@ -186,7 +186,6 @@
         try {
             const resp = await fetch(SHEET_CSV);
             const text = await resp.text();
-            // Evitar problemas con comas dentro de las celdas
             const rows = text.split(/\r?\n/).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
             
             db = rows.map((r, i) => ({
@@ -197,7 +196,6 @@
                 ip:      r[4]?.replace(/"/g, '').trim() || "",
                 // Columna F (Índice 5) - Enlace de Google Drive
                 xmlLink: r[5]?.replace(/"/g, '').trim() || "",
-                // Desplazamos los siguientes índices si insertaste la Columna F
                 mask:    r[6]?.replace(/"/g, '').trim() || "",
                 tx:      r[7]?.replace(/"/g, '').trim() || "",
                 rx:      r[8]?.replace(/"/g, '').trim() || ""
@@ -319,7 +317,7 @@
         location.reload();
     }
 
-    // --- LOGICA DEL VISOR XML CONECTADO A GOOGLE DRIVE ---
+    // --- LOGICA DEL VISOR XML ---
     function cerrarModalXML() { 
         document.getElementById("xmlModal").style.display = "none"; 
         document.getElementById("xmlTable").style.display = "none";
@@ -338,7 +336,7 @@
         document.getElementById("xmlModal").style.display = "flex";
 
         if (!xmlLink || xmlLink.trim() === "") {
-            loadingDiv.innerHTML = "⚠️ No hay enlace XML registrado en la base de datos para este sitio.";
+            loadingDiv.innerHTML = "⚠️ No hay enlace XML registrado en la base de datos (Columna F) para este sitio.";
             loadingDiv.style.color = "#ef4444";
             return;
         }
@@ -347,11 +345,9 @@
         const match = fileId.match(/(?:id=|d\/)([a-zA-Z0-9_-]{25,})/);
         if (match) fileId = match[1];
 
-        // --- INICIO DE LA LUPA (DEBUG) ---
-        // Esto nos mostrará exactamente qué está leyendo la página
-        console.log("Enlace original de Excel:", xmlLink);
-        console.log("ID extraído:", fileId);
-        // ---------------------------------
+        // LOGS DE DEPURACIÓN - Puedes verlos en la consola del navegador (F12)
+        console.log("Enlace de Excel leido:", xmlLink);
+        console.log("ID extraído para Drive:", fileId);
 
         loadingDiv.innerHTML = '<span class="dot dot-sync"></span> Conectando con Google Drive y procesando...';
         loadingDiv.style.color = "var(--warning)";
@@ -361,8 +357,7 @@
             const response = await fetch(url);
             
             if (!response.ok) {
-                // Si falla, mostramos el ID que intentó buscar para ver si está cortado o mal formado
-                throw new Error(`Fallo al buscar el ID: [${fileId}]. Verifica que este ID específico sea público en Drive.`);
+                throw new Error(`Fallo al buscar archivo [${fileId}]. Asegúrate de que el enlace en Drive sea público.`);
             }
             
             const xmlText = await response.text();
@@ -376,58 +371,7 @@
                 const sn = m.querySelector('SerialNumber')?.textContent || '-';
                 
                 if(sn !== "-" && sn !== "") {
-                    html += `<tr><td><strong>${moc}</strong></td><td>${pn}</td><td><span style="color:var(--success); font-weight:bold;">${sn}</span></td></tr>`;
-                }
-            });
-
-            tableBody.innerHTML = html !== "" ? html : "<tr><td colspan='3' style='text-align:center;'>No se encontraron módulos con número de serie</td></tr>";
-            
-            loadingDiv.style.display = "none";
-            table.style.display = "table";
-
-        } catch (error) {
-            loadingDiv.innerHTML = `❌ Error: ${error.message}`;
-            loadingDiv.style.color = "#ef4444";
-        }
-    }
-        // 2. Extraer el ID exacto del Drive Link
-        let fileId = xmlLink;
-        const match = xmlLink.match(/(?:id=|d\/)([a-zA-Z0-9_-]{25,})/);
-        if (match) fileId = match[1];
-
-        loadingDiv.innerHTML = '<span class="dot dot-sync"></span> Conectando con Google Drive y procesando...';
-        loadingDiv.style.color = "var(--warning)";
-
-        try {
-            // 3. Petición a la API de Drive para bajar el contenido
-            const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error("Acceso denegado o archivo no encontrado. Asegúrate de que el enlace en Drive sea público ('Cualquier persona con el enlace').");
-            }
-            
-            const xmlText = await response.text();
-            
-            // 4. Analizar la estructura del XML
-            const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
-            const modules = xmlDoc.querySelectorAll('HardwareInventory Module');
-            let html = "";
-            
-            modules.forEach(m => {
-                const moc = m.querySelector('Moc')?.textContent || '-';
-                const pn = m.querySelector('HardwareProductNumber')?.textContent || '-';
-                const sn = m.querySelector('SerialNumber')?.textContent || '-';
-                
-                // Mostrar solo los elementos que tengan número de serie válido
-                if(sn !== "-" && sn !== "") {
-                    html += `
-                        <tr>
-                            <td><strong>${moc}</strong></td>
-                            <td>${pn}</td>
-                            <td><span style="color:var(--success); font-weight:bold; letter-spacing: 1px;">${sn}</span></td>
-                        </tr>
-                    `;
+                    html += `<tr><td><strong>${moc}</strong></td><td>${pn}</td><td><span style="color:var(--success); font-weight:bold; letter-spacing: 1px;">${sn}</span></td></tr>`;
                 }
             });
 
