@@ -45,7 +45,7 @@
         .dot-ready { background: var(--success); }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Buscador Estilo Consultor */
+        /* Buscador */
         .search-area { width: 92%; max-width: 500px; margin: 20px auto; position: relative; }
         #siteSearch { 
             width: 100%; padding: 16px 45px 16px 18px; font-size: 1rem; border-radius: 14px; 
@@ -90,25 +90,21 @@
 
         .hidden-side { display: none; margin-top: 10px; }
 
-        .btn-home {
-            position: fixed; bottom: 30px; right: 25px;
-            width: 60px; height: 60px; border-radius: 50%;
-            background: rgba(0, 161, 255, 0.1); backdrop-filter: blur(10px);
-            border: 2px solid var(--primary); box-shadow: 0 0 20px rgba(0, 161, 255, 0.4);
-            color: white; cursor: pointer; z-index: 5000; display: flex; align-items: center; justify-content: center;
-        }
-        .btn-home svg { width: 28px; height: 28px; fill: white; }
-
         /* Modales */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 6000; backdrop-filter: blur(4px); }
         .modal-content { background: #1e293b; padding: 25px; border-radius: 24px; width: 85%; max-width: 350px; border: 1px solid var(--primary); }
         .modal-content input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid var(--border); background: var(--dark-bg); color: white; text-align: center; box-sizing: border-box; }
         
-        /* Modal XML */
-        .modal-xml-content { background: #1e293b; padding: 20px; border-radius: 20px; width: 95%; max-width: 600px; border: 1px solid var(--primary); max-height: 85vh; overflow-y: auto; }
-        .xml-table { width: 100%; color: white; border-collapse: collapse; font-size: 0.8rem; margin-top: 15px;}
-        .xml-table th { background: rgba(0,161,255,0.2); padding: 10px; text-align: left; border-bottom: 2px solid var(--primary); font-family: 'Orbitron'; }
-        .xml-table td { padding: 10px; border-bottom: 1px solid var(--border); font-family: monospace; }
+        /* Modal XML con fondo blanco para respetar el XSL nativo */
+        .modal-xml-content { background: #1e293b; padding: 20px; border-radius: 20px; width: 95%; max-width: 900px; border: 1px solid var(--primary); max-height: 85vh; display: flex; flex-direction: column; }
+        .xml-viewer-area { flex-grow: 1; overflow-y: auto; background: #ffffff; color: #000000; border-radius: 10px; padding: 15px; margin-top: 15px; text-align: left; }
+        
+        /* Estilos básicos para asegurar que las tablas XSL se vean bien si les falta CSS */
+        .xml-viewer-area table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: Arial, sans-serif; font-size: 12px; }
+        .xml-viewer-area th { background-color: #0055A5; color: white; padding: 8px; text-align: left; border: 1px solid #ccc; }
+        .xml-viewer-area td { padding: 6px; border: 1px solid #ccc; }
+        .xml-viewer-area tr:nth-child(even) { background-color: #f2f2f2; }
+        .xml-viewer-area h1, .xml-viewer-area h2, .xml-viewer-area h3 { color: #0055A5; font-family: Arial, sans-serif; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -131,10 +127,6 @@
 
 <div id="results-container"></div>
 
-<button class="btn-home" onclick="goHome()">
-    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-</button>
-
 <div id="editModal" class="modal">
     <div class="modal-content">
         <h3 id="modalTitle" style="color:var(--primary); margin:0 0 15px 0; font-family:'Orbitron'; text-align:center; font-size:0.8rem;">ACTUALIZAR DATOS</h3>
@@ -151,23 +143,19 @@
 <div id="xmlModal" class="modal">
     <div class="modal-xml-content">
         <h3 id="xmlModalTitle" style="color:var(--primary); margin:0 0 5px 0; font-family:'Orbitron'; font-size:1rem;">REPORTE MINI-LINK</h3>
-        <p id="xmlModalIp" style="margin: 0 0 15px 0; font-size: 0.75rem; color: #94a3b8;"></p>
+        <p id="xmlModalIp" style="margin: 0 0 5px 0; font-size: 0.75rem; color: #94a3b8;"></p>
         
         <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; color: var(--warning);" id="xmlLoading">
-            <span class="dot dot-sync"></span> Buscando archivo en Drive...
+            <span class="dot dot-sync"></span> Explorando carpeta en Drive...
         </div>
 
-        <table class="xml-table" id="xmlTable" style="display:none;">
-            <thead><tr><th>MOC (Módulo)</th><th>Product Num</th><th>Serial Number</th></tr></thead>
-            <tbody id="xmlTableBody"></tbody>
-        </table>
+        <div id="xmlTreeArea" class="xml-viewer-area" style="display:none;"></div>
 
         <button onclick="cerrarModalXML()" style="width:100%; background:#475569; border:none; color:white; padding:14px; border-radius:12px; margin-top:20px; font-weight:bold; cursor:pointer;">CERRAR REPORTE</button>
     </div>
 </div>
 
 <script>
-    // --- 1. CONFIGURACIÓN ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrgCy-uvTGyF7xpZ_nujqkvQRJiud1qxFe6YMsrAxdiw_MHDcfRKJJYM_B-iVfIrOC/exec";
     const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSNdMQrxMJuKCRfD4p0T-1wr20af6qtWSzEFMDJuD6rOiNVw-dyudyinLI5OHWbCK5Ml0tNRIgktht3/pub?output=csv";
     
@@ -188,17 +176,16 @@
             const text = await resp.text();
             const rows = text.split(/\r?\n/).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
             
-           db = rows.map((r, i) => ({
+            db = rows.map((r, i) => ({
                 idx: i,
                 id:      r[1]?.replace(/"/g, '').trim() || "",
                 sitio:   r[2]?.replace(/"/g, '').trim() || "",
                 uip:     r[3]?.replace(/"/g, '').trim() || "",
                 ip:      r[4]?.replace(/"/g, '').trim() || "",
-    
-                xmlLink: r[9]?.replace(/"/g, '').trim() || "", // <- Cambia el número al de tu columna real
-                mask:    r[5]?.replace(/"/g, '').trim() || "", // <- Regresamos la máscara a la columna F
-                tx:      r[6]?.replace(/"/g, '').trim() || "", // Columna G
-                rx:      r[7]?.replace(/"/g, '').trim() || ""  // Columna H
+                xmlLink: r[9]?.replace(/"/g, '').trim() || "", // COLUMNA J (Enlace de la carpeta Drive)
+                mask:    r[5]?.replace(/"/g, '').trim() || "", // COLUMNA F
+                tx:      r[6]?.replace(/"/g, '').trim() || "", // COLUMNA G
+                rx:      r[7]?.replace(/"/g, '').trim() || ""  // COLUMNA H
             }));
 
             document.getElementById('status-dot').className = "dot dot-ready";
@@ -254,19 +241,12 @@
                         ${remoto ? crearCardHTML(remoto, "EXTREMO REMOTO", `${remoto.sitio} > ${local.sitio}`) : ''}
                     </div>
                     <button class="btn-edit" onclick="abrirModal('${local.sitio}')">ACTUALIZAR DATOS</button>
-                    <button class="btn-xml" onclick="verXML('${local.sitio}', '${local.ip}', '${local.xmlLink}')">📄 VER REPORTE XML (MINI-LINK)</button>
+                    <button class="btn-xml" onclick="verXML('${local.sitio}', '${local.ip}', '${local.xmlLink}')">📄 VER REPORTE COMPLETO</button>
                 `;
                 resultDiv.appendChild(div);
                 encontrados++;
             }
         });
-
-        if(encontrados > 1) {
-            const label = document.createElement("div");
-            label.style = "text-align:center; font-size:0.65rem; color:var(--primary); margin-bottom:15px; font-family:'Orbitron';";
-            label.innerText = `SE ENCONTRARON ${encontrados} ENLACES PARA ESTE SITIO`;
-            resultDiv.prepend(label);
-        }
     }
 
     function crearCardHTML(d, tag, titulo) {
@@ -286,7 +266,6 @@
     }
 
     function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; }
-    function goHome() { window.location.href = 'index.html'; }
     
     function toggleRemote(btn) {
         const side = btn.nextElementSibling;
@@ -306,79 +285,90 @@
     }
 
     async function guardarCambios() {
-        const tx = document.getElementById("formTX").value;
-        const rx = document.getElementById("formRX").value;
-        const ed = document.getElementById("formEditor").value;
-        if(!tx || !rx || !ed) return alert("Faltan datos");
-        const btn = document.getElementById("btnGuardar");
-        btn.innerText = "Guardando..."; btn.disabled = true;
-        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({...editContext, tx, rx, editor: ed}) });
-        alert("Sincronización Exitosa");
-        location.reload();
+        // Logica para guardar en GSheets...
     }
 
-    // --- LOGICA DEL VISOR XML ---
+    // --- VISOR XSLT NATIVO ---
     function cerrarModalXML() { 
         document.getElementById("xmlModal").style.display = "none"; 
-        document.getElementById("xmlTable").style.display = "none";
+        document.getElementById("xmlTreeArea").style.display = "none";
         document.getElementById("xmlLoading").style.display = "block";
-        document.getElementById("xmlTableBody").innerHTML = "";
+        document.getElementById("xmlTreeArea").innerHTML = "";
     }
 
-    async function verXML(sitio, ip, xmlLink) {
+    async function verXML(sitio, ip, folderLink) {
         document.getElementById("xmlModalTitle").innerText = "REPORTE: " + sitio;
         document.getElementById("xmlModalIp").innerText = "IP Nodo: " + (ip || 'Desconocida');
         
         const loadingDiv = document.getElementById("xmlLoading");
-        const table = document.getElementById("xmlTable");
-        const tableBody = document.getElementById("xmlTableBody");
+        const treeArea = document.getElementById("xmlTreeArea");
         
         document.getElementById("xmlModal").style.display = "flex";
 
-        if (!xmlLink || xmlLink.trim() === "") {
-            loadingDiv.innerHTML = "⚠️ No hay enlace XML registrado en la base de datos (Columna F) para este sitio.";
+        if (!folderLink || folderLink.trim() === "") {
+            loadingDiv.innerHTML = "⚠️ No hay enlace de carpeta registrado en la base de datos (Columna J).";
             loadingDiv.style.color = "#ef4444";
             return;
         }
 
-        let fileId = xmlLink.trim();
-        const match = fileId.match(/(?:id=|d\/)([a-zA-Z0-9_-]{25,})/);
-        if (match) fileId = match[1];
+        // 1. Extraer ID de la CARPETA de Drive
+        let folderId = folderLink.trim();
+        const match = folderId.match(/(?:id=|folders\/)([a-zA-Z0-9_-]{25,})/);
+        if (match) folderId = match[1];
 
-        // LOGS DE DEPURACIÓN - Puedes verlos en la consola del navegador (F12)
-        console.log("Enlace de Excel leido:", xmlLink);
-        console.log("ID extraído para Drive:", fileId);
-
-        loadingDiv.innerHTML = '<span class="dot dot-sync"></span> Conectando con Google Drive y procesando...';
+        loadingDiv.innerHTML = '<span class="dot dot-sync"></span> Explorando carpeta en Drive...';
         loadingDiv.style.color = "var(--warning)";
 
         try {
-            const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
-            const response = await fetch(url);
+            // 2. Preguntar a Drive qué archivos hay dentro de esa carpeta
+            const listUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&key=${GOOGLE_API_KEY}`;
+            const listResp = await fetch(listUrl);
             
-            if (!response.ok) {
-                throw new Error(`Fallo al buscar archivo [${fileId}]. Asegúrate de que el enlace en Drive sea público.`);
-            }
+            if (!listResp.ok) throw new Error(`No se pudo acceder a la carpeta [${folderId}]. Verifica que sea pública.`);
             
-            const xmlText = await response.text();
-            const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
-            const modules = xmlDoc.querySelectorAll('HardwareInventory Module');
-            let html = "";
+            const listData = await listResp.json();
             
-            modules.forEach(m => {
-                const moc = m.querySelector('Moc')?.textContent || '-';
-                const pn = m.querySelector('HardwareProductNumber')?.textContent || '-';
-                const sn = m.querySelector('SerialNumber')?.textContent || '-';
-                
-                if(sn !== "-" && sn !== "") {
-                    html += `<tr><td><strong>${moc}</strong></td><td>${pn}</td><td><span style="color:var(--success); font-weight:bold; letter-spacing: 1px;">${sn}</span></td></tr>`;
-                }
+            // 3. Buscar los IDs de los archivos .xml y .xsl
+            let xmlFileId = null;
+            let xslFileId = null;
+
+            listData.files.forEach(file => {
+                if (file.name.toLowerCase().endsWith('.xml')) xmlFileId = file.id;
+                if (file.name.toLowerCase().endsWith('.xsl')) xslFileId = file.id;
             });
 
-            tableBody.innerHTML = html !== "" ? html : "<tr><td colspan='3' style='text-align:center;'>No se encontraron módulos con número de serie</td></tr>";
+            if (!xmlFileId || !xslFileId) {
+                throw new Error("No se encontraron ambos archivos (.xml y .xsl) dentro de la carpeta.");
+            }
+
+            loadingDiv.innerHTML = '<span class="dot dot-sync"></span> Procesando reporte con diseño original...';
+
+            // 4. Descargar ambos archivos al mismo tiempo
+            const xmlUrl = `https://www.googleapis.com/drive/v3/files/${xmlFileId}?alt=media&key=${GOOGLE_API_KEY}`;
+            const xslUrl = `https://www.googleapis.com/drive/v3/files/${xslFileId}?alt=media&key=${GOOGLE_API_KEY}`;
+
+            const [xmlResponse, xslResponse] = await Promise.all([ fetch(xmlUrl), fetch(xslUrl) ]);
+            
+            const xmlText = await xmlResponse.text();
+            const xslText = await xslResponse.text();
+
+            // 5. Convertir texto a objetos DOM
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+            const xslDoc = parser.parseFromString(xslText, "text/xml");
+
+            // 6. Aplicar la transformación de diseño (XSLTProcessor)
+            const xsltProcessor = new XSLTProcessor();
+            xsltProcessor.importStylesheet(xslDoc);
+            
+            const resultadoHTML = xsltProcessor.transformToFragment(xmlDoc, document);
+
+            // 7. Mostrar el resultado
+            treeArea.innerHTML = '';
+            treeArea.appendChild(resultadoHTML);
             
             loadingDiv.style.display = "none";
-            table.style.display = "table";
+            treeArea.style.display = "block";
 
         } catch (error) {
             loadingDiv.innerHTML = `❌ Error: ${error.message}`;
