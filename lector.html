@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <title>Mini-Link Auto-Explorer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js" async defer></script>
     <style>
         :root { --ericsson-blue: #002561; }
         body { background-color: #f4f7f9; }
         .sidebar { height: 100vh; background: white; border-right: 1px solid #dee2e6; overflow-y: auto; }
-        .nav-link { cursor: pointer; color: #333; border-bottom: 1px solid #eee; }
-        .nav-link:hover { background: #eef2f7; }
+        .nav-link { cursor: pointer; color: #333; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .nav-link:hover { background: #eef2f7; color: var(--ericsson-blue); }
         .header { background: var(--ericsson-blue); color: white; padding: 15px; }
+        .card { border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -20,63 +19,102 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3 sidebar p-0">
-            <div class="p-3 bg-light border-bottom">
-                <h6>Reportes en Drive</h6>
-                <button onclick="handleAuthClick()" class="btn btn-sm btn-primary w-100">Cargar Carpeta</button>
+            <div class="p-3 bg-light border-bottom text-center">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" width="30" class="mb-2">
+                <h6>Reportes Mini-Link</h6>
+                <button onclick="handleAuthClick()" class="btn btn-sm btn-primary w-100 mt-2">Acceder a Drive</button>
             </div>
             <div id="fileList" class="nav flex-column">
-                <p class="p-3 text-muted small">Haz clic en "Cargar" para ver los archivos...</p>
+                <p class="p-3 text-muted small text-center">Conecta tu cuenta para ver los archivos .xml</p>
             </div>
         </div>
 
         <div class="col-md-9 p-0">
-            <div class="header">
-                <h5 class="mb-0">Detalle del Nodo: <span id="nodeTitle">Ninguno seleccionado</span></h5>
+            <div class="header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Nodo: <span id="nodeTitle" class="fw-light">Seleccione un archivo</span></h5>
+                <small id="lastGen"></small>
             </div>
             <div id="viewerContent" class="p-4" style="display:none;">
-                <div class="card p-3 mb-3" id="infoGeneral"></div>
+                <div id="infoGeneral" class="row mb-3"></div>
                 <div class="card p-3">
-                    <h6>Inventario de Hardware</h6>
-                    <table class="table table-sm mt-2">
-                        <thead><tr><th>MOC</th><th>Serial Number</th><th>Revision</th></tr></thead>
-                        <tbody id="invBody"></tbody>
-                    </table>
+                    <h6 class="border-bottom pb-2">Inventario de Hardware</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mt-2">
+                            <thead class="table-light">
+                                <tr><th>MOC</th><th>Product Number</th><th>Serial Number</th><th>Revision</th></tr>
+                            </thead>
+                            <tbody id="invBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+<script src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+
 <script>
-    const CLIENT_ID = 'TU_CLIENT_ID.apps.googleusercontent.com';
-    const API_KEY = 'TU_API_KEY';
-    const FOLDER_ID = 'ID_DE_TU_CARPETA_DRIVE'; // Cambia esto por el ID de tu carpeta
+    // --- CONFIGURACIÓN ---
+    const CLIENT_ID = '399805604277-q1i584dr73335mog7a1pbov74ist01d1.apps.googleusercontent.com';
+    const API_KEY = 'TU_API_KEY_REAL_AQUI'; // <--- BUSCA UNA "API KEY" EN GOOGLE CLOUD, NO EL CLIENT SECRET
+    const FOLDER_ID = '1o6aaCx4zq5S0UNN4F8Nsu0DoWwBfz0Hl';
     const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
 
+    let tokenClient;
     let accessToken = null;
 
-    function handleAuthClick() {
-        const client = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID, scope: SCOPES,
-            callback: (resp) => {
-                accessToken = resp.access_token;
-                listXmlFiles();
-            }
+    function gapiLoaded() {
+        gapi.load('client', async () => {
+            await gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+            });
         });
-        client.requestAccessToken();
+    }
+
+    function gisLoaded() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: (tokenResponse) => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    accessToken = tokenResponse.access_token;
+                    listXmlFiles();
+                }
+            },
+        });
+    }
+
+    function handleAuthClick() {
+        if (accessToken === null) {
+            tokenClient.requestAccessToken({prompt: 'consent'});
+        } else {
+            tokenClient.requestAccessToken({prompt: ''});
+        }
     }
 
     async function listXmlFiles() {
-        const response = await fetch(`https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+name+contains+'.xml'&fields=files(id,name)&key=${API_KEY}`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        const data = await response.json();
-        const listDiv = document.getElementById('fileList');
-        listDiv.innerHTML = data.files.map(f => `
-            <a class="nav-link p-3" onclick="loadXml('${f.id}', '${f.name}')">
-                📄 ${f.name}
-            </a>
-        `).join('');
+        try {
+            const response = await fetch(`https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+name+contains+'.xml'&fields=files(id,name)&key=${API_KEY}`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            const data = await response.json();
+            const listDiv = document.getElementById('fileList');
+            
+            if (data.files && data.files.length > 0) {
+                listDiv.innerHTML = data.files.map(f => `
+                    <a class="nav-link p-3" onclick="loadXml('${f.id}', '${f.name}')">
+                        📄 ${f.name}
+                    </a>
+                `).join('');
+            } else {
+                listDiv.innerHTML = '<p class="p-3 text-danger small">No se encontraron XMLs en la carpeta.</p>';
+            }
+        } catch (err) {
+            console.error("Error listando archivos:", err);
+        }
     }
 
     async function loadXml(fileId, fileName) {
@@ -86,25 +124,29 @@
         const xmlText = await resp.text();
         const xml = new DOMParser().parseFromString(xmlText, "text/xml");
         
-        // Renderizado automático
         document.getElementById('viewerContent').style.display = 'block';
         document.getElementById('nodeTitle').innerText = xml.querySelector('Label')?.textContent || fileName;
+        document.getElementById('lastGen').innerText = "Generado: " + (xml.querySelector('Generated')?.textContent || 'N/A');
         
         // Info General
         document.getElementById('infoGeneral').innerHTML = `
-            <p><strong>IP:</strong> ${xml.querySelector('Ip')?.textContent}</p>
-            <p><strong>Fecha Reporte:</strong> ${xml.querySelector('Generated')?.textContent}</p>
+            <div class="col-md-4"><div class="card p-2 text-center small"><strong>IP:</strong> ${xml.querySelector('Ip')?.textContent}</div></div>
         `;
 
         // Inventario
         const modules = xml.querySelectorAll('HardwareInventory Module');
-        document.getElementById('invBody').innerHTML = Array.from(modules).map(m => `
-            <tr>
-                <td>${m.querySelector('Moc')?.textContent}</td>
-                <td><span class="badge bg-light text-dark border">${m.querySelector('SerialNumber')?.textContent}</span></td>
-                <td>${m.querySelector('HardwareRevision')?.textContent}</td>
-            </tr>
-        `).join('');
+        document.getElementById('invBody').innerHTML = Array.from(modules).map(m => {
+            const sn = m.querySelector('SerialNumber')?.textContent;
+            if (sn === "-") return ""; // Ignorar vacíos
+            return `
+                <tr>
+                    <td><strong>${m.querySelector('Moc')?.textContent}</strong></td>
+                    <td>${m.querySelector('HardwareProductNumber')?.textContent}</td>
+                    <td><span class="badge bg-light text-dark border font-monospace">${sn}</span></td>
+                    <td>${m.querySelector('HardwareRevision')?.textContent}</td>
+                </tr>
+            `;
+        }).join('');
     }
 </script>
 </body>
