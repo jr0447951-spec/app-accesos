@@ -188,17 +188,17 @@
             const text = await resp.text();
             const rows = text.split(/\r?\n/).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
             
-            db = rows.map((r, i) => ({
+           db = rows.map((r, i) => ({
                 idx: i,
                 id:      r[1]?.replace(/"/g, '').trim() || "",
                 sitio:   r[2]?.replace(/"/g, '').trim() || "",
                 uip:     r[3]?.replace(/"/g, '').trim() || "",
                 ip:      r[4]?.replace(/"/g, '').trim() || "",
-                // Columna F (Índice 5) - Enlace de Google Drive
-                xmlLink: r[5]?.replace(/"/g, '').trim() || "",
-                mask:    r[6]?.replace(/"/g, '').trim() || "",
-                tx:      r[7]?.replace(/"/g, '').trim() || "",
-                rx:      r[8]?.replace(/"/g, '').trim() || ""
+    
+                xmlLink: r[9]?.replace(/"/g, '').trim() || "", // <- Cambia el número al de tu columna real
+                mask:    r[5]?.replace(/"/g, '').trim() || "", // <- Regresamos la máscara a la columna F
+                tx:      r[6]?.replace(/"/g, '').trim() || "", // Columna G
+                rx:      r[7]?.replace(/"/g, '').trim() || ""  // Columna H
             }));
 
             document.getElementById('status-dot').className = "dot dot-ready";
