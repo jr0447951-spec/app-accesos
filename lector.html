@@ -337,13 +337,59 @@
         
         document.getElementById("xmlModal").style.display = "flex";
 
-        // 1. Validar si existe el link
         if (!xmlLink || xmlLink.trim() === "") {
-            loadingDiv.innerHTML = "⚠️ No hay enlace XML registrado en la Columna F de la base de datos para este sitio.";
-            loadingDiv.style.color = "#ef4444"; // Rojo
+            loadingDiv.innerHTML = "⚠️ No hay enlace XML registrado en la base de datos para este sitio.";
+            loadingDiv.style.color = "#ef4444";
             return;
         }
 
+        let fileId = xmlLink.trim();
+        const match = fileId.match(/(?:id=|d\/)([a-zA-Z0-9_-]{25,})/);
+        if (match) fileId = match[1];
+
+        // --- INICIO DE LA LUPA (DEBUG) ---
+        // Esto nos mostrará exactamente qué está leyendo la página
+        console.log("Enlace original de Excel:", xmlLink);
+        console.log("ID extraído:", fileId);
+        // ---------------------------------
+
+        loadingDiv.innerHTML = '<span class="dot dot-sync"></span> Conectando con Google Drive y procesando...';
+        loadingDiv.style.color = "var(--warning)";
+
+        try {
+            const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                // Si falla, mostramos el ID que intentó buscar para ver si está cortado o mal formado
+                throw new Error(`Fallo al buscar el ID: [${fileId}]. Verifica que este ID específico sea público en Drive.`);
+            }
+            
+            const xmlText = await response.text();
+            const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
+            const modules = xmlDoc.querySelectorAll('HardwareInventory Module');
+            let html = "";
+            
+            modules.forEach(m => {
+                const moc = m.querySelector('Moc')?.textContent || '-';
+                const pn = m.querySelector('HardwareProductNumber')?.textContent || '-';
+                const sn = m.querySelector('SerialNumber')?.textContent || '-';
+                
+                if(sn !== "-" && sn !== "") {
+                    html += `<tr><td><strong>${moc}</strong></td><td>${pn}</td><td><span style="color:var(--success); font-weight:bold;">${sn}</span></td></tr>`;
+                }
+            });
+
+            tableBody.innerHTML = html !== "" ? html : "<tr><td colspan='3' style='text-align:center;'>No se encontraron módulos con número de serie</td></tr>";
+            
+            loadingDiv.style.display = "none";
+            table.style.display = "table";
+
+        } catch (error) {
+            loadingDiv.innerHTML = `❌ Error: ${error.message}`;
+            loadingDiv.style.color = "#ef4444";
+        }
+    }
         // 2. Extraer el ID exacto del Drive Link
         let fileId = xmlLink;
         const match = xmlLink.match(/(?:id=|d\/)([a-zA-Z0-9_-]{25,})/);
