@@ -33,9 +33,7 @@
 
         h1 {
             font-family: 'Orbitron', sans-serif;
-            margin: 0;
-            font-size: 1.2rem;
-            letter-spacing: 2px;
+            margin: 0; font-size: 1.2rem; letter-spacing: 2px;
             background: linear-gradient(to bottom, #ffffff, #00a1ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -46,8 +44,7 @@
         #status-indicator {
             display: inline-flex; align-items: center; gap: 6px;
             font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
-            margin-top: 5px; opacity: 0.8;
-            font-family: 'Orbitron', sans-serif;
+            margin-top: 5px; opacity: 0.8; font-family: 'Orbitron', sans-serif;
         }
 
         .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
@@ -101,45 +98,35 @@
         .info-label { font-size: 0.6rem; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; display: block; }
         .info-val { font-size: 1rem; color: #fff; font-weight: 500; }
 
+        .maintenance-container { margin-top: 5px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: rgba(255, 255, 255, 0.02); margin-bottom: 5px; }
+        .maintenance-trigger {
+            width: 100%; padding: 15px; background: rgba(0, 161, 255, 0.1); border: none;
+            color: var(--primary); font-family: 'Orbitron', sans-serif; font-size: 0.75rem;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+        }
+        .maintenance-content { display: none; padding: 10px; flex-direction: column; gap: 8px; animation: fadeIn 0.3s ease; }
+
         .key-alert { 
             background: #be123c; border-left: 4px solid #ff4d4d; color: white; 
             padding: 12px; border-radius: 12px; font-weight: bold; display: flex; 
             flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 10px; font-size: 0.85rem;
         }
 
-        .btn-gps { 
+        .btn-gps, .btn-wa { 
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            background: linear-gradient(135deg, var(--primary), #0072ff); color: white; 
-            padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 800; margin-top: 25px;
-            font-family: 'Orbitron', sans-serif; font-size: 0.9rem;
-        }
-
-        .btn-wa { 
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            background: linear-gradient(135deg, #25d366, #128c7e); color: white; 
             padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 800; margin-top: 12px;
             font-family: 'Orbitron', sans-serif; font-size: 0.9rem; border: none; width: 100%; cursor: pointer;
         }
+        .btn-gps { background: linear-gradient(135deg, var(--primary), #0072ff); color: white; margin-top: 25px; }
+        .btn-wa { background: linear-gradient(135deg, #25d366, #128c7e); color: white; }
 
         .btn-home {
-            position: fixed; bottom: 30px; right: 25px;
-            width: 60px; height: 60px; border-radius: 50%;
-            background: rgba(0, 161, 255, 0.1); backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid var(--primary);
-            box-shadow: 0 0 15px rgba(0, 161, 255, 0.4), inset 0 0 10px rgba(0, 161, 255, 0.2);
-            color: white; cursor: pointer; z-index: 5000; display: flex;
-            align-items: center; justify-content: center;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; border-radius: 50%;
+            background: rgba(0, 161, 255, 0.1); backdrop-filter: blur(10px); border: 2px solid var(--primary);
+            box-shadow: 0 0 15px rgba(0, 161, 255, 0.4); color: white; cursor: pointer; z-index: 5000;
+            display: flex; align-items: center; justify-content: center;
         }
-        .btn-home svg { width: 28px; height: 28px; fill: white; filter: drop-shadow(0 0 5px var(--primary)); }
-        .btn-home:active { transform: scale(0.85); box-shadow: 0 0 25px var(--primary); }
-
-        .btn-copy-small {
-            background: none; border: none; cursor: pointer; padding: 0; 
-            font-size: 1.1rem; opacity: 0.8; transition: opacity 0.2s;
-        }
-        .btn-copy-small:hover { opacity: 1; }
+        .btn-copy-small { background: none; border: none; cursor: pointer; padding: 0; font-size: 1.1rem; opacity: 0.8; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -162,16 +149,11 @@
 
 <div id="result"></div>
 
-<button class="btn-home" onclick="goHome()" title="Volver al inicio">
-    <svg viewBox="0 0 24 24">
-        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-    </svg>
+<button class="btn-home" onclick="goHome()">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
 </button>
 
 <script>
-window.onbeforeunload = function () { window.scrollTo(0, 0); };
-if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
-
 let sites = [];
 const input = document.getElementById('siteSearch');
 const clearBtn = document.getElementById('clearBtn');
@@ -194,25 +176,19 @@ function procesarCSV(data) {
 }
 
 fetch(SHEETS_CSV_URL)
-    .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+    .then(r => r.text())
     .then(data => {
         sites = procesarCSV(data);
         localStorage.setItem('sites_cache', JSON.stringify(sites));
         statusDot.className = "dot dot-ready";
         statusText.innerText = `Red Lista: ${sites.length} Sitios`;
-        statusText.style.color = "var(--success)";
     })
-    .catch(err => {
-        const cachedData = localStorage.getItem('sites_cache');
-        if (cachedData) {
-            sites = JSON.parse(cachedData);
+    .catch(() => {
+        const cached = localStorage.getItem('sites_cache');
+        if (cached) {
+            sites = JSON.parse(cached);
             statusDot.className = "dot dot-ready";
             statusText.innerText = `Modo Offline: ${sites.length} Sitios`;
-            statusText.style.color = "var(--warning)";
-        } else {
-            statusDot.className = "dot dot-error";
-            statusText.innerText = "Error de Red";
-            statusText.style.color = "var(--danger)";
         }
     });
 
@@ -224,14 +200,6 @@ input.addEventListener('input', (e) => {
     sugDiv.innerHTML = matches.map(s => `<div class="suggestion-item" onclick="seleccionar('${s.SITEID}')"><strong>${s.SITEID}</strong><br><small>${s['NOMBRE DE SITIO']}</small></div>`).join('');
     sugDiv.style.display = matches.length ? 'block' : 'none';
 });
-
-function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; window.scrollTo({top: 0, behavior: 'smooth'});}
-
-function goHome() { 
-    if (navigator.vibrate) navigator.vibrate(20); 
-    window.scrollTo({top: 0, behavior: 'smooth'}); 
-    setTimeout(() => { window.location.href = 'index.html'; }, 200); 
-}
 
 function seleccionar(id) {
     const s = sites.find(x => x.SITEID === id);
@@ -253,19 +221,35 @@ function seleccionar(id) {
     const lat = s.LATITUDE || s.Latitude || s.Latitud;
     const lon = s.LONGITUDE || s.Longitude || s.Longitud;
     const propNombre = s['Nombre para Propietario'] || 'N/A';
+    const nicNis = s['NIC/NIS'] || 'N/A';
 
-    const textoWA = encodeURIComponent(
-        `🛰️ *CONSULTA DE SITIO*\n` +
-        `🆔 *ID:* ${s.SITEID}\n` +
-        `🏢 *NOMBRE:* ${s['NOMBRE DE SITIO']}\n` +
-        `👤 *PROP:* ${propNombre}\n` +
-        `📍 *MAPA:* https://www.google.com/maps?q=${lat},${lon}`
-    );
+    const textoWA = encodeURIComponent(`🛰️ *CONSULTA DE SITIO*\n🆔 *ID:* ${s.SITEID}\n🏢 *NOMBRE:* ${s['NOMBRE DE SITIO']}\n👤 *PROP:* ${propNombre}\n📍 *MAPA:* https://www.google.com/maps?q=${lat},${lon}`);
     const waUrl = `https://wa.me/?text=${textoWA}`;
+
+    // LÓGICA DE VALIDACIÓN: Solo crear el HTML si hay datos de mantenimiento
+    let maintenanceHTML = '';
+    const tieneMtto = s['Canidad de aceite'] || s['Cantidad de refrigerante'] || s['filtro aceite'] || s['Filtro de aire'] || s['Filtro de combustible'];
+    
+    if (tieneMtto) {
+        maintenanceHTML = `
+            <div class="maintenance-container">
+                <button class="maintenance-trigger" onclick="toggleMaint()">
+                    <span>🛠️ FICHA TÉCNICA / MTTO MG</span>
+                    <span id="maint-arrow">▼</span>
+                </button>
+                <div id="maint-content" class="maintenance-content">
+                    <div class="info-item"><span class="info-label">Cant. Aceite</span><span class="info-val">${s['Canidad de aceite'] || '0'} Galones</span></div>
+                    <div class="info-item"><span class="info-label">Cant. Refrigerante</span><span class="info-val">${s['Cantidad de refrigerante'] || '0'} Galones</span></div>
+                    <div class="info-item"><span class="info-label">Filtro de Aceite</span><span class="info-val">${s['filtro aceite'] || 'N/A'}</span></div>
+                    <div class="info-item"><span class="info-label">Filtro de Aire</span><span class="info-val">${s['Filtro de aire'] || 'N/A'}</span></div>
+                    <div class="info-item"><span class="info-label">Filtro de Combustible</span><span class="info-val">${s['Filtro de combustible'] || 'N/A'}</span></div>
+                </div>
+            </div>`;
+    }
 
     resultDiv.innerHTML = `
         <div class="card">
-            <div class="header-title" onclick="copiar('${s.SITEID} - ${s['NOMBRE DE SITIO']}', 'ID')">
+            <div class="header-title" onclick="copiar('${s.SITEID} - ${s['NOMBRE DE SITIO']}', 'ID', this)">
                 <h2>${s.SITEID} - ${s['NOMBRE DE SITIO']}</h2>
                 <span id="copyLabel" class="copy-tag">TAP PARA COPIAR ID</span>
             </div>
@@ -273,12 +257,21 @@ function seleccionar(id) {
                 <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=${lat},${lon}&t=k&z=18&output=embed"></iframe>
             </div>
             <div class="info-list">
-                <div class="info-item"><span class="info-label">NIC / NIS</span><span class="info-val" style="color:#fbbf24;">${s['NIC/NIS'] || 'N/A'}</span></div>
+                <div class="info-item" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span class="info-label">NIC / NIS</span>
+                        <span class="info-val" style="color:#fbbf24;">${nicNis}</span>
+                    </div>
+                    <button class="btn-copy-small" onclick="copiar('${nicNis}', 'NIC', this)">📋</button>
+                </div>
+                
                 <div class="info-item"><span class="info-label">Distribuidora</span><span class="info-val">${s.Distribuidora || 'N/A'}</span></div>
+                
                 ${llaveHTML}
+                ${maintenanceHTML}
+
                 <div class="info-item"><span class="info-label">Porte</span><span class="info-val">${s.Porte || 'N/A'}</span></div>
                 <div class="info-item"><span class="info-label">Altura</span><span class="info-val">${s.Altura || 'N/A'}</span></div>
-                
                 <div class="info-item"><span class="info-label">Propietario</span><span class="info-val">${s.Propietario || 'N/A'}</span></div>
                 
                 <div class="info-item" style="display:flex; justify-content:space-between; align-items:center;">
@@ -290,7 +283,6 @@ function seleccionar(id) {
                 </div>
 
                 <div class="info-item"><span class="info-label">Tipo de Transmisión</span><span class="info-val">${s['Tipo de Transmisión'] || 'N/A'}</span></div>
-                
                 <div class="info-item"><span class="info-label">Municipio</span><span class="info-val">${s.Municipio || 'N/A'}</span></div>
                 <div class="info-item"><span class="info-label">Dirección Exacta</span><span class="info-val">${s.DIRECCION || s['Dirección'] || 'N/A'}</span></div>
             </div>
@@ -301,11 +293,19 @@ function seleccionar(id) {
     setTimeout(() => { resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
 }
 
+function toggleMaint() {
+    const content = document.getElementById('maint-content');
+    const arrow = document.getElementById('maint-arrow');
+    const isVisible = window.getComputedStyle(content).display === 'flex';
+    content.style.display = isVisible ? 'none' : 'flex';
+    arrow.innerText = isVisible ? '▼' : '▲';
+    if (navigator.vibrate) navigator.vibrate(15);
+}
+
 function copiar(txt, tipo, el) {
     if (!txt || txt === 'N/A') return;
     navigator.clipboard.writeText(txt);
     if (navigator.vibrate) navigator.vibrate(20);
-
     if (tipo === 'ID') {
         const lbl = document.getElementById('copyLabel');
         lbl.innerText = "¡DATOS COPIADOS!"; lbl.style.color = "var(--success)";
@@ -317,10 +317,9 @@ function copiar(txt, tipo, el) {
     }
 }
 
+function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; window.scrollTo({top: 0, behavior: 'smooth'});}
+function goHome() { window.scrollTo({top: 0, behavior: 'smooth'}); setTimeout(() => { window.location.href = 'index.html'; }, 200); }
 document.addEventListener('click', (e) => { if (!input.contains(e.target)) sugDiv.style.display = 'none'; });
-window.scrollTo(0, 0);
 </script>
 </body>
 </html>
-
-
