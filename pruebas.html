@@ -226,20 +226,26 @@ function seleccionar(id) {
     const textoWA = encodeURIComponent(`🛰️ *CONSULTA DE SITIO*\n🆔 *ID:* ${s.SITEID}\n🏢 *NOMBRE:* ${s['NOMBRE DE SITIO']}\n👤 *PROP:* ${propNombre}\n📍 *MAPA:* https://www.google.com/maps?q=${lat},${lon}`);
     const waUrl = `https://wa.me/?text=${textoWA}`;
 
-    const maintenanceHTML = `
-        <div class="maintenance-container">
-            <button class="maintenance-trigger" onclick="toggleMaint()">
-                <span>🛠️ FICHA TÉCNICA / MTTO MG</span>
-                <span id="maint-arrow">▼</span>
-            </button>
-            <div id="maint-content" class="maintenance-content">
-                <div class="info-item"><span class="info-label">Cant. Aceite</span><span class="info-val">${s['Canidad de aceite'] || '0'} Galones</span></div>
-                <div class="info-item"><span class="info-label">Cant. Refrigerante</span><span class="info-val">${s['Cantidad de refrigerante'] || '0'} Galones</span></div>
-                <div class="info-item"><span class="info-label">Filtro de Aceite</span><span class="info-val">${s['filtro aceite'] || 'N/A'}</span></div>
-                <div class="info-item"><span class="info-label">Filtro de Aire</span><span class="info-val">${s['Filtro de aire'] || 'N/A'}</span></div>
-                <div class="info-item"><span class="info-label">Filtro de Combustible</span><span class="info-val">${s['Filtro de combustible'] || 'N/A'}</span></div>
-            </div>
-        </div>`;
+    // LÓGICA DE VALIDACIÓN: Solo crear el HTML si hay datos de mantenimiento
+    let maintenanceHTML = '';
+    const tieneMtto = s['Canidad de aceite'] || s['Cantidad de refrigerante'] || s['filtro aceite'] || s['Filtro de aire'] || s['Filtro de combustible'];
+    
+    if (tieneMtto) {
+        maintenanceHTML = `
+            <div class="maintenance-container">
+                <button class="maintenance-trigger" onclick="toggleMaint()">
+                    <span>🛠️ FICHA TÉCNICA / MTTO MG</span>
+                    <span id="maint-arrow">▼</span>
+                </button>
+                <div id="maint-content" class="maintenance-content">
+                    <div class="info-item"><span class="info-label">Cant. Aceite</span><span class="info-val">${s['Canidad de aceite'] || '0'} Galones</span></div>
+                    <div class="info-item"><span class="info-label">Cant. Refrigerante</span><span class="info-val">${s['Cantidad de refrigerante'] || '0'} Galones</span></div>
+                    <div class="info-item"><span class="info-label">Filtro de Aceite</span><span class="info-val">${s['filtro aceite'] || 'N/A'}</span></div>
+                    <div class="info-item"><span class="info-label">Filtro de Aire</span><span class="info-val">${s['Filtro de aire'] || 'N/A'}</span></div>
+                    <div class="info-item"><span class="info-label">Filtro de Combustible</span><span class="info-val">${s['Filtro de combustible'] || 'N/A'}</span></div>
+                </div>
+            </div>`;
+    }
 
     resultDiv.innerHTML = `
         <div class="card">
