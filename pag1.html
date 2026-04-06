@@ -225,7 +225,7 @@ async function inicializar(){
     vehiculos.forEach(v => {
         if(v.Placa){
             const o = document.createElement('option');
-            o.value = v.Placa; o.textContent = `${v.Placa} (${v.Marca})`;
+            o.value = v.Placa; o.textContent = `${v.Placa} - ${v.Marca} ${v.Color}`;;
             sVeh.appendChild(o);
         }
     });
