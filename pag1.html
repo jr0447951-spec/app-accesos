@@ -100,6 +100,7 @@
         #generar { background: #3b82f6; }
         #whatsapp { background: #25d366; }
         #btnLimpiar { background: rgba(244, 63, 94, 0.15); border: 1px solid var(--danger); color: var(--danger); font-size: 11px; padding: 8px; margin-bottom: 5px; }
+        #btnCambiarSitio { background: rgba(0, 161, 255, 0.15); border: 1px solid var(--primary); color: var(--primary); font-size: 11px; padding: 8px; margin-bottom: 5px; }
 
         .btn-float-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 9999; }
         .btn-nav { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: white; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); }
@@ -134,6 +135,11 @@
         </div>
     </div>
 
+    <div id="contenedorFechaCorte" style="display: none;">
+        <label>📅 Fecha del Corte</label>
+        <input type="date" id="fechaCorte">
+    </div>
+
     <label>👤 Técnico Responsable (Líder)</label>
     <select id="tecnicoPrincipal"><option value="">Seleccione líder...</option></select>
 
@@ -149,7 +155,10 @@
 
     <hr style="opacity: 0.1; margin: 20px 0;">
 
-    <button id="btnLimpiar" class="main-btn">🗑️ Limpiar Formulario</button>
+    <div style="display: flex; gap: 10px;">
+        <button id="btnCambiarSitio" class="main-btn" style="margin-top: 0; flex: 1;">🔄 Cambiar Sitio (Mantener Equipo)</button>
+        <button id="btnLimpiar" class="main-btn" style="margin-top: 0; flex: 1;">🗑️ Limpiar Formulario</button>
+    </div>
     
     <label>📝 Vista Previa del Mensaje</label>
     <textarea id="vistaPrevia" readonly></textarea>
@@ -321,12 +330,46 @@ function generarMensaje(){
 
     const tecs = todos.map(t => `${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
 
-    return `BUEN DIA\nSU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :\n▬▬▬▬▬▬▬▬▬▬\nID: ${id}\nNOMBRE: ${inSitio.value}\nPROPIETARIO: ${inSitio.dataset.p || 'N/A'}\nNombre Torrero: ${inSitio.dataset.t || 'N/A'}\n▬▬▬▬▬▬▬▬▬▬\nACTIVIDAD: ${act}\n▬▬▬▬▬▬▬▬▬▬\nTECNICOS/DUI\n${tecs}\n▬▬▬▬▬▬▬▬▬▬\nPlaca: ${v.Placa||''}\nMarca: ${v.Marca||''}\nModelo: ${v.Modelo||''}\nColor: ${v.Color||''}\n▬▬▬▬▬▬▬▬▬▬\nEmpresa: CELECT SA DE CV\nSupervisor: ${supData[0]}\nTel: ${supData[1]}\n▬▬▬▬▬▬▬▬▬▬\nTEL: ${tP.TELEFONO||''}\nCORREO: ${tP.CORREO||''} tecnicossv@celectcac.com`;
+    let textoActividad = act;
+    if(act === "CORTE PROGRAMADO") {
+        const fInput = document.getElementById('fechaCorte').value;
+        if(fInput) {
+            const partes = fInput.split('-');
+            if(partes.length === 3) {
+                const aa = partes[0].substring(2);
+                const mm = partes[1];
+                const dd = partes[2];
+                textoActividad = `CORTE PROGRAMADO  ${dd}/${mm}/${aa}`;
+            }
+        }
+    }
+
+    return `BUEN DIA\nSU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :\n▬▬▬▬▬▬▬▬▬▬\nID: ${id}\nNOMBRE: ${inSitio.value}\nPROPIETARIO: ${inSitio.dataset.p || 'N/A'}\nNombre Torrero: ${inSitio.dataset.t || 'N/A'}\n▬▬▬▬▬▬▬▬▬▬\nACTIVIDAD: ${textoActividad}\n▬▬▬▬▬▬▬▬▬▬\nTECNICOS/DUI\n${tecs}\n▬▬▬▬▬▬▬▬▬▬\nPlaca: ${v.Placa||''}\nMarca: ${v.Marca||''}\nModelo: ${v.Modelo||''}\nColor: ${v.Color||''}\n▬▬▬▬▬▬▬▬▬▬\nEmpresa: CELECT SA DE CV\nSupervisor: ${supData[0]}\nTel: ${supData[1]}\n▬▬▬▬▬▬▬▬▬▬\nTEL: ${tP.TELEFONO||''}\nCORREO: ${tP.CORREO||''} tecnicossv@celectcac.com`;
 }
 
 function actualizarPreview() { document.getElementById('vistaPrevia').value = generarMensaje(); }
 
-document.getElementById('actividad').onchange = actualizarPreview;
+document.getElementById('actividad').onchange = () => {
+    const act = document.getElementById('actividad').value;
+    const contenedor = document.getElementById('contenedorFechaCorte');
+    const inputFecha = document.getElementById('fechaCorte');
+    
+    if(act === "CORTE PROGRAMADO") {
+        contenedor.style.display = 'block';
+        if(!inputFecha.value) {
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            inputFecha.value = `${yyyy}-${mm}-${dd}`;
+        }
+    } else {
+        contenedor.style.display = 'none';
+    }
+    actualizarPreview();
+};
+
+document.getElementById('fechaCorte').onchange = actualizarPreview;
 document.getElementById('vehiculo').onchange = actualizarPreview;
 
 document.getElementById('generar').onclick = () => {
@@ -343,6 +386,14 @@ document.getElementById('whatsapp').onclick = () => {
 
 document.getElementById('btnLimpiar').onclick = () => {
     if(confirm("¿Limpiar todo?")){ location.reload(); }
+};
+
+document.getElementById('btnCambiarSitio').onclick = () => {
+    inSitio.value = '';
+    delete inSitio.dataset.id;
+    delete inSitio.dataset.p;
+    delete inSitio.dataset.t;
+    actualizarPreview();
 };
 
 inicializar();
