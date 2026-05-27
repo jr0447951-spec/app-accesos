@@ -3,323 +3,400 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultor de Sitio - Network Ops</title>
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/7532/7532164.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-
+    <title>Generador de Accesos - Network Ops</title>
     <style>
         :root { 
             --primary: #00a1ff; 
+            --movistar: #5bc500;
             --dark-bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.08);
-            --border: rgba(255, 255, 255, 0.15);
-            --success: #22c55e;
-            --warning: #fbbf24;
-            --danger: #ef4444;
+            --glass: rgba(255, 255, 255, 0.07);
+            --danger: #f43f5e;
         }
 
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            margin: 0; padding-bottom: 100px; 
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px 15px 140px;
             background: radial-gradient(circle at top right, #1e293b, var(--dark-bg));
-            color: white; min-height: 100vh;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
         }
 
-        header { 
-            width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
-            padding: 15px 0; position: sticky; top: 0; z-index: 2000;
-            border-bottom: 1px solid var(--border); text-align: center;
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(0, 161, 255, 0.05) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(0, 161, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -2;
         }
 
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            margin: 0; font-size: 1.2rem; letter-spacing: 2px;
-            background: linear-gradient(to bottom, #ffffff, #00a1ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        header { text-align: center; margin-bottom: 20px; }
+        h2 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; color: white; text-transform: uppercase; }
+        .subtitle { color: var(--primary); font-size: 0.8rem; font-weight: bold; }
+
+        .form-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        label {
+            display: block;
+            margin: 12px 0 5px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--primary);
             text-transform: uppercase;
-            filter: drop-shadow(0 0 8px rgba(0, 161, 255, 0.5));
         }
 
-        #status-indicator {
-            display: inline-flex; align-items: center; gap: 6px;
-            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
-            margin-top: 5px; opacity: 0.8; font-family: 'Orbitron', sans-serif;
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
         }
 
-        .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-        .dot-sync { background: var(--warning); animation: pulse 1s infinite; }
-        .dot-ready { background: var(--success); }
-        .dot-error { background: var(--danger); }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        input:focus, select:focus { border-color: var(--primary); background: rgba(0,0,0,0.6); }
 
-        .search-area { width: 92%; max-width: 500px; margin: 20px auto; position: relative; }
-        #siteSearch { 
-            width: 100%; padding: 16px 45px 16px 18px; font-size: 1rem; border-radius: 14px; 
-            border: 1px solid var(--border); background: rgba(255,255,255,0.05);
-            color: white; outline: none; box-sizing: border-box;
+        #listaSitios {
+            position: absolute;
+            width: 100%;
+            background: #1e293b;
+            border-radius: 12px;
+            z-index: 1000;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid var(--primary);
+            margin-top: 5px;
+            display: none;
         }
-        #clearBtn {
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            background: rgba(255,255,255,0.15); border: none; color: white;
-            width: 28px; height: 28px; border-radius: 50%; display: none; cursor: pointer;
-        }
+        #listaSitios div { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; font-size: 13px; }
+        #listaSitios div:hover { background: rgba(0, 161, 255, 0.2); }
 
-        .suggestions { 
-            position: absolute; top: 100%; left: 0; right: 0; 
-            background: #1e293b; border-radius: 12px; max-height: 250px; 
-            overflow-y: auto; z-index: 3000; display: none; margin-top: 5px; border: 1px solid var(--primary);
-        }
-        .suggestion-item { padding: 14px; border-bottom: 1px solid var(--border); cursor: pointer; }
-        .suggestion-item:hover { background: rgba(0, 161, 255, 0.1); }
+        #tecnicosAdicionales { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; }
+        .chip { padding: 8px 14px; background: rgba(255,255,255,0.08); border-radius: 50px; font-size: 11px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .chip.selected { background: var(--movistar); color: white; border-color: #fff; }
+        .chip.disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; }
 
-        #result { width: 92%; max-width: 500px; margin: 0 auto; scroll-margin-top: 100px; }
+        .main-btn { padding: 15px; margin-top: 10px; width: 100%; font-size: 14px; border: none; border-radius: 12px; cursor: pointer; color: white; font-weight: bold; text-transform: uppercase; }
+        #generar { background: #3b82f6; }
+        #whatsapp { background: #25d366; }
+        #btnLimpiar { background: rgba(244, 63, 94, 0.15); border: 1px solid var(--danger); color: var(--danger); font-size: 11px; padding: 8px; margin-bottom: 5px; }
+        #btnCambiarSitio { background: rgba(0, 161, 255, 0.15); border: 1px solid var(--primary); color: var(--primary); font-size: 11px; padding: 8px; margin-bottom: 5px; }
 
-        .card { 
-            background: var(--glass); backdrop-filter: blur(15px);
-            border: 1px solid var(--border); border-radius: 24px; padding: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4); animation: fadeIn 0.3s ease-out;
-        }
+        .btn-float-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 9999; }
+        .btn-nav { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: white; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); }
+        .nav-report { background: linear-gradient(135deg, #FF9800, #ed6c02); }
+        .nav-home { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
 
-        .header-title { 
-            background: rgba(0, 161, 255, 0.15); padding: 18px; border-radius: 16px; 
-            text-align: center; margin-bottom: 15px; border: 1px dashed var(--primary); cursor: pointer;
-        }
-        .header-title h2 { margin: 0; font-size: 1rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; }
-        .copy-tag { font-size: 0.6rem; color: var(--primary); font-weight: bold; margin-top: 6px; display: block; }
-
-        .map-box { 
-            width: 100%; height: 200px; border-radius: 16px; overflow: hidden; 
-            margin-bottom: 20px; border: 1px solid var(--border); background: #000;
-        }
-
-        .info-list { display: flex; flex-direction: column; gap: 10px; }
-        .info-item { background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 12px; border-left: 4px solid var(--primary); }
-        .info-label { font-size: 0.6rem; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; display: block; }
-        .info-val { font-size: 1rem; color: #fff; font-weight: 500; }
-
-        .maintenance-container { margin-top: 5px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: rgba(255, 255, 255, 0.02); margin-bottom: 5px; }
-        .maintenance-trigger {
-            width: 100%; padding: 15px; background: rgba(0, 161, 255, 0.1); border: none;
-            color: var(--primary); font-family: 'Orbitron', sans-serif; font-size: 0.75rem;
-            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
-        }
-        .maintenance-content { display: none; padding: 10px; flex-direction: column; gap: 8px; animation: fadeIn 0.3s ease; }
-
-        .key-alert { 
-            background: #be123c; border-left: 4px solid #ff4d4d; color: white; 
-            padding: 12px; border-radius: 12px; font-weight: bold; display: flex; 
-            flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 10px; font-size: 0.85rem;
-        }
-
-        .btn-gps, .btn-wa { 
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 800; margin-top: 12px;
-            font-family: 'Orbitron', sans-serif; font-size: 0.9rem; border: none; width: 100%; cursor: pointer;
-        }
-        .btn-gps { background: linear-gradient(135deg, var(--primary), #0072ff); color: white; margin-top: 25px; }
-        .btn-wa { background: linear-gradient(135deg, #25d366, #128c7e); color: white; }
-
-        .btn-home {
-            position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; border-radius: 50%;
-            background: rgba(0, 161, 255, 0.1); backdrop-filter: blur(10px); border: 2px solid var(--primary);
-            box-shadow: 0 0 15px rgba(0, 161, 255, 0.4); color: white; cursor: pointer; z-index: 5000;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .btn-copy-small { background: none; border: none; cursor: pointer; padding: 0; font-size: 1.1rem; opacity: 0.8; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        textarea { height: 100px; resize: none; margin-top: 10px; font-family: monospace; font-size: 11px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>CONSULTOR DE SITIO</h1>
-    <div id="status-indicator">
-        <span id="status-dot" class="dot dot-sync"></span>
-        <span id="status-text">Sincronizando...</span>
-    </div>
+    <h2>Generador de Accesos</h2>
+    <div class="subtitle">SISTEMA TECNOLOGÍA OPERATIVA</div>
 </header>
 
-<div class="search-area">
-    <input type="text" id="siteSearch" placeholder="🔍 ID o Nombre del sitio..." autocomplete="off">
-    <button id="clearBtn" onclick="limpiar()">✕</button>
-    <div id="suggestions" class="suggestions"></div>
+<div class="form-card">
+    <label>📍 Sitio / Ubicación</label>
+    <div style="position: relative;">
+        <input type="text" id="sitio" placeholder="Buscar por ID o Nombre..." autocomplete="off">
+        <div id="listaSitios"></div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label>🛠️ Actividad</label>
+            <select id="actividad"><option value="">Seleccione...</option></select>
+        </div>
+        <div style="flex: 1;">
+            <label>🚐 Vehículo</label>
+            <select id="vehiculo"><option value="">Seleccione...</option></select>
+        </div>
+    </div>
+
+    <div id="contenedorFechaCorte" style="display: none;">
+        <label>📅 Fecha del Corte</label>
+        <input type="date" id="fechaCorte">
+    </div>
+
+    <label>👤 Técnico Responsable (Líder)</label>
+    <select id="tecnicoPrincipal"><option value="">Seleccione líder...</option></select>
+
+    <label>👔 Supervisor a Cargo</label>
+    <select id="supervisor">
+        <option value="José Rivas|6161 4465">José Rivas (6161 4465)</option>
+        <option value="Victor Salas|6170 0973">Victor Salas (6170 0973)</option>
+    </select>
+
+    <label>👥 Técnicos de Apoyo</label>
+    <div id="tecnicosAdicionales"></div>
+    <div id="contadorSeleccionados" style="font-size: 10px; margin-top: 5px; color: #94a3b8;">Seleccionados: 0</div>
+
+    <hr style="opacity: 0.1; margin: 20px 0;">
+
+    <div style="display: flex; gap: 10px;">
+        <button id="btnCambiarSitio" class="main-btn" style="margin-top: 0; flex: 1;">🔄 Cambiar Sitio (Mantener Equipo)</button>
+        <button id="btnLimpiar" class="main-btn" style="margin-top: 0; flex: 1;">🗑️ Limpiar Formulario</button>
+    </div>
+    
+    <label>📝 Vista Previa del Mensaje</label>
+    <textarea id="vistaPrevia" readonly></textarea>
+
+    <button id="generar" class="main-btn">Copiar al Portapapeles</button>
+    <button id="whatsapp" class="main-btn">Enviar a WhatsApp</button>
 </div>
 
-<div id="result"></div>
-
-<button class="btn-home" onclick="goHome()">
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-</button>
+<div class="btn-float-container">
+    <a href="pag2.html" class="btn-nav nav-report"><span>📝 Ingreso/Salida</span></a>
+    <a href="index.html" class="btn-nav nav-home"><span>🏠 Ir al Inicio</span></a>
+</div>
 
 <script>
-let sites = [];
-const input = document.getElementById('siteSearch');
-const clearBtn = document.getElementById('clearBtn');
-const sugDiv = document.getElementById('suggestions');
-const resultDiv = document.getElementById('result');
-const statusDot = document.getElementById('status-dot');
-const statusText = document.getElementById('status-text');
+// --- SEGURIDAD ---
+(function() {
+    const loginTime = localStorage.getItem('acceso_tecnico_eebb');
+    if (!loginTime || (new Date().getTime() - loginTime > 86400000)) {
+        window.location.href = 'index.html';
+    }
+})();
 
-const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
+// --- VARIABLES ---
+let sitios=[], actividades=[], tecnicos=[], vehiculos=[];
+const URL_SITIOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?output=csv';
 
-function procesarCSV(data) {
-    const rows = data.split(/\r?\n/).filter(row => row.trim().length > 0);
-    const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    return rows.slice(1).map(row => {
-        const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        let obj = {};
-        headers.forEach((h, i) => obj[h] = values[i] ? values[i].trim().replace(/"/g, '') : '');
-        return obj;
-    });
+async function cargarCSV(url, esSitios = false){
+    try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const lineas = text.trim().split('\n');
+        const sep = lineas[0].includes(';') ? ';' : ',';
+        const headers = lineas[0].split(sep).map(h => h.trim().replace(/"/g, ''));
+        
+        return lineas.slice(1).map(l => {
+            const cols = l.split(sep);
+            let obj = {};
+            headers.forEach((h, i) => obj[h] = cols[i]?.trim().replace(/"/g, '') || "");
+            
+            if (esSitios) {
+                return {
+                    ID: obj['SITEID'],
+                    Nombre: obj['NOMBRE DE SITIO'],
+                    Prop: obj['Propietario'],
+                    Torrero: obj['Nombre para Propietario']
+                };
+            }
+            return obj;
+        });
+    } catch(e) { return []; }
 }
 
-fetch(SHEETS_CSV_URL)
-    .then(r => r.text())
-    .then(data => {
-        sites = procesarCSV(data);
-        localStorage.setItem('sites_cache', JSON.stringify(sites));
-        statusDot.className = "dot dot-ready";
-        statusText.innerText = `Red Lista: ${sites.length} Sitios`;
-    })
-    .catch(() => {
-        const cached = localStorage.getItem('sites_cache');
-        if (cached) {
-            sites = JSON.parse(cached);
-            statusDot.className = "dot dot-ready";
-            statusText.innerText = `Modo Offline: ${sites.length} Sitios`;
+async function inicializar(){
+    [sitios, actividades, tecnicos, vehiculos] = await Promise.all([
+        cargarCSV(URL_SITIOS, true),
+        cargarCSV('actividad.csv'),
+        cargarCSV('tecnicos.csv'),
+        cargarCSV('vehiculos.csv')
+    ]);
+
+    // Actividades
+    const sAct = document.getElementById('actividad');
+    actividades.forEach(a => {
+        if(a.ACTIVIDAD){
+            const o = document.createElement('option');
+            o.value = a.ACTIVIDAD; o.textContent = a.ACTIVIDAD;
+            sAct.appendChild(o);
         }
     });
 
-input.addEventListener('input', (e) => {
-    const val = e.target.value.toLowerCase().trim();
-    clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
-    if (val.length < 2) { sugDiv.style.display = 'none'; return; }
-    const matches = sites.filter(s => (s.SITEID && s.SITEID.toLowerCase().includes(val)) || (s['NOMBRE DE SITIO'] && s['NOMBRE DE SITIO'].toLowerCase().includes(val))).slice(0, 8);
-    sugDiv.innerHTML = matches.map(s => `<div class="suggestion-item" onclick="seleccionar('${s.SITEID}')"><strong>${s.SITEID}</strong><br><small>${s['NOMBRE DE SITIO']}</small></div>`).join('');
-    sugDiv.style.display = matches.length ? 'block' : 'none';
-});
+    // Vehículos
+    const sVeh = document.getElementById('vehiculo');
+    vehiculos.forEach(v => {
+        if(v.Placa){
+            const o = document.createElement('option');
+            o.value = v.Placa; o.textContent = `${v.Placa} - ${v.Marca} ${v.Color}`;;
+            sVeh.appendChild(o);
+        }
+    });
 
-function seleccionar(id) {
-    const s = sites.find(x => x.SITEID === id);
-    sugDiv.style.display = 'none';
-    input.value = s['NOMBRE DE SITIO'];
+    // Técnicos con Lógica de Nombre Corto para Chips
+    const sTec = document.getElementById('tecnicoPrincipal');
+    const dAdd = document.getElementById('tecnicosAdicionales');
 
-    const rawLlave = (s['Llave requerida'] || s['LLAVE REQUERIDA'] || "").trim();
-    const infoLlave = (s['Información de llave'] || s['INFORMACION DE LLAVE'] || "").trim();
-    let llaveHTML = '';
-    if (rawLlave.toUpperCase().startsWith("SI")) {
-        llaveHTML = `
-            <div class="key-alert">
-                <span>🔑 LLAVE NECESARIA</span>
-                <span style="font-size:0.75rem; font-weight:normal;">${rawLlave}</span>
-                ${infoLlave ? `<span style="font-size:0.72rem; font-weight:800; margin-top:5px; border-top:1px solid rgba(255,255,255,0.2); width:100%; padding-top:5px;">ℹ️ INFO: ${infoLlave}</span>` : ''}
-            </div>`;
-    }
+    tecnicos.forEach((t, i) => {
+        const o = document.createElement('option');
+        o.value = i; o.textContent = `${t.TECNICO} (${t.DUI})`;
+        sTec.appendChild(o);
 
-    const lat = s.LATITUDE || s.Latitude || s.Latitud;
-    const lon = s.LONGITUDE || s.Longitude || s.Longitud;
-    const propNombre = s['Nombre para Propietario'] || 'N/A';
-    const nicNis = s['NIC/NIS'] || 'N/A';
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        
+        // Lógica: Primer Nombre + Primer Apellido
+        const p = t.TECNICO.split(' ');
+        chip.textContent = p.length >= 3 ? `${p[0]} ${p[2]}` : t.TECNICO;
+        chip.dataset.index = i;
+        chip.onclick = () => {
+            if(parseInt(sTec.value) === i) return;
+            chip.classList.toggle('selected');
+            actualizarPreview(); actualizarContador();
+        };
+        dAdd.appendChild(chip);
+    });
 
-    const textoWA = encodeURIComponent(`🛰️ *CONSULTA DE SITIO*\n🆔 *ID:* ${s.SITEID}\n🏢 *NOMBRE:* ${s['NOMBRE DE SITIO']}\n👤 *PROP:* ${propNombre}\n📍 *MAPA:* https://www.google.com/maps?q=${lat},${lon}`);
-    const waUrl = `https://wa.me/?text=${textoWA}`;
-
-    // LÓGICA DE VALIDACIÓN: Solo crear el HTML si hay datos de mantenimiento
-    let maintenanceHTML = '';
-    const tieneMtto = s['Canidad de aceite'] || s['Cantidad de refrigerante'] || s['filtro aceite'] || s['Filtro de aire'] || s['Filtro de combustible'];
+    sTec.onchange = () => {
+        document.querySelectorAll('.chip').forEach(c => {
+            const idx = parseInt(c.dataset.index);
+            if(idx === parseInt(sTec.value)){
+                c.classList.remove('selected'); c.classList.add('disabled');
+            } else { c.classList.remove('disabled'); }
+        });
+        actualizarPreview(); actualizarContador();
+    };
     
-    if (tieneMtto) {
-        maintenanceHTML = `
-            <div class="maintenance-container">
-                <button class="maintenance-trigger" onclick="toggleMaint()">
-                    <span>🛠️ FICHA TÉCNICA / MTTO MG</span>
-                    <span id="maint-arrow">▼</span>
-                </button>
-                <div id="maint-content" class="maintenance-content">
-                    <div class="info-item"><span class="info-label">Cant. Aceite</span><span class="info-val">${s['Canidad de aceite'] || '0'} Galones</span></div>
-                    <div class="info-item"><span class="info-label">Cant. Refrigerante</span><span class="info-val">${s['Cantidad de refrigerante'] || '0'} Galones</span></div>
-                    <div class="info-item"><span class="info-label">Filtro de Aceite</span><span class="info-val">${s['filtro aceite'] || 'N/A'}</span></div>
-                    <div class="info-item"><span class="info-label">Filtro de Aire</span><span class="info-val">${s['Filtro de aire'] || 'N/A'}</span></div>
-                    <div class="info-item"><span class="info-label">Filtro de Combustible</span><span class="info-val">${s['Filtro de combustible'] || 'N/A'}</span></div>
-                </div>
-            </div>`;
+    document.getElementById('supervisor').onchange = actualizarPreview;
+    actualizarPreview();
+}
+
+// --- BUSCADOR ---
+const inSitio = document.getElementById('sitio');
+const lSitios = document.getElementById('listaSitios');
+
+inSitio.oninput = () => {
+    const norm = (t) => t.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const val = norm(inSitio.value);
+    const words = val.split(/\s+/).filter(w => w.length > 0);
+    
+    lSitios.innerHTML = '';
+    if(words.length === 0) { lSitios.style.display = 'none'; return; }
+
+    const res = sitios.filter(s => {
+        const idN = norm(s.ID || ""), nmN = norm(s.Nombre || "");
+        return words.every(w => idN.includes(w) || nmN.includes(w));
+    }).slice(0, 10);
+
+    if(res.length > 0){
+        lSitios.style.display = 'block';
+        res.forEach(s => {
+            const d = document.createElement('div');
+            d.innerHTML = `<strong>${s.ID}</strong> - ${s.Nombre}`;
+            d.onclick = () => {
+                inSitio.value = s.Nombre;
+                inSitio.dataset.id = s.ID;
+                inSitio.dataset.p = s.Prop;
+                inSitio.dataset.t = s.Torrero;
+                lSitios.style.display = 'none';
+                actualizarPreview();
+            };
+            lSitios.appendChild(d);
+        });
+    } else { lSitios.style.display = 'none'; }
+};
+
+// --- MENSAJE ---
+function actualizarContador(){
+    const n = document.querySelectorAll('.chip.selected').length;
+    document.getElementById('contadorSeleccionados').textContent = `Seleccionados: ${n}`;
+}
+
+function generarMensaje(){
+    const id = inSitio.dataset.id, act = document.getElementById('actividad').value, tIdx = document.getElementById('tecnicoPrincipal').value;
+    if(!id || !act || tIdx === "") return "Complete los datos requeridos...";
+
+    const v = vehiculos[document.getElementById('vehiculo').selectedIndex-1] || {};
+    const supData = document.getElementById('supervisor').value.split('|');
+    const tP = tecnicos[tIdx];
+    const tA = Array.from(document.querySelectorAll('.chip.selected')).map(c => tecnicos[c.dataset.index]);
+    const todos = [tP, ...tA];
+
+    const tecs = todos.map(t => `${t.TECNICO}\t${t.DUI} (${t['FECHA DE NACIMIENTO']})`).join('\n');
+
+    let textoActividad = act;
+    if(act === "CORTE PROGRAMADO") {
+        const fInput = document.getElementById('fechaCorte').value;
+        if(fInput) {
+            const partes = fInput.split('-');
+            if(partes.length === 3) {
+                const aa = partes[0].substring(2);
+                const mm = partes[1];
+                const dd = partes[2];
+                textoActividad = `CORTE PROGRAMADO  ${dd}/${mm}/${aa}`;
+            }
+        }
     }
 
-    resultDiv.innerHTML = `
-        <div class="card">
-            <div class="header-title" onclick="copiar('${s.SITEID} - ${s['NOMBRE DE SITIO']}', 'ID', this)">
-                <h2>${s.SITEID} - ${s['NOMBRE DE SITIO']}</h2>
-                <span id="copyLabel" class="copy-tag">TAP PARA COPIAR ID</span>
-            </div>
-            <div class="map-box">
-                <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=${lat},${lon}&t=k&z=18&output=embed"></iframe>
-            </div>
-            <div class="info-list">
-                <div class="info-item" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <span class="info-label">NIC / NIS</span>
-                        <span class="info-val" style="color:#fbbf24;">${nicNis}</span>
-                    </div>
-                    <button class="btn-copy-small" onclick="copiar('${nicNis}', 'NIC', this)">📋</button>
-                </div>
-                
-                <div class="info-item"><span class="info-label">Distribuidora</span><span class="info-val">${s.Distribuidora || 'N/A'}</span></div>
-                
-                ${llaveHTML}
-                ${maintenanceHTML}
-
-                <div class="info-item"><span class="info-label">Porte</span><span class="info-val">${s.Porte || 'N/A'}</span></div>
-                <div class="info-item"><span class="info-label">Altura</span><span class="info-val">${s.Altura || 'N/A'}</span></div>
-                <div class="info-item"><span class="info-label">Propietario</span><span class="info-val">${s.Propietario || 'N/A'}</span></div>
-                
-                <div class="info-item" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <span class="info-label">Nombre para Propietario</span>
-                        <span class="info-val">${propNombre}</span>
-                    </div>
-                    <button class="btn-copy-small" onclick="copiar('${propNombre}', 'PROP', this)">📋</button>
-                </div>
-
-                <div class="info-item"><span class="info-label">Tipo de Transmisión</span><span class="info-val">${s['Tipo de Transmisión'] || 'N/A'}</span></div>
-                <div class="info-item"><span class="info-label">Municipio</span><span class="info-val">${s.Municipio || 'N/A'}</span></div>
-                <div class="info-item"><span class="info-label">Dirección Exacta</span><span class="info-val">${s.DIRECCION || s['Dirección'] || 'N/A'}</span></div>
-            </div>
-            <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="btn-gps">🚀 INICIAR GPS</a>
-            <a href="${waUrl}" target="_blank" class="btn-wa">📱 COMPARTIR POR WHATSAPP</a>
-        </div>
-    `;
-    setTimeout(() => { resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+    return `BUEN DIA\nSU AYUDA CON EL SIGUIENTE ACCESO POR FAVOR :\n▬▬▬▬▬▬▬▬▬▬\nID: ${id}\nNOMBRE: ${inSitio.value}\nPROPIETARIO: ${inSitio.dataset.p || 'N/A'}\nNombre Torrero: ${inSitio.dataset.t || 'N/A'}\n▬▬▬▬▬▬▬▬▬▬\nACTIVIDAD: ${textoActividad}\n▬▬▬▬▬▬▬▬▬▬\nTECNICOS/DUI\n${tecs}\n▬▬▬▬▬▬▬▬▬▬\nPlaca: ${v.Placa||''}\nMarca: ${v.Marca||''}\nModelo: ${v.Modelo||''}\nColor: ${v.Color||''}\n▬▬▬▬▬▬▬▬▬▬\nEmpresa: CELECT SA DE CV\nSupervisor: ${supData[0]}\nTel: ${supData[1]}\n▬▬▬▬▬▬▬▬▬▬\nTEL: ${tP.TELEFONO||''}\nCORREO: ${tP.CORREO||''} tecnicossv@celectcac.com`;
 }
 
-function toggleMaint() {
-    const content = document.getElementById('maint-content');
-    const arrow = document.getElementById('maint-arrow');
-    const isVisible = window.getComputedStyle(content).display === 'flex';
-    content.style.display = isVisible ? 'none' : 'flex';
-    arrow.innerText = isVisible ? '▼' : '▲';
-    if (navigator.vibrate) navigator.vibrate(15);
-}
+function actualizarPreview() { document.getElementById('vistaPrevia').value = generarMensaje(); }
 
-function copiar(txt, tipo, el) {
-    if (!txt || txt === 'N/A') return;
-    navigator.clipboard.writeText(txt);
-    if (navigator.vibrate) navigator.vibrate(20);
-    if (tipo === 'ID') {
-        const lbl = document.getElementById('copyLabel');
-        lbl.innerText = "¡DATOS COPIADOS!"; lbl.style.color = "var(--success)";
-        setTimeout(() => { lbl.innerText = "TAP PARA COPIAR ID"; lbl.style.color = "var(--primary)"; }, 1500);
+document.getElementById('actividad').onchange = () => {
+    const act = document.getElementById('actividad').value;
+    const contenedor = document.getElementById('contenedorFechaCorte');
+    const inputFecha = document.getElementById('fechaCorte');
+    
+    if(act === "CORTE PROGRAMADO") {
+        contenedor.style.display = 'block';
+        if(!inputFecha.value) {
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            inputFecha.value = `${yyyy}-${mm}-${dd}`;
+        }
     } else {
-        const original = el.innerText;
-        el.innerText = "✅";
-        setTimeout(() => { el.innerText = original; }, 1000);
+        contenedor.style.display = 'none';
     }
-}
+    actualizarPreview();
+};
 
-function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; window.scrollTo({top: 0, behavior: 'smooth'});}
-function goHome() { window.scrollTo({top: 0, behavior: 'smooth'}); setTimeout(() => { window.location.href = 'index.html'; }, 200); }
-document.addEventListener('click', (e) => { if (!input.contains(e.target)) sugDiv.style.display = 'none'; });
+document.getElementById('fechaCorte').onchange = actualizarPreview;
+document.getElementById('vehiculo').onchange = actualizarPreview;
+
+document.getElementById('generar').onclick = () => {
+    const m = document.getElementById('vistaPrevia').value;
+    if(m.includes("Complete")) return alert("Faltan datos");
+    navigator.clipboard.writeText(m); alert('✅ Mensaje copiado');
+};
+
+document.getElementById('whatsapp').onclick = () => {
+    const m = document.getElementById('vistaPrevia').value;
+    if(m.includes("Complete")) return alert("Faltan datos");
+    window.open(`https://wa.me/?text=${encodeURIComponent(m)}`, '_blank');
+};
+
+document.getElementById('btnLimpiar').onclick = () => {
+    if(confirm("¿Limpiar todo?")){ location.reload(); }
+};
+
+document.getElementById('btnCambiarSitio').onclick = () => {
+    inSitio.value = '';
+    delete inSitio.dataset.id;
+    delete inSitio.dataset.p;
+    delete inSitio.dataset.t;
+    actualizarPreview();
+};
+
+inicializar();
 </script>
 </body>
 </html>
