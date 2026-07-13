@@ -94,7 +94,7 @@
             margin-bottom: 15px; border: 1px solid var(--border); background: #000;
         }
 
-        /* FILA DE INSIGNIAS OPERATIVAS - DISEÑO ORIGINAL RE-ESTILIZADO MÁS GRANDE */
+        /* FILA DE INSIGNIAS OPERATIVAS - DISEÑO COMPACTO ORIGINAL */
         .ops-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -109,7 +109,7 @@
             text-align: center;
         }
         .ops-badge-label {
-            font-size: 0.7rem; /* Incrementado para mayor legibilidad */
+            font-size: 0.7rem;
             color: #94a3b8;
             font-weight: 800;
             text-transform: uppercase;
@@ -118,7 +118,7 @@
             letter-spacing: 0.5px;
         }
         .ops-badge-val {
-            font-size: 1.15rem; /* Incrementado para mayor visibilidad en campo */
+            font-size: 1.15rem;
             font-weight: bold;
             font-family: 'Orbitron', sans-serif;
             display: block;
@@ -194,7 +194,7 @@ const resultDiv = document.getElementById('result');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 
-const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
+const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE_5CZtD7qHGW5cWHGAjn7ALTphVm5h88lco9cySYoAe2VBW4fq8DQ7-SZY6cd_FHtNQJS3MpE88hs/pub?gid=1955381502&single=true&output=csv';
 
 function procesarCSV(data) {
     const rows = data.split(/\r?\n/).filter(row => row.trim().length > 0);
@@ -207,7 +207,7 @@ function procesarCSV(data) {
     });
 }
 
-fetch(SHEETS_CSV_URL)
+fetch(SHEETS_URL)
     .then(r => r.text())
     .then(data => {
         sites = procesarCSV(data);
@@ -229,22 +229,33 @@ input.addEventListener('input', (e) => {
     clearBtn.style.display = val.length > 0 ? 'flex' : 'none';
     if (val.length < 2) { sugDiv.style.display = 'none'; return; }
     const matches = sites.filter(s => (s.SITEID && s.SITEID.toLowerCase().includes(val)) || (s['NOMBRE DE SITIO'] && s['NOMBRE DE SITIO'].toLowerCase().includes(val))).slice(0, 8);
-    sugDiv.innerHTML = matches.map(s => `<div class="suggestion-item" onclick="seleccionar('${s.SITEID}')"><strong>${s.SITEID}</strong><br><small>${s['NOMBRE DE SITIO']}</small></div>`).join('');
+    
+    sugDiv.innerHTML = matches.map(s => {
+        const idSeguro = s.SITEID ? s.SITEID.trim() : '';
+        const nombreSeguro = s['NOMBRE DE SITIO'] ? s['NOMBRE DE SITIO'].trim() : 'SITIO SIN NOMBRE';
+        return `<div class="suggestion-item" onclick="seleccionar('${idSeguro}', '${nombreSeguro.replace(/'/g, "\\'")}')">
+            <strong>${idSeguro || '⚠️ SIN ID'}</strong><br>
+            <small>${nombreSeguro}</small>
+        </div>`;
+    }).join('');
     sugDiv.style.display = matches.length ? 'block' : 'none';
 });
 
-function seleccionar(id) {
-    const s = sites.find(x => x.SITEID === id);
+function seleccionar(id, nombreRespaldo) {
+    const s = sites.find(x => id ? x.SITEID === id : x['NOMBRE DE SITIO'] === nombreRespaldo);
+    if (!s) return;
+    
     sugDiv.style.display = 'none';
-    input.value = s['NOMBRE DE SITIO'];
+    input.value = s['NOMBRE DE SITIO'] || '';
 
-    // Mapeo de datos de Acceso y Autonomía
-    const accesoNocturno = (s['ACCESO NOCTURNO'] || s['Acceso Nocturno'] || s['acceso nocturno'] || 'NO').trim();
-    const comentarioAcceso = (s['COMENTARIO DE ACCESO'] || s['Comentario de Acceso'] || s['comentario de acceso'] || '').trim();
-    const conectarMg = (s['POSIBLIDAD DE CONECTAR MG'] || s['POSIBILIDAD DE CONECTAR MG'] || s['Posibilidad de conectar MG'] || 'NO').trim();
-    const autonomia = (s['autonomia estimada'] || s['Autonomia Estimada'] || s['autonomía estimada'] || '').trim();
+    const idMostrar = (s.SITEID || "S/N").trim();
+    const nombreMostrar = (s['NOMBRE DE SITIO'] || "SITIO SIN NOMBRE").trim();
 
-    // Colores condicionales en base al texto para el diseño cyberpunk original
+    const accesoNocturno = (s['ACCESO NOCTURNO'] || s['Acceso Nocturno'] || 'NO').trim();
+    const comentarioAcceso = (s['COMENTARIO DE ACCESO'] || s['Comentario de Acceso'] || '').trim();
+    const conectarMg = (s['POSIBLIDAD DE CONECTAR MG'] || s['POSIBILIDAD DE CONECTAR MG'] || 'NO').trim();
+    const autonomia = (s['autonomia estimada'] || s['Autonomia Estimada'] || '').trim();
+
     const colorAcceso = accesoNocturno.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
     const colorConectar = conectarMg.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
 
@@ -265,10 +276,9 @@ function seleccionar(id) {
     const propNombre = s['Nombre para Propietario'] || 'N/A';
     const nicNis = s['NIC/NIS'] || 'N/A';
 
-    const textoWA = encodeURIComponent(`🛰️ *CONSULTA DE SITIO*\n🆔 *ID:* ${s.SITEID}\n🏢 *NOMBRE:* ${s['NOMBRE DE SITIO']}\n👤 *PROP:* ${propNombre}\n📍 *MAPA:* http://maps.google.com/?q=${lat},${lon}`);
+    const textoWA = encodeURIComponent(`🛰️ *CONSULTA DE SITIO*\n🆔 *ID:* ${idMostrar}\n🏢 *NOMBRE:* ${nombreMostrar}\n👤 *PROP:* ${propNombre}\n📍 *MAPA:* https://www.google.com/maps?q=${lat},${lon}`);
     const waUrl = `https://wa.me/?text=${textoWA}`;
 
-    // Lógica de mantenimiento
     let maintenanceHTML = '';
     const tieneMtto = s['Canidad de aceite'] || s['Cantidad de refrigerante'] || s['filtro aceite'] || s['Filtro de aire'] || s['Filtro de combustible'];
     
@@ -291,8 +301,8 @@ function seleccionar(id) {
 
     resultDiv.innerHTML = `
         <div class="card">
-            <div class="header-title" onclick="copiar('${s.SITEID} - ${s['NOMBRE DE SITIO']}', 'ID', this)">
-                <h2>${s.SITEID} - ${s['NOMBRE DE SITIO']}</h2>
+            <div class="header-title" onclick="copiarID('${idMostrar.replace(/'/g, "\\'")}', '${nombreMostrar.replace(/'/g, "\\'")}', this)">
+                <h2>${idMostrar} - ${nombreMostrar}</h2>
                 <span id="copyLabel" class="copy-tag">TAP PARA COPIAR ID</span>
             </div>
             
@@ -327,7 +337,7 @@ function seleccionar(id) {
                         <span class="info-label">NIC / NIS</span>
                         <span class="info-val" style="color:#fbbf24;">${nicNis}</span>
                     </div>
-                    <button class="btn-copy-small" onclick="copiar('${nicNis}', 'NIC', this)">📋</button>
+                    <button class="btn-copy-small" onclick="copiarOtrasCeldas('${nicNis}', this)">📋</button>
                 </div>
                 
                 <div class="info-item"><span class="info-label">Distribuidora</span><span class="info-val">${s.Distribuidora || 'N/A'}</span></div>
@@ -344,7 +354,7 @@ function seleccionar(id) {
                         <span class="info-label">Nombre para Propietario</span>
                         <span class="info-val">${propNombre}</span>
                     </div>
-                    <button class="btn-copy-small" onclick="copiar('${propNombre}', 'PROP', this)">📋</button>
+                    <button class="btn-copy-small" onclick="copiarOtrasCeldas('${propNombre}', this)">📋</button>
                 </div>
 
                 <div class="info-item"><span class="info-label">Tipo de Transmisión</span><span class="info-val">${s['Tipo de Transmisión'] || 'N/A'}</span></div>
@@ -352,7 +362,7 @@ function seleccionar(id) {
                 <div class="info-item"><span class="info-label">Dirección Exacta</span><span class="info-val">${s.DIRECCION || s['Dirección'] || 'N/A'}</span></div>
             </div>
             
-            <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" class="btn-gps">🚀 INICIAR GPS</a>
+            <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="btn-gps">🚀 INICIAR GPS</a>
             <a href="${waUrl}" target="_blank" class="btn-wa">📱 COMPARTIR POR WHATSAPP</a>
         </div>
     `;
@@ -368,19 +378,39 @@ function toggleMaint() {
     if (navigator.vibrate) navigator.vibrate(15);
 }
 
-function copiar(txt, tipo, el) {
+/* LÓGICA CON REGLA DE COPIADO INTELIGENTE */
+function copiarID(id, nombre, el) {
+    let textoACopiar = "";
+    const lbl = document.getElementById('copyLabel');
+    
+    // Regla: Verifica si el ID tiene exactamente 6 dígitos/caracteres
+    const tiene6Digitos = /^[a-zA-Z0-9]{6}$/.test(id);
+
+    if (tiene6Digitos) {
+        textoACopiar = `${id} - ${nombre}`;
+        lbl.innerText = "¡ID + NOMBRE COPIADOS!";
+    } else {
+        textoACopiar = nombre; // Solo copia el nombre si el ID está incompleto o ausente
+        lbl.innerText = "⚠️ ID INVÁLIDO: ¡SÓLO NOMBRE COPIADO!";
+    }
+
+    navigator.clipboard.writeText(textoACopiar);
+    if (navigator.vibrate) navigator.vibrate(20);
+    
+    lbl.style.color = "var(--success)";
+    setTimeout(() => { 
+        lbl.innerText = "TAP PARA COPIAR ID"; 
+        lbl.style.color = "var(--primary)"; 
+    }, 2000);
+}
+
+function copiarOtrasCeldas(txt, el) {
     if (!txt || txt === 'N/A') return;
     navigator.clipboard.writeText(txt);
     if (navigator.vibrate) navigator.vibrate(20);
-    if (tipo === 'ID') {
-        const lbl = document.getElementById('copyLabel');
-        lbl.innerText = "¡DATOS COPIADOS!"; lbl.style.color = "var(--success)";
-        setTimeout(() => { lbl.innerText = "TAP PARA COPIAR ID"; lbl.style.color = "var(--primary)"; }, 1500);
-    } else {
-        const original = el.innerText;
-        el.innerText = "✅";
-        setTimeout(() => { el.innerText = original; }, 1000);
-    }
+    const original = el.innerText;
+    el.innerText = "✅";
+    setTimeout(() => { el.innerText = original; }, 1000);
 }
 
 function limpiar() { input.value = ''; clearBtn.style.display = 'none'; sugDiv.style.display = 'none'; resultDiv.innerHTML = ''; window.scrollTo({top: 0, behavior: 'smooth'});}
