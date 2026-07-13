@@ -241,6 +241,35 @@ input.addEventListener('input', (e) => {
     sugDiv.style.display = matches.length ? 'block' : 'none';
 });
 
+// Función para traducir decimales (ej. 3.25 o 4.75) a horas y minutos legibles (ej: 3h 15m)
+function formatearAutonomia(valRaw) {
+    if (!valRaw) return 'N/A';
+    
+    // Quitar espacios y limpiar texto adicional (si ya dice "H" o "horas")
+    let valorLimpio = valRaw.replace(/[^\d.]/g, '').trim();
+    let num = parseFloat(valorLimpio);
+    
+    if (isNaN(num)) return valRaw; // Si no es un número limpio, devolvemos el texto original de Excel
+
+    let horas = Math.floor(num);
+    let decimal = num - horas;
+    let minutos = Math.round(decimal * 60);
+
+    // Si los minutos redondeados dan 60, sumamos una hora extra y ponemos 0 minutos
+    if (minutos === 60) {
+        horas += 1;
+        minutos = 0;
+    }
+
+    if (horas === 0) {
+        return `${minutos}m`;
+    } else if (minutos === 0) {
+        return `${horas}h`;
+    } else {
+        return `${horas}h ${minutos}m`;
+    }
+}
+
 function seleccionar(id, nombreRespaldo) {
     const s = sites.find(x => id ? x.SITEID === id : x['NOMBRE DE SITIO'] === nombreRespaldo);
     if (!s) return;
@@ -254,7 +283,10 @@ function seleccionar(id, nombreRespaldo) {
     const accesoNocturno = (s['ACCESO NOCTURNO'] || s['Acceso Nocturno'] || 'NO').trim();
     const comentarioAcceso = (s['COMENTARIO DE ACCESO'] || s['Comentario de Acceso'] || '').trim();
     const conectarMg = (s['POSIBLIDAD DE CONECTAR MG'] || s['POSIBILIDAD DE CONECTAR MG'] || 'NO').trim();
-    const autonomia = (s['autonomia estimada'] || s['Autonomia Estimada'] || '').trim();
+    const autonomiaRaw = (s['autonomia estimada'] || s['Autonomia Estimada'] || '').trim();
+    
+    // Convertimos la autonomía decimal a formato legible en tiempo real
+    const autonomiaFormateada = formatearAutonomia(autonomiaRaw);
 
     const colorAcceso = accesoNocturno.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
     const colorConectar = conectarMg.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
@@ -321,7 +353,7 @@ function seleccionar(id, nombreRespaldo) {
                 </div>
                 <div class="ops-badge">
                     <span class="ops-badge-label">🔋 Autonomía</span>
-                    <span class="ops-badge-val" style="color: var(--warning);">${autonomia ? autonomia + ' H' : 'N/A'}</span>
+                    <span class="ops-badge-val" style="color: var(--warning);">${autonomiaFormateada}</span>
                 </div>
             </div>
 
@@ -378,19 +410,16 @@ function toggleMaint() {
     if (navigator.vibrate) navigator.vibrate(15);
 }
 
-/* LÓGICA CON REGLA DE COPIADO INTELIGENTE */
 function copiarID(id, nombre, el) {
     let textoACopiar = "";
     const lbl = document.getElementById('copyLabel');
-    
-    // Regla: Verifica si el ID tiene exactamente 6 dígitos/caracteres
     const tiene6Digitos = /^[a-zA-Z0-9]{6}$/.test(id);
 
     if (tiene6Digitos) {
         textoACopiar = `${id} - ${nombre}`;
         lbl.innerText = "¡ID + NOMBRE COPIADOS!";
     } else {
-        textoACopiar = nombre; // Solo copia el nombre si el ID está incompleto o ausente
+        textoACopiar = nombre;
         lbl.innerText = "⚠️ ID INVÁLIDO: ¡SÓLO NOMBRE COPIADO!";
     }
 
