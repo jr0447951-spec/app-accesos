@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -95,50 +94,34 @@
             margin-bottom: 15px; border: 1px solid var(--border); background: #000;
         }
 
-        /* FILA DE INSIGNIAS OPERATIVAS - REDISEÑO DE ALTA VISIBILIDAD */
+        /* FILA DE INSIGNIAS OPERATIVAS - DISEÑO ORIGINAL RE-ESTILIZADO MÁS GRANDE */
         .ops-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 18px;
+            gap: 8px;
+            margin-bottom: 15px;
         }
         .ops-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
             padding: 10px 4px;
-            border-radius: 14px;
+            border-radius: 12px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s ease;
         }
         .ops-badge-label {
-            font-size: 0.65rem;
-            color: rgba(0, 0, 0, 0.75);
+            font-size: 0.7rem; /* Incrementado para mayor legibilidad */
+            color: #94a3b8;
             font-weight: 800;
             text-transform: uppercase;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             letter-spacing: 0.5px;
         }
         .ops-badge-val {
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: #000000;
+            font-size: 1.15rem; /* Incrementado para mayor visibilidad en campo */
+            font-weight: bold;
             font-family: 'Orbitron', sans-serif;
             display: block;
-        }
-
-        /* Estados dinámicos de color sólido e invertido para máxima lectura */
-        .badge-success { 
-            background: linear-gradient(135deg, #22c55e, #16a34a); 
-            box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); 
-        }
-        .badge-danger { 
-            background: linear-gradient(135deg, #ef4444, #dc2626); 
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); 
-        }
-        .badge-warning { 
-            background: linear-gradient(135deg, #fbbf24, #f59e0b); 
-            box-shadow: 0 0 10px rgba(251, 191, 36, 0.2); 
         }
 
         .info-list { display: flex; flex-direction: column; gap: 10px; }
@@ -261,9 +244,9 @@ function seleccionar(id) {
     const conectarMg = (s['POSIBLIDAD DE CONECTAR MG'] || s['POSIBILIDAD DE CONECTAR MG'] || s['Posibilidad de conectar MG'] || 'NO').trim();
     const autonomia = (s['autonomia estimada'] || s['Autonomia Estimada'] || s['autonomía estimada'] || '').trim();
 
-    // Clases CSS condicionales para fondos sólidos de alta visibilidad
-    const claseAcceso = accesoNocturno.toUpperCase().startsWith('SI') ? 'badge-success' : 'badge-danger';
-    const claseConectar = conectarMg.toUpperCase().startsWith('SI') ? 'badge-success' : 'badge-danger';
+    // Colores condicionales en base al texto para el diseño cyberpunk original
+    const colorAcceso = accesoNocturno.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
+    const colorConectar = conectarMg.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
 
     const rawLlave = (s['Llave requerida'] || s['LLAVE REQUERIDA'] || "").trim();
     const infoLlave = (s['Información de llave'] || s['INFORMACION DE LLAVE'] || "").trim();
@@ -282,7 +265,7 @@ function seleccionar(id) {
     const propNombre = s['Nombre para Propietario'] || 'N/A';
     const nicNis = s['NIC/NIS'] || 'N/A';
 
-    const textoWA = encodeURIComponent(`🛰️ *CONSULTA DE SITIO*\n🆔 *ID:* ${s.SITEID}\n🏢 *NOMBRE:* ${s['NOMBRE DE SITIO']}\n👤 *PROP:* ${propNombre}\n📍 *MAPA:* https://www.google.com/maps?q=${lat},${lon}`);
+    const textoWA = encodeURIComponent(`🛰️ *CONSULTA DE SITIO*\n🆔 *ID:* ${s.SITEID}\n🏢 *NOMBRE:* ${s['NOMBRE DE SITIO']}\n👤 *PROP:* ${propNombre}\n📍 *MAPA:* http://maps.google.com/?q=${lat},${lon}`);
     const waUrl = `https://wa.me/?text=${textoWA}`;
 
     // Lógica de mantenimiento
@@ -317,24 +300,22 @@ function seleccionar(id) {
                 <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=${lat},${lon}&t=k&z=18&output=embed"></iframe>
             </div>
 
-            <!-- Fila de Estado Rápido / Operaciones con Rediseño de Contraste Alto -->
             <div class="ops-grid">
-                <div class="ops-badge ${claseAcceso}">
+                <div class="ops-badge">
                     <span class="ops-badge-label">🌙 Nocturno</span>
-                    <span class="ops-badge-val">${accesoNocturno.toUpperCase()}</span>
+                    <span class="ops-badge-val" style="color: ${colorAcceso};">${accesoNocturno.toUpperCase()}</span>
                 </div>
-                <div class="ops-badge ${claseConectar}">
+                <div class="ops-badge">
                     <span class="ops-badge-label">🔌 Conectar MG</span>
-                    <span class="ops-badge-val">${conectarMg.toUpperCase()}</span>
+                    <span class="ops-badge-val" style="color: ${colorConectar};">${conectarMg.toUpperCase()}</span>
                 </div>
-                <div class="ops-badge badge-warning">
+                <div class="ops-badge">
                     <span class="ops-badge-label">🔋 Autonomía</span>
-                    <span class="ops-badge-val">${autonomia ? autonomia + ' H' : 'N/A'}</span>
+                    <span class="ops-badge-val" style="color: var(--warning);">${autonomia ? autonomia + ' H' : 'N/A'}</span>
                 </div>
             </div>
 
             <div class="info-list">
-                <!-- Comentario de Acceso (Solo visible si contiene texto para ahorrar espacio) -->
                 ${comentarioAcceso ? `
                 <div class="info-item" style="border-left: 4px solid var(--warning);">
                     <span class="info-label" style="color: var(--warning);">📝 Comentario de Acceso</span>
@@ -371,7 +352,7 @@ function seleccionar(id) {
                 <div class="info-item"><span class="info-label">Dirección Exacta</span><span class="info-val">${s.DIRECCION || s['Dirección'] || 'N/A'}</span></div>
             </div>
             
-            <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lon}" target="_blank" class="btn-gps">🚀 INICIAR GPS</a>
+            <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" class="btn-gps">🚀 INICIAR GPS</a>
             <a href="${waUrl}" target="_blank" class="btn-wa">📱 COMPARTIR POR WHATSAPP</a>
         </div>
     `;
