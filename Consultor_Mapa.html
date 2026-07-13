@@ -63,6 +63,7 @@
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,0.15); border: none; color: white;
             width: 28px; height: 28px; border-radius: 50%; display: none; cursor: pointer;
+            align-items: center; justify-content: center;
         }
 
         .suggestions { 
@@ -85,12 +86,40 @@
             background: rgba(0, 161, 255, 0.15); padding: 18px; border-radius: 16px; 
             text-align: center; margin-bottom: 15px; border: 1px dashed var(--primary); cursor: pointer;
         }
-        .header-title h2 { margin: 0; font-size: 1rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; }
+        .header-title h2 { margin: 0; font-size: 1rem; text-transform: uppercase; font-family: 'Orbitron', sans-serif; line-height: 1.4; }
         .copy-tag { font-size: 0.6rem; color: var(--primary); font-weight: bold; margin-top: 6px; display: block; }
 
         .map-box { 
             width: 100%; height: 200px; border-radius: 16px; overflow: hidden; 
-            margin-bottom: 20px; border: 1px solid var(--border); background: #000;
+            margin-bottom: 15px; border: 1px solid var(--border); background: #000;
+        }
+
+        /* Fila de mini badges operativas */
+        .ops-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .ops-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 8px 4px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .ops-badge-label {
+            font-size: 0.55rem;
+            color: #94a3b8;
+            font-weight: 800;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 3px;
+        }
+        .ops-badge-val {
+            font-size: 0.85rem;
+            font-weight: bold;
+            font-family: 'Orbitron', sans-serif;
         }
 
         .info-list { display: flex; flex-direction: column; gap: 10px; }
@@ -116,6 +145,7 @@
             display: flex; align-items: center; justify-content: center; gap: 10px;
             padding: 18px; border-radius: 16px; text-decoration: none; font-weight: 800; margin-top: 12px;
             font-family: 'Orbitron', sans-serif; font-size: 0.9rem; border: none; width: 100%; cursor: pointer;
+            box-sizing: border-box;
         }
         .btn-gps { background: linear-gradient(135deg, var(--primary), #0072ff); color: white; margin-top: 25px; }
         .btn-wa { background: linear-gradient(135deg, #25d366, #128c7e); color: white; }
@@ -206,6 +236,16 @@ function seleccionar(id) {
     sugDiv.style.display = 'none';
     input.value = s['NOMBRE DE SITIO'];
 
+    // Mapeo de datos de Acceso y Autonomía
+    const accesoNocturno = (s['ACCESO NOCTURNO'] || s['Acceso Nocturno'] || s['acceso nocturno'] || 'NO').trim();
+    const comentarioAcceso = (s['COMENTARIO DE ACCESO'] || s['Comentario de Acceso'] || s['comentario de acceso'] || '').trim();
+    const conectarMg = (s['POSIBLIDAD DE CONECTAR MG'] || s['POSIBILIDAD DE CONECTAR MG'] || s['Posibilidad de conectar MG'] || 'NO').trim();
+    const autonomia = (s['autonomia estimada'] || s['Autonomia Estimada'] || s['autonomía estimada'] || '').trim();
+
+    // Colores condicionales para las insignias
+    const colorAcceso = accesoNocturno.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
+    const colorConectar = conectarMg.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
+
     const rawLlave = (s['Llave requerida'] || s['LLAVE REQUERIDA'] || "").trim();
     const infoLlave = (s['Información de llave'] || s['INFORMACION DE LLAVE'] || "").trim();
     let llaveHTML = '';
@@ -226,7 +266,7 @@ function seleccionar(id) {
     const textoWA = encodeURIComponent(`🛰️ *CONSULTA DE SITIO*\n🆔 *ID:* ${s.SITEID}\n🏢 *NOMBRE:* ${s['NOMBRE DE SITIO']}\n👤 *PROP:* ${propNombre}\n📍 *MAPA:* https://www.google.com/maps?q=${lat},${lon}`);
     const waUrl = `https://wa.me/?text=${textoWA}`;
 
-    // LÓGICA DE VALIDACIÓN: Solo crear el HTML si hay datos de mantenimiento
+    // Lógica de mantenimiento
     let maintenanceHTML = '';
     const tieneMtto = s['Canidad de aceite'] || s['Cantidad de refrigerante'] || s['filtro aceite'] || s['Filtro de aire'] || s['Filtro de combustible'];
     
@@ -253,10 +293,33 @@ function seleccionar(id) {
                 <h2>${s.SITEID} - ${s['NOMBRE DE SITIO']}</h2>
                 <span id="copyLabel" class="copy-tag">TAP PARA COPIAR ID</span>
             </div>
+            
             <div class="map-box">
                 <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=${lat},${lon}&t=k&z=18&output=embed"></iframe>
             </div>
+
+            <div class="ops-grid">
+                <div class="ops-badge">
+                    <span class="ops-badge-label">🌙 Nocturno</span>
+                    <span class="ops-badge-val" style="color: ${colorAcceso};">${accesoNocturno.toUpperCase()}</span>
+                </div>
+                <div class="ops-badge">
+                    <span class="ops-badge-label">🔌 Conectar MG</span>
+                    <span class="ops-badge-val" style="color: ${colorConectar};">${conectarMg.toUpperCase()}</span>
+                </div>
+                <div class="ops-badge">
+                    <span class="ops-badge-label">🔋 Autonomía</span>
+                    <span class="ops-badge-val" style="color: var(--warning);">${autonomia ? autonomia + ' H' : 'N/A'}</span>
+                </div>
+            </div>
+
             <div class="info-list">
+                ${comentarioAcceso ? `
+                <div class="info-item" style="border-left: 4px solid var(--warning);">
+                    <span class="info-label" style="color: var(--warning);">📝 Comentario de Acceso</span>
+                    <span class="info-val" style="font-size: 0.85rem; line-height: 1.3;">${comentarioAcceso}</span>
+                </div>` : ''}
+
                 <div class="info-item" style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <span class="info-label">NIC / NIS</span>
@@ -286,6 +349,7 @@ function seleccionar(id) {
                 <div class="info-item"><span class="info-label">Municipio</span><span class="info-val">${s.Municipio || 'N/A'}</span></div>
                 <div class="info-item"><span class="info-label">Dirección Exacta</span><span class="info-val">${s.DIRECCION || s['Dirección'] || 'N/A'}</span></div>
             </div>
+            
             <a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" class="btn-gps">🚀 INICIAR GPS</a>
             <a href="${waUrl}" target="_blank" class="btn-wa">📱 COMPARTIR POR WHATSAPP</a>
         </div>
