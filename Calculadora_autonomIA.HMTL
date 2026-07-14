@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Tiempo Límite - Respaldo Real (90% SoH)</title>
+    <!-- Tailwind CSS para diseño profesional -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-md w-full border border-red-500/30 text-slate-100">
+        <div class="flex items-center justify-center space-x-3 mb-2">
+            <span class="text-3xl text-red-500">⚠️</span>
+            <h1 class="text-2xl font-bold text-red-400 text-center tracking-tight">Tiempo Límite de Apagado</h1>
+        </div>
+        <p class="text-xs text-slate-400 text-center mb-6">Cálculo de autonomía crítica en tiempo real para mantenimiento de campo</p>
+
+        <!-- Formulario de Entradas -->
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase mb-1 tracking-wider">Voltaje del Sistema (Voltios DC)</label>
+                <div class="relative">
+                    <input type="number" id="voltaje" value="54.20" step="0.01" class="w-full pl-3 pr-16 py-2.5 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-white font-semibold">
+                    <span class="absolute right-3 top-2.5 text-slate-400 font-bold text-sm">VDC</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <!-- El técnico ingresa la capacidad de etiqueta (100Ah) -->
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1 tracking-wider">Capacidad Unitara</label>
+                    <div class="relative">
+                        <input type="number" id="capacidad" value="100" class="w-full pl-3 pr-12 py-2.5 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-white font-semibold">
+                        <span class="absolute right-3 top-2.5 text-slate-400 text-sm">Ah</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1 tracking-wider">Nº de Bancos (Paralelo)</label>
+                    <input type="number" id="cantidad" value="2" min="1" class="w-full px-3 py-2.5 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-white font-semibold">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase mb-1 tracking-wider">Corriente de Consumo Actual</label>
+                <div class="relative">
+                    <input type="number" id="corriente" value="12.00" step="0.01" class="w-full pl-3 pr-16 py-2.5 bg-slate-700 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-white font-semibold">
+                    <span class="absolute right-3 top-2.5 text-slate-400 text-sm">A DC</span>
+                </div>
+            </div>
+
+            <button onclick="calcularAutonomiaCritica()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 mt-2 shadow-lg tracking-wide uppercase text-sm">
+                Calcular Tiempo de Colapso
+            </button>
+        </div>
+
+        <hr class="my-6 border-slate-700">
+
+        <!-- Panel de Resultados de Emergencia -->
+        <div id="resultado-panel" class="bg-red-950/40 rounded-xl p-4 border border-red-500/20 hidden">
+            <h3 class="text-xs font-bold text-red-400 uppercase tracking-wider text-center mb-3">⚠️ TIEMPO ESTIMADO ANTES DEL CORTE</h3>
+            
+            <div class="text-center mb-4">
+                <span id="resultado-tiempo" class="text-4xl font-extrabold text-red-500 tracking-tight">--</span>
+                <span class="text-[10px] text-red-400 block mt-1 uppercase tracking-wider font-semibold">Margen de seguridad integrado para contingencias</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs text-slate-300 pt-3 border-t border-red-500/20">
+                <!-- Se muestra el valor nominal para no confundir al técnico con las etiquetas físicas -->
+                <div>Capacidad Nominal: <strong id="res-cap-total" class="text-white">--</strong></div>
+                <div>Estado de Descarga: <strong class="text-red-400 font-bold">Límite Físico (100%)</strong></div>
+                <div class="col-span-2 mt-1">Potencia de Descarga: <strong id="res-potencia" class="text-white">--</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica de Cálculo con Factor de Envejecimiento Oculto del 90% -->
+    <script>
+        function calcularAutonomiaCritica() {
+            const v = parseFloat(document.getElementById('voltaje').value);
+            const ah = parseFloat(document.getElementById('capacidad').value);
+            const cant = parseInt(document.getElementById('cantidad').value);
+            const a = parseFloat(document.getElementById('corriente').value);
+            
+            // --- PARÁMETRO OCULTO DE ENVEJECIMIENTO (SOH) ---
+            // 0.90 significa que asumimos que la batería conserva el 90% de su capacidad original (10% degradación tras 3 años).
+            const FACTOR_ENVEJECIMIENTO = 0.90; 
+
+            if (isNaN(v) || isNaN(ah) || isNaN(cant) || isNaN(a) || a <= 0) {
+                alert("Por favor, introduce valores válidos.");
+                return;
+            }
+
+            // Capacidad teórica que se le muestra al técnico
+            const capNominalTotal = ah * cant;
+
+            // Capacidad real degradada que usamos internamente para el cálculo del tiempo
+            const capRealCalculo = capNominalTotal * FACTOR_ENVEJECIMIENTO;
+
+            // Tiempo de autonomía crítico real con la batería degradada al 90% SoH
+            const horasTotales = capRealCalculo / a;
+            const horas = Math.floor(horasTotales);
+            const minutos = Math.round((horasTotales - horas) * 60);
+
+            const potencia = v * a;
+
+            // Mostrar resultados manteniendo la coherencia visual con la etiqueta física de la batería
+            document.getElementById('res-cap-total').innerText = capNominalTotal + " Ah";
+            document.getElementById('res-potencia').innerText = potencia.toFixed(1) + " W (DC)";
+            document.getElementById('resultado-tiempo').innerText = `${horas} horas, ${minutos} minutos`;
+            
+            document.getElementById('resultado-panel').classList.remove('hidden');
+        }
+
+        // Carga inicial al abrir la página
+        window.onload = calcularAutonomiaCritica;
+    </script>
+</body>
+</html>
