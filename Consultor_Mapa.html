@@ -91,15 +91,48 @@
 
         .map-box { 
             width: 100%; height: 200px; border-radius: 16px; overflow: hidden; 
-            margin-bottom: 15px; border: 1px solid var(--border); background: #000;
+            margin-bottom: 8px; border: 1px solid var(--border); background: #000;
         }
 
-        /* FILA DE INSIGNIAS OPERATIVAS - DISEÑO COMPACTO ORIGINAL */
+        /* CONTENEDOR PARA EL BOTÓN DE COPIAR COORDENADAS ABAJO DEL MAPA */
+        .map-coords-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 0.75rem;
+        }
+        .coords-text {
+            color: #94a3b8;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+        }
+        .btn-copy-coords {
+            background: rgba(0, 161, 255, 0.2);
+            border: 1px solid var(--primary);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-copy-coords:hover {
+            background: var(--primary);
+        }
+
+        /* FILA DE INSIGNIAS OPERATIVAS */
         .ops-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         .ops-badge {
             background: rgba(255, 255, 255, 0.03);
@@ -122,6 +155,31 @@
             font-weight: bold;
             font-family: 'Orbitron', sans-serif;
             display: block;
+        }
+
+        /* RECTÁNGULO DE TECNOLOGÍA */
+        .tech-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tech-label {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 800;
+            text-transform: uppercase;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .tech-val {
+            font-size: 0.95rem;
+            font-weight: bold;
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
         }
 
         .info-list { display: flex; flex-direction: column; gap: 10px; }
@@ -241,21 +299,16 @@ input.addEventListener('input', (e) => {
     sugDiv.style.display = matches.length ? 'block' : 'none';
 });
 
-// Función para traducir decimales (ej. 3.25 o 4.75) a horas y minutos legibles (ej: 3h 15m)
 function formatearAutonomia(valRaw) {
     if (!valRaw) return 'N/A';
-    
-    // Quitar espacios y limpiar texto adicional (si ya dice "H" o "horas")
     let valorLimpio = valRaw.replace(/[^\d.]/g, '').trim();
     let num = parseFloat(valorLimpio);
-    
-    if (isNaN(num)) return valRaw; // Si no es un número limpio, devolvemos el texto original de Excel
+    if (isNaN(num)) return valRaw;
 
     let horas = Math.floor(num);
     let decimal = num - horas;
     let minutos = Math.round(decimal * 60);
 
-    // Si los minutos redondeados dan 60, sumamos una hora extra y ponemos 0 minutos
     if (minutos === 60) {
         horas += 1;
         minutos = 0;
@@ -285,11 +338,14 @@ function seleccionar(id, nombreRespaldo) {
     const conectarMg = (s['POSIBLIDAD DE CONECTAR MG'] || s['POSIBILIDAD DE CONECTAR MG'] || 'NO').trim();
     const autonomiaRaw = (s['autonomia estimada'] || s['Autonomia Estimada'] || '').trim();
     
-    // Convertimos la autonomía decimal a formato legible en tiempo real
     const autonomiaFormateada = formatearAutonomia(autonomiaRaw);
 
     const colorAcceso = accesoNocturno.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
     const colorConectar = conectarMg.toUpperCase().startsWith('SI') ? 'var(--success)' : 'var(--danger)';
+
+    // Obtención de Tecnología (Columna AD)
+    const tecnologiaRaw = (s['TECNOLOGIA'] || s['Tecnologia'] || '').trim();
+    const tecnologiaMostrar = tecnologiaRaw !== '' ? tecnologiaRaw : '⚠️ Sin información de tecnología en la base';
 
     const rawLlave = (s['Llave requerida'] || s['LLAVE REQUERIDA'] || "").trim();
     const infoLlave = (s['Información de llave'] || s['INFORMACION DE LLAVE'] || "").trim();
@@ -303,8 +359,8 @@ function seleccionar(id, nombreRespaldo) {
             </div>`;
     }
 
-    const lat = s.LATITUDE || s.Latitude || s.Latitud;
-    const lon = s.LONGITUDE || s.Longitude || s.Longitud;
+    const lat = s.LATITUDE || s.Latitude || s.Latitud || '';
+    const lon = s.LONGITUDE || s.Longitude || s.Longitud || '';
     const propNombre = s['Nombre para Propietario'] || 'N/A';
     const nicNis = s['NIC/NIS'] || 'N/A';
 
@@ -342,6 +398,12 @@ function seleccionar(id, nombreRespaldo) {
                 <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=${lat},${lon}&t=k&z=18&output=embed"></iframe>
             </div>
 
+            <!-- BARRA DE COORDENADAS ABAJO DEL MAPA -->
+            <div class="map-coords-bar">
+                <span class="coords-text">📍 ${lat}, ${lon}</span>
+                <button class="btn-copy-coords" onclick="copiarCoordenadas('${lat}, ${lon}', this)">COPIAR GPS</button>
+            </div>
+
             <div class="ops-grid">
                 <div class="ops-badge">
                     <span class="ops-badge-label">🌙 Nocturno</span>
@@ -355,6 +417,12 @@ function seleccionar(id, nombreRespaldo) {
                     <span class="ops-badge-label">🔋 Autonomía</span>
                     <span class="ops-badge-val" style="color: var(--warning);">${autonomiaFormateada}</span>
                 </div>
+            </div>
+
+            <!-- RECTÁNGULO DE TECNOLOGÍA -->
+            <div class="tech-box">
+                <span class="tech-label">📡 Tecnología:</span>
+                <span class="tech-val">${tecnologiaMostrar}</span>
             </div>
 
             <div class="info-list">
@@ -408,6 +476,15 @@ function toggleMaint() {
     content.style.display = isVisible ? 'none' : 'flex';
     arrow.innerText = isVisible ? '▼' : '▲';
     if (navigator.vibrate) navigator.vibrate(15);
+}
+
+function copiarCoordenadas(coords, el) {
+    if (!coords) return;
+    navigator.clipboard.writeText(coords);
+    if (navigator.vibrate) navigator.vibrate(20);
+    const original = el.innerText;
+    el.innerText = "¡COPIADO!";
+    setTimeout(() => { el.innerText = original; }, 1200);
 }
 
 function copiarID(id, nombre, el) {
